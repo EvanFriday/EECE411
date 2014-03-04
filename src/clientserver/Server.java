@@ -30,15 +30,12 @@ import clientserver.Client;
 
 public class Server implements Remote {
 	
-	final static int WAITING_FOR_CONNECTION = 0;
-	final static int ACCEPTING_DATA = 1;
-	final static int PROPAGATING_DATA = 2;
 	
-	private ServerSocket serverSocket;
-	private Client clientSocket;
+	
+	private static Socket socket;
 	
 	public static int i;
-	public static int STATUS = WAITING_FOR_CONNECTION;
+	
 	public static boolean matchingKeyFound = false;
 	public static boolean isPutOperation = false;
 	public static byte[] command = new byte[1];
@@ -50,47 +47,19 @@ public class Server implements Remote {
 	
 	public static ArrayList<KeyValuePair> KVStore;
 	
-	public static void main(String argv[]) throws IOException, OutOfMemoryError{
-		//TODO: wait command for accept
-		
-		while(true){
-				switch(STATUS){
-				case WAITING_FOR_CONNECTION:
-					//wait for connection
-					//connection ready ->
-					STATUS=ACCEPTING_DATA;
-					
-				case ACCEPTING_DATA:
-					//read in new data
-					acceptUpdate();
-					STATUS=PROPAGATING_DATA;
-					
-				case PROPAGATING_DATA:
-					//Connect to other nodes, and send data.
-					Client.propagateUpdate();
-					STATUS=WAITING_FOR_CONNECTION;
-					
-				default:
-					System.out.println("somehow we are no in the state machine...\n");
-				}
-		}
-		
-		
-	}
-
-	
 	public Server(int port) throws IOException{
-		serverSocket = new ServerSocket(port);
-		serverSocket.setSoTimeout(10000);
+		Socket socket = new Socket();
+		socket.setSoTimeout(10000);
 	}	
-	
+	public static void propagateUpdate() throws IOException, OutOfMemoryError{
+		//TODO: Implement Pushing features
+	}
 	public  static void acceptUpdate() throws IOException, OutOfMemoryError{
 		//TODO: properly read in commands from propagate
 		try {
 			
-			Socket serversocket = new Socket("localhost", 12345);
-			InputStream is = serversocket.getInputStream();
-			OutputStream os = serversocket.getOutputStream();
+			InputStream is = socket.getInputStream();
+			OutputStream os = socket.getOutputStream();
 			
 			while(true) {
 				
