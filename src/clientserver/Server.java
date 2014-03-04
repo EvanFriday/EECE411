@@ -48,7 +48,7 @@ public class Server implements Remote {
 	public static void propagateUpdate() throws IOException, OutOfMemoryError{
 		//TODO: Implement Pushing features
 	}
-	public  static void acceptUpdate() throws IOException, OutOfMemoryError{
+	public static synchronized void acceptUpdate() throws IOException, OutOfMemoryError{
 		//TODO: properly read in commands from propagate
 		try {
 			Socket connection = serverSocket.accept();
@@ -57,7 +57,7 @@ public class Server implements Remote {
 			
 			while(true) {
 				
-				is.read(command, 1, 0);
+				is.read(command, 0, 1);
 				
 				if(command[0] == 0x01) // Put operation - includes value
 				{
