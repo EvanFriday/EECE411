@@ -19,7 +19,8 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
-import org.rev6.scf.SshException;
+
+//changes
 
 
 public class Server implements Remote {
