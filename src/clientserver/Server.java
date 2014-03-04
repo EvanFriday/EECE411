@@ -1,5 +1,5 @@
 /*
- * Author: Cameron Johnston
+ * Authors: Evan Friday, Cameron Johnston, Kevin Petersen
  * Date: 2014-03-02
  * EECE 411 Project Phase 2 Server:
  * 
@@ -28,7 +28,13 @@ import java.util.ArrayList;
 
 public class Server implements Remote {
 	
+	final static int WAITING_FOR_CONNECTION = 0;
+	final static int ACCEPTING_DATA = 1;
+	final static int PROPAGATING_DATA = 2;
+	
+	
 	public static int i;
+	public static int STATUS = WAITING_FOR_CONNECTION;
 	public static boolean matchingKeyFound = false;
 	public static boolean isPutOperation = false;
 	public static byte[] command = new byte[1];
@@ -36,10 +42,43 @@ public class Server implements Remote {
 	public static byte[] value = new byte[1024];
 	public static byte[] error_code = new byte[1];
 	public static byte[] return_value = new byte[1024];
+
 	
 	public static ArrayList<KeyValuePair> KVStore;
 	
 	public static void main(String argv[]) throws IOException, OutOfMemoryError{
+		//TODO: wait command for accept
+		
+		while(true){
+				switch(STATUS){
+				case WAITING_FOR_CONNECTION:
+					//wait for connection
+					//connection ready ->
+					STATUS=ACCEPTING_DATA;
+					
+				case ACCEPTING_DATA:
+					//read in new data
+					acceptUpdate();
+					STATUS=PROPAGATING_DATA;
+					
+				case PROPAGATING_DATA:
+					//Connect to other nodes, and send data.
+					propagateUpdate();
+					STATUS=WAITING_FOR_CONNECTION;
+					
+				default:
+					System.out.println("somehow we are no in the state machine...\n");
+				}
+		}
+		
+		
+	}
+	public static void propagateUpdate() throws IOException, OutOfMemoryError{
+		//TODO: Implement Pushing features
+	}
+	
+	public  static void acceptUpdate() throws IOException, OutOfMemoryError{
+		//TODO: properly read in commands from propagate
 		try {
 			
 			Socket serversocket = new Socket("localhost", 12345);
@@ -147,6 +186,7 @@ public class Server implements Remote {
 		} catch (OutOfMemoryError e) {
 			e.printStackTrace();
 			error_code[0] = 0x02; // Out of space
-		}		
+		}
 	}
+	
 }
