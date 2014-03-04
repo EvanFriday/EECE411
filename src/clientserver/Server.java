@@ -14,10 +14,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import clientserver.Client;
 
 
 public class Server implements Remote {
@@ -26,6 +28,8 @@ public class Server implements Remote {
 	final static int ACCEPTING_DATA = 1;
 	final static int PROPAGATING_DATA = 2;
 	
+	private ServerSocket serverSocket;
+	private Client clientSocket;
 	
 	public static int i;
 	public static int STATUS = WAITING_FOR_CONNECTION;
@@ -57,7 +61,7 @@ public class Server implements Remote {
 					
 				case PROPAGATING_DATA:
 					//Connect to other nodes, and send data.
-					propagateUpdate();
+					Client.propagateUpdate();
 					STATUS=WAITING_FOR_CONNECTION;
 					
 				default:
@@ -67,9 +71,12 @@ public class Server implements Remote {
 		
 		
 	}
-	public static void propagateUpdate() throws IOException, OutOfMemoryError{
-		//TODO: Implement Pushing features
-	}
+
+	
+	public Server(int port) throws IOException{
+		serverSocket = new ServerSocket(port);
+		serverSocket.setSoTimeout(10000);
+	}	
 	
 	public  static void acceptUpdate() throws IOException, OutOfMemoryError{
 		//TODO: properly read in commands from propagate
