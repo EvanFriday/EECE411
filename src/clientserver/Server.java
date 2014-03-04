@@ -21,6 +21,12 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 
 
+<<<<<<< HEAD
+
+//changes
+
+=======
+>>>>>>> 7b163c5fd5c14d7be1cbf02dd42311d8c92c8424
 
 public class Server implements Remote {
 	
@@ -62,8 +68,8 @@ public class Server implements Remote {
 				if(command[0] == 0x01) // Put operation - includes value
 				{
 					isPutOperation = true;
-					is.read(key, 32, 1);
-					is.read(value, 1024, 33);
+					is.read(key, 1, 32);
+					is.read(value, 33, 1024);
 					for(i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
 					{
 						KVStore.get(i);
@@ -94,7 +100,7 @@ public class Server implements Remote {
 				
 				else if(command[0] == 0x02) // Get operation
 				{
-					is.read(key, 32, 1);
+					is.read(key, 1, 32);
 					for(i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
 					{
 						KVStore.get(i);
@@ -114,7 +120,7 @@ public class Server implements Remote {
 				
 				else if(command[0] == 0x03) // Remove operation
 				{
-					is.read(key, 32, 1);
+					is.read(key, 1, 32);
 					for(i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
 					{
 						KVStore.get(i);
