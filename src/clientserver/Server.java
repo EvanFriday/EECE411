@@ -19,9 +19,12 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 
+<<<<<<< HEAD
 
 //changes
 
+=======
+>>>>>>> 7b163c5fd5c14d7be1cbf02dd42311d8c92c8424
 
 public class Server implements Remote {
 	
