@@ -19,14 +19,14 @@ import java.net.Socket;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import clientserver.Client;
+
 
 
 public class Server implements Remote {
 	
 	
 	
-	private static Socket socket;
+	private static ServerSocket serverSocket;
 	
 	public static int i;
 	
@@ -42,8 +42,8 @@ public class Server implements Remote {
 	public static ArrayList<KeyValuePair> KVStore;
 	
 	public Server(int port) throws IOException{
-		Socket socket = new Socket();
-		socket.setSoTimeout(10000);
+		serverSocket = new ServerSocket(port);
+		serverSocket.setSoTimeout(10000);
 	}	
 	public static void propagateUpdate() throws IOException, OutOfMemoryError{
 		//TODO: Implement Pushing features
@@ -51,9 +51,9 @@ public class Server implements Remote {
 	public  static void acceptUpdate() throws IOException, OutOfMemoryError{
 		//TODO: properly read in commands from propagate
 		try {
-			
-			InputStream is = socket.getInputStream();
-			OutputStream os = socket.getOutputStream();
+			Socket connection = serverSocket.accept();
+			InputStream is = connection.getInputStream();
+			OutputStream os = connection.getOutputStream();
 			
 			while(true) {
 				
