@@ -104,6 +104,8 @@ public class Server implements Remote {
 			Socket connection = new Socket(address,port);
 			InputStream is = connection.getInputStream();  //READ ERROR CODES INTO IS!!!
 			OutputStream os = connection.getOutputStream();
+			byte[] returnedErrorCode = new byte[1];
+			byte[] returnedValue = new byte[1024];
 			
 			// Write data to OutputStream about each KeyValuePair
 			for(int j=0; j<KVStore.size(); j++) {
@@ -121,6 +123,25 @@ public class Server implements Remote {
 			}
 			
 			// Read error codes
+			is.read(returnedErrorCode, 0, 1);
+			
+			switch(returnedErrorCode[0]) {
+			case 0x00: // Success
+				System.out.println("Operation successful.");
+			case 0x01: // Inexistent key
+				System.out.println("Inexistent key.");
+			case 0x02: // Out of space
+				System.out.println("Out of space.");
+			case 0x03:
+				System.out.println("System overload.");
+			case 0x04:
+				System.out.println("Internal KVStore failure.");
+			case 0x05:
+				System.out.println("Unrecognized command.");
+			default:
+				System.out.println("Unknown error.");
+			}
+			
 		connection.close();
 		
 	}
