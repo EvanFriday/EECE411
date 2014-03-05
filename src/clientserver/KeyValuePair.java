@@ -12,8 +12,11 @@ public class KeyValuePair {
 		value = v;
 	}
 	KeyValuePair(){
-		key = null;
-		value = null;
+		int i;
+		for(i=0; i<32; i++)
+			key[i] = 0;
+		for(i=0; i<1024; i++)
+			value[i] = 0;
 	}
 	
 	// Get and Set methods
