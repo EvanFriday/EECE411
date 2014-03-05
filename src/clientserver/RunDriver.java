@@ -12,7 +12,7 @@ public class RunDriver {
 	final static int port = 9999;
 	
 	public static int STATUS = WAITING_FOR_CONNECTION;
-	public static int address1,address2,address3;
+	public static String address1,address2,address3;
 	
 	public static void main(String[] args) throws OutOfMemoryError, IOException {
 		while(true){
@@ -33,21 +33,45 @@ public class RunDriver {
 				Thread t1 = new Thread(new Runnable()
 				{
 					public void run(){
-						Server.propagateUpdate(address1, port);
+						try {
+							Server.propagateUpdate(address1, port);
+						} catch (OutOfMemoryError e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
 				
 				});
 				Thread t2 = new Thread(new Runnable()
 				{
 					public void run(){
-						Server.propagateUpdate(address2, port);
+						try {
+							Server.propagateUpdate(address2, port);
+						} catch (OutOfMemoryError e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
 				
 				});
 				Thread t3 = new Thread(new Runnable()
 				{
 					public void run(){
-						Server.propagateUpdate(address3, port);
+						try {
+							Server.propagateUpdate(address3, port);
+						} catch (OutOfMemoryError e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
 				
 				});
