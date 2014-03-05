@@ -2,8 +2,8 @@ package clientserver;
 
 public class KeyValuePair {
 
-	public static byte[] key = new byte[32];
-	public static byte[] value = new byte[1024];
+	public byte[] key = new byte[32];
+	public byte[] value = new byte[1024];
 	
 	// Constructor
 	KeyValuePair(byte[] k, byte[] v)
@@ -11,18 +11,22 @@ public class KeyValuePair {
 		key = k;
 		value = v;
 	}
+	KeyValuePair(){
+		key = null;
+		value = null;
+	}
 	
 	// Get and Set methods
-	public static byte[] getKey() {
-		return key;
+	public byte[] getKey() {
+		return this.key;
 	}
-	public static void setKey(byte[] key) {
-		KeyValuePair.key = key;
+	public void setKey(byte[] key) {
+		this.key = key;
 	}
-	public static byte[] getValue() {
-		return value;
+	public byte[] getValue() {
+		return this.value;
 	}
-	public static void setValue(byte[] value) {
-		KeyValuePair.value = value;
+	public void setValue(byte[] value) {
+		this.value = value;
 	}	
 }

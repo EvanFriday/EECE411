@@ -22,13 +22,6 @@ import java.rmi.server.RemoteServer;
 import java.util.ArrayList;
 
 
-<<<<<<< HEAD
-
-//changes
-
-=======
->>>>>>> 7b163c5fd5c14d7be1cbf02dd42311d8c92c8424
-
 public class Server implements Remote {
 	
 	
@@ -47,18 +40,15 @@ public class Server implements Remote {
 
 	
 	public static ArrayList<KeyValuePair> KVStore;
-	public static ArrayList<HostPortPair> RemoteServers;
 	
 	public Server(int port) throws IOException{
 		serverSocket = new ServerSocket(port);
 		serverSocket.setSoTimeout(10000);
-	}	
-	public static void propagateUpdate() throws IOException, OutOfMemoryError{
+	}
+	public static void propagateUpdate(String address, int port) throws IOException, OutOfMemoryError{
 		//TODO: Implement Pushing features
-		
-		// Push data to all other nodes
-		for(int i = 0; i<RemoteServers.size(); i++) {
-			Socket connection = new Socket(RemoteServers.get(i).host, RemoteServers.get(i).port);
+			
+			Socket connection = new Socket(address,port);
 			InputStream is = connection.getInputStream();
 			OutputStream os = connection.getOutputStream();
 			
@@ -68,15 +58,15 @@ public class Server implements Remote {
 				byte[] b = new byte[1+32+1024];
 				b[0] = 0x01; // Put command
 				for(int k=0; k<32; k++) { // Copy "key" value into b
-					b[k+1] = KeyValuePair.key[k];
+					b[k+1] = KVP.key[k];
 				}
 				for(int k=0; k<1024; k++) { // Copy "value" value into b
-					b[k+33] = KeyValuePair.value[k];
+					b[k+33] = KVP.value[k];
 				}
 				os.write(b);
 				os.flush();
 			}
-		}
+		connection.close();
 		
 	}
 	public static synchronized void acceptUpdate() throws IOException, OutOfMemoryError{
@@ -85,86 +75,85 @@ public class Server implements Remote {
 			Socket connection = serverSocket.accept();
 			InputStream is = connection.getInputStream();
 			OutputStream os = connection.getOutputStream();
+			KeyValuePair localKey = new KeyValuePair();
 			
 			while(true) {
-				
+				//Read values
 				is.read(command, 0, 1);
+				is.read(key, 1, 32);
+				is.read(value, 33, 1024);
 				
-				if(command[0] == 0x01) // Put operation - includes value
-				{
-					isPutOperation = true;
-					is.read(key, 1, 32);
-					is.read(value, 33, 1024);
-					for(i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
-					{
-						KVStore.get(i);
-						if(KeyValuePair.getKey() == key) // Match found
-						{
-							KeyValuePair.setValue(value);
-							matchingKeyFound = true;
-							break;
-						}
-					}
-					if(matchingKeyFound)
-						matchingKeyFound = false;
-					else // Only add a new entry if there was none already with matching key
-					{
-						if(KVStore.size() < 40000)
-						{
-							KVStore.add(new KeyValuePair(key, value));
-							error_code[0] = 0x00;
-						}
-						else // Out of space
-						{
-							error_code[0] = 0x02;
-						}
-					}
+				switch((int)command[0]){
+				case 0x01: //put operation
+							isPutOperation = true;
 						
-					error_code[0] = 0x00;
-				}
-				
-				else if(command[0] == 0x02) // Get operation
-				{
-					is.read(key, 1, 32);
-					for(i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
-					{
-						KVStore.get(i);
-						if(KeyValuePair.getKey() == key) // Match found
-						{
-							return_value = KeyValuePair.getValue();
+							for(i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
+							{
+								localKey=KVStore.get(i);
+								if(localKey.getKey() == key) // Match found
+								{
+									localKey.setValue(value);
+									matchingKeyFound = true;
+									break;
+								}
+							}
+							if(matchingKeyFound)
+								matchingKeyFound = false;
+							else // Only add a new entry if there was none already with matching key
+							{
+								if(KVStore.size() < 40000)
+								{
+									KVStore.add(new KeyValuePair(key, value));
+									error_code[0] = 0x00;
+								}
+								else // Out of space
+								{
+									error_code[0] = 0x02;
+								}
+							}
+								
 							error_code[0] = 0x00;
-							matchingKeyFound = true;
 							break;
-						}
-					}
-					if(matchingKeyFound)
-						matchingKeyFound = false;
-					else
-						error_code[0] = 0x01;
-				}
-				
-				else if(command[0] == 0x03) // Remove operation
-				{
-					is.read(key, 1, 32);
-					for(i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
-					{
-						KVStore.get(i);
-						if(KeyValuePair.getKey() == key) // Match found
-						{
-							KVStore.remove(i);
-							error_code[0] = 0x00;
-							matchingKeyFound = true;
+				case 0x02: // search operation
+
+							for(i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
+							{
+								localKey = KVStore.get(i);
+								if(localKey.getKey() == key) // Match found
+								{
+									return_value = localKey.getValue();
+									error_code[0] = 0x00;
+									matchingKeyFound = true;
+									break;
+								}
+							}
+							if(matchingKeyFound)
+								matchingKeyFound = false;
+							else
+								error_code[0] = 0x01;
 							break;
-						}
-					}
-					if(matchingKeyFound)
-						matchingKeyFound = false;
-					else
-						error_code[0] = 0x01;
+				case 0x03: //remove operation
+							for(i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
+							{
+								localKey=KVStore.get(i);
+								if(localKey.getKey() == key) // Match found
+								{
+									KVStore.remove(i);
+									error_code[0] = 0x00;
+									matchingKeyFound = true;
+									break;
+								}
+							}
+							if(matchingKeyFound)
+								matchingKeyFound = false;
+							else
+								error_code[0] = 0x01;
+							break;
+				default:
+							//Command wasn't anything we wanted... derp!
+							error_code[0] = 0x05;
+							break;
 				}
-				
-				else // Invalid command
-					error_code[0] = 0x05;
 				
 				// Send result
 				if(isPutOperation)
