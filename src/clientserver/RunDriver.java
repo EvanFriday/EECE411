@@ -14,11 +14,15 @@ public class RunDriver {
 	
 	public static void main(String[] args) throws OutOfMemoryError, IOException{
 		Server server = new Server(9999);
+		try{
+		 MODE = (Integer) Integer.parseInt(args[0]);
+		}
+		catch(ArrayIndexOutOfBoundsException e){
+			MODE = 0;
+		}
 		
-		MODE = (Integer) Integer.parseInt(args[0]);
 		if(MODE != RECEIVE_ONLY && MODE != GOSSIP){
-			System.err.print("You have specified an invalid mode");
-			
+			System.err.print("You have specified an invalid mode");	
 		}
 		
 		while(true){
@@ -26,7 +30,7 @@ public class RunDriver {
 			case ACCEPTING_DATA:
 				//read in new data
 
-				System.out.print("WAITING FOR INCOMING UPDATE");
+				System.out.print("WAITING FOR INCOMING UPDATE\n");
 				server.acceptUpdate();
 				//Depending on mode specified, either continuously accept data, or propagate as well
 				switch(MODE){
