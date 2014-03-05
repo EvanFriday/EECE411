@@ -31,7 +31,7 @@ public class Server implements Remote {
 	public static int i;
 	
 	public static boolean matchingKeyFound = false;
-	public static boolean isPutOperation = false;
+	public static boolean isGetOperation = false;
 	public static byte[] command = new byte[1];
 	public static byte[] key = new byte[32];
 	public static byte[] value = new byte[1024];
@@ -85,7 +85,6 @@ public class Server implements Remote {
 				
 				switch((int)command[0]){
 				case 0x01: //put operation
-							isPutOperation = true;
 						
 							for(i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
 							{
@@ -116,6 +115,7 @@ public class Server implements Remote {
 							break;
 				case 0x02: // search operation
 
+					isGetOperation = true;
 							for(i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
 							{
 								localKey = KVStore.get(i);
@@ -156,11 +156,11 @@ public class Server implements Remote {
 				}
 				
 				// Send result
-				if(isPutOperation)
+				if(isGetOperation)
 				{
 					os.write(error_code);
 					os.write(return_value);
-					isPutOperation = false;
+					isGetOperation = false;
 				}
 				else
 					os.write(error_code);
