@@ -45,11 +45,11 @@ public class Server implements Remote {
 		serverSocket = new ServerSocket(port);
 		serverSocket.setSoTimeout(10000);
 	}
-	public static void propagateUpdate(String address, int port) throws IOException, OutOfMemoryError{
+	public static synchronized void propagateUpdate(String address, int port) throws IOException, OutOfMemoryError{
 		//TODO: Implement Pushing features
 			
 			Socket connection = new Socket(address,port);
-			InputStream is = connection.getInputStream();
+			InputStream is = connection.getInputStream();  //READ ERROR CODES INTO IS!!!
 			OutputStream os = connection.getOutputStream();
 			
 			// Write data to OutputStream about each KeyValuePair
