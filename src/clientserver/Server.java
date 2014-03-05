@@ -18,7 +18,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
-import java.rmi.server.RemoteServer;
 import java.util.ArrayList;
 
 
@@ -66,6 +65,8 @@ public class Server implements Remote {
 				os.write(b);
 				os.flush();
 			}
+			
+			// Read error codes
 		connection.close();
 		
 	}
