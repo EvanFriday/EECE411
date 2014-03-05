@@ -10,6 +10,8 @@
 
 package clientserver;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -96,10 +98,11 @@ public class Server implements Remote {
 		t1.start();
 		t2.start();
 		t3.start();
+		
+		
 	}
 	
 	public static synchronized void propagateUpdate(String address, int port) throws IOException, OutOfMemoryError{
-		//TODO: Implement Pushing features
 			
 			Socket connection = new Socket(address,port);
 			InputStream is = connection.getInputStream();
@@ -254,7 +257,14 @@ public class Server implements Remote {
 			error_code[0] = 0x02; // Out of space
 		}
 	}
-	
+	public static void fileRead(String file_location) throws IOException{
+		//TODO: read the IP list file dawg.
+		FileReader file = new FileReader(file_location);
+		//TODO: pick three random files to propagate to
+		
+		file.close();
+		
+	}
 	
 	
 }
