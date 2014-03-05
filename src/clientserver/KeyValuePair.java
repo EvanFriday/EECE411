@@ -5,7 +5,6 @@ public class KeyValuePair {
 	public static byte[] key = new byte[32];
 	public static byte[] value = new byte[1024];
 	
-	
 	// Constructor
 	KeyValuePair(byte[] k, byte[] v)
 	{
@@ -25,10 +24,5 @@ public class KeyValuePair {
 	}
 	public static void setValue(byte[] value) {
 		KeyValuePair.value = value;
-	}
-	
-	// Other methods
-	
-	
-	
+	}	
 }
