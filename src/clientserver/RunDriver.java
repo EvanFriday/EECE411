@@ -6,22 +6,16 @@ import clientserver.Server;
 
 public class RunDriver {
 	
-	final static int WAITING_FOR_CONNECTION = 0;
-	final static int ACCEPTING_DATA = 1;
-	final static int PROPAGATING_DATA = 2;
-	final static int port = 9999;
+	final static int ACCEPTING_DATA = 0;
+	final static int PROPAGATING_DATA = 1;
 	
-	public static int STATUS = WAITING_FOR_CONNECTION;
-	public static String address1,address2,address3;
+	
+	public static int STATUS = ACCEPTING_DATA;
+	
 	
 	public static void main(String[] args) throws OutOfMemoryError, IOException {
 		while(true){
 			switch(STATUS){
-			case WAITING_FOR_CONNECTION:
-				//wait for connection
-				//connection ready ->
-				STATUS=ACCEPTING_DATA;
-				break;
 			case ACCEPTING_DATA:
 				//read in new data
 				Server.acceptUpdate();
@@ -29,56 +23,8 @@ public class RunDriver {
 				break;
 			case PROPAGATING_DATA:
 				//Connect to other nodes, and send data.
-				
-				Thread t1 = new Thread(new Runnable()
-				{
-					public void run(){
-						try {
-							Server.propagateUpdate(address1, port);
-						} catch (OutOfMemoryError e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-				
-				});
-				Thread t2 = new Thread(new Runnable()
-				{
-					public void run(){
-						try {
-							Server.propagateUpdate(address2, port);
-						} catch (OutOfMemoryError e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-				
-				});
-				Thread t3 = new Thread(new Runnable()
-				{
-					public void run(){
-						try {
-							Server.propagateUpdate(address3, port);
-						} catch (OutOfMemoryError e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-				
-				});
-				t1.start();
-				t2.start();
-				t3.start();
-				STATUS=WAITING_FOR_CONNECTION;
+				Server.propagate();
+				STATUS=ACCEPTING_DATA;
 				break;
 			default:
 				System.out.println("somehow we are no in the state machine...\n");

@@ -36,14 +36,68 @@ public class Server implements Remote {
 	public static byte[] value = new byte[1024];
 	public static byte[] error_code = new byte[1];
 	public static byte[] return_value = new byte[1024];
-
-	
+	final static int port = 9999;
+	public static String address1,address2,address3;
 	public static ArrayList<KeyValuePair> KVStore;
+	public static ArrayList<String> addressList;
 	
 	public Server(int port) throws IOException{
 		serverSocket = new ServerSocket(port);
 		serverSocket.setSoTimeout(10000);
 	}
+	public static void propagate(){
+		//TODO: CREATE A RANDOM IP PICKER AFTER CALLING FILE READ.
+		// Create three threads, to propagate to three nodes
+		Thread t1 = new Thread(new Runnable()
+		{
+			public void run(){
+				try {
+					Server.propagateUpdate(address1, port);
+				} catch (OutOfMemoryError e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		
+		});
+		Thread t2 = new Thread(new Runnable()
+		{
+			public void run(){
+				try {
+					Server.propagateUpdate(address2, port);
+				} catch (OutOfMemoryError e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		
+		});
+		Thread t3 = new Thread(new Runnable()
+		{
+			public void run(){
+				try {
+					Server.propagateUpdate(address3, port);
+				} catch (OutOfMemoryError e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		
+		});
+		t1.start();
+		t2.start();
+		t3.start();
+	}
+	
 	public static synchronized void propagateUpdate(String address, int port) throws IOException, OutOfMemoryError{
 		//TODO: Implement Pushing features
 			
@@ -179,5 +233,7 @@ public class Server implements Remote {
 			error_code[0] = 0x02; // Out of space
 		}
 	}
+	
+	
 	
 }
