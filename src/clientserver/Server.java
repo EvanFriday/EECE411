@@ -105,7 +105,7 @@ public class Server implements Remote {
 			InputStream is = connection.getInputStream();  //READ ERROR CODES INTO IS!!!
 			OutputStream os = connection.getOutputStream();
 			byte[] returnedErrorCode = new byte[1];
-			byte[] returnedValue = new byte[1024];
+			// byte[] returnedValue = new byte[1024];
 			
 			// Write data to OutputStream about each KeyValuePair
 			for(int j=0; j<KVStore.size(); j++) {
