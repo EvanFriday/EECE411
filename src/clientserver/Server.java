@@ -56,6 +56,27 @@ public class Server implements Remote {
 	public static void propagateUpdate() throws IOException, OutOfMemoryError{
 		//TODO: Implement Pushing features
 		
+		// Push data to all other nodes
+		for(int i = 0; i<RemoteServers.size(); i++) {
+			Socket connection = new Socket(RemoteServers.get(i).host, RemoteServers.get(i).port);
+			InputStream is = connection.getInputStream();
+			OutputStream os = connection.getOutputStream();
+			
+			// Write data to OutputStream about each KeyValuePair
+			for(int j=0; j<KVStore.size(); j++) {
+				KeyValuePair KVP = KVStore.get(j);
+				byte[] b = new byte[1+32+1024];
+				b[0] = 0x01; // Put command
+				for(int k=0; k<32; k++) { // Copy "key" value into b
+					b[k+1] = KeyValuePair.key[k];
+				}
+				for(int k=0; k<1024; k++) { // Copy "value" value into b
+					b[k+33] = KeyValuePair.value[k];
+				}
+				os.write(b);
+				os.flush();
+			}
+		}
 		
 	}
 	public  static void acceptUpdate() throws IOException, OutOfMemoryError{
