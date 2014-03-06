@@ -10,10 +10,8 @@ public class Propagate implements Runnable{
 		this.address = address;
 		this.port = port;
 		t = new Thread(this, threadname);
-		t.start();
-
 	}
-	
+
 	public void run() {
 		try {
 			Server.propagateUpdate(address, port);
@@ -24,6 +22,10 @@ public class Propagate implements Runnable{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public void propagate(){
+		t.start();
 	}
 
 	

@@ -53,12 +53,13 @@ public class Server implements Remote {
 	public void propagate(){
 		//TODO: CREATE A RANDOM IP PICKER AFTER CALLING FILE READ.
 		address1 = address2 = address3 = "localhost";
-		
-		
 		// Create three threads, to propagate to three nodes
 		Propagate p1 = new Propagate(address1, port, "First node");
 		Propagate p2 = new Propagate(address2, port, "Second node");
 		Propagate p3 = new Propagate(address3, port, "Third node");
+		p1.propagate();
+		p2.propagate();
+		p3.propagate();
 	}
 	
 	public synchronized static void propagateUpdate(String address, int port) throws IOException, OutOfMemoryError {
