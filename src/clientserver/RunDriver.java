@@ -30,10 +30,10 @@ public class RunDriver {
 				//Depending on mode specified, either continuously accept data, or propagate as well
 				switch(MODE){
 				case RECEIVE_ONLY: 	
-					STATUS=PROPAGATING_DATA;
+					STATUS=ACCEPTING_DATA;
 					break;
 				case GOSSIP:
-					STATUS=ACCEPTING_DATA;
+					STATUS=PROPAGATING_DATA;
 					break;
 				default: 			
 				}
