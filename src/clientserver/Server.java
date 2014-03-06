@@ -31,38 +31,40 @@ public class Server implements Remote {
 	
 	public static int i;
 	
-	public static boolean matchingKeyFound = false;
-	public static boolean isGetOperation = false;
-	public static byte[] command = new byte[1];
-	public static byte[] key = new byte[32];
-	public static byte[] value = new byte[1024];
-	public static byte[] error_code = new byte[1];
-	public static byte[] return_value = new byte[1024];
+	private boolean matchingKeyFound = false;
+	private boolean isGetOperation = false;
+	private byte[] command = new byte[1];
+	private byte[] key = new byte[32];
+	private byte[] value = new byte[1024];
+	private byte[] error_code = new byte[1];
+	private byte[] return_value = new byte[1024];
 	
 	public static ArrayList<KeyValuePair> KVStore;
 	public static ArrayList<String> addressList;
-	public String address1,address2,address3;
-	public final int port = 9999;
+	private String address1,address2,address3;
+	private int port = 9999;
 	
 	
 	public Server(int port) throws IOException{
+		this.port = port;
 		serverSocket = new ServerSocket(port);
 		serverSocket.setSoTimeout(10000);
+		
 	}
 	
 	public void propagate(){
 		//TODO: CREATE A RANDOM IP PICKER AFTER CALLING FILE READ.
 		address1 = address2 = address3 = "localhost";
 		// Create three threads, to propagate to three nodes
-		Propagate p1 = new Propagate(address1, port, "First node");
-		Propagate p2 = new Propagate(address2, port, "Second node");
-		Propagate p3 = new Propagate(address3, port, "Third node");
+		Propagate p1 = new Propagate(address1, port, "First node" , this);
+		Propagate p2 = new Propagate(address2, port, "Second node", this);
+		Propagate p3 = new Propagate(address3, port, "Third node", this);
 		p1.propagate();
 		p2.propagate();
 		p3.propagate();
 	}
 	
-	public synchronized static void propagateUpdate(String address, int port) throws IOException, OutOfMemoryError {
+	public synchronized void propagateUpdate(String address, int port) throws IOException, OutOfMemoryError {
 			
 			Socket connection = new Socket(address,port);
 			InputStream is = connection.getInputStream();
@@ -220,7 +222,7 @@ public class Server implements Remote {
 			e.printStackTrace();
 		}
 	}
-	public static void fileRead(String file_location) throws IOException{
+	public void fileRead(String file_location) throws IOException{
 		//TODO: read the IP list file dawg.
 		FileReader file = new FileReader(file_location);
 		//TODO: pick three random files to propagate to
