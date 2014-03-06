@@ -159,7 +159,8 @@ public class Server implements Remote {
 				//Read values
 				is.read(command, 0, 1);
 				is.read(key, 1, 32);
-				is.read(value, 33, 1024);
+				if(command[0] == 0x01) // There is only a value input if it's a put operation
+					is.read(value, 33, 1024);
 				
 				switch((int)command[0]){
 				case 0x01: //put operation
