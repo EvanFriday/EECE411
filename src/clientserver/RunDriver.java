@@ -14,7 +14,7 @@ public class RunDriver {
 	
 	public static void main(String[] args) throws OutOfMemoryError, IOException{
 		MODE = (Integer) Integer.parseInt(args[0]);
-		if(MODE != RECEIVE_ONLY || MODE != GOSSIP){
+		if(MODE != RECEIVE_ONLY && MODE != GOSSIP){
 			System.err.print("You have specified an invalid mode");
 			
 		}
