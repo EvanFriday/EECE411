@@ -17,6 +17,7 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ public class Server implements Remote {
 	
 	
 	
-	private static ServerSocket serverSocket;
+	private ServerSocket serverSocket;
 	
 	public static int i;
 	
@@ -37,71 +38,30 @@ public class Server implements Remote {
 	public static byte[] value = new byte[1024];
 	public static byte[] error_code = new byte[1];
 	public static byte[] return_value = new byte[1024];
-	final static int port = 9999;
-	public static String address1,address2,address3;
+	
 	public static ArrayList<KeyValuePair> KVStore;
 	public static ArrayList<String> addressList;
+	public String address1,address2,address3;
+	public final int port = 9999;
+	
 	
 	public Server(int port) throws IOException{
 		serverSocket = new ServerSocket(port);
 		serverSocket.setSoTimeout(10000);
 	}
-	public static void propagate(){
+	
+	public void propagate(){
 		//TODO: CREATE A RANDOM IP PICKER AFTER CALLING FILE READ.
+		address1 = address2 = address3 = "localhost";
+		
+		
 		// Create three threads, to propagate to three nodes
-		Thread t1 = new Thread(new Runnable()
-		{
-			public void run(){
-				try {
-					Server.propagateUpdate(address1, port);
-				} catch (OutOfMemoryError e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		
-		});
-		Thread t2 = new Thread(new Runnable()
-		{
-			public void run(){
-				try {
-					Server.propagateUpdate(address2, port);
-				} catch (OutOfMemoryError e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		
-		});
-		Thread t3 = new Thread(new Runnable()
-		{
-			public void run(){
-				try {
-					Server.propagateUpdate(address3, port);
-				} catch (OutOfMemoryError e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		
-		});
-		t1.start();
-		t2.start();
-		t3.start();
-		
-		
+		Propagate p1 = new Propagate(address1, port, "First node");
+		Propagate p2 = new Propagate(address2, port, "Second node");
+		Propagate p3 = new Propagate(address3, port, "Third node");
 	}
 	
-	public static synchronized void propagateUpdate(String address, int port) throws IOException, OutOfMemoryError{
+	public synchronized static void propagateUpdate(String address, int port) throws IOException, OutOfMemoryError {
 			
 			Socket connection = new Socket(address,port);
 			InputStream is = connection.getInputStream();
@@ -147,7 +107,7 @@ public class Server implements Remote {
 		connection.close();
 		
 	}
-	public static synchronized void acceptUpdate() throws IOException, OutOfMemoryError{
+	public synchronized void acceptUpdate() throws IOException, OutOfMemoryError, SocketTimeoutException{
 		//TODO: properly read in commands from propagate
 		try {
 			Socket connection = serverSocket.accept();
@@ -255,6 +215,8 @@ public class Server implements Remote {
 		} catch (OutOfMemoryError e) {
 			e.printStackTrace();
 			error_code[0] = 0x02; // Out of space
+		} catch (SocketTimeoutException e){
+			e.printStackTrace();
 		}
 	}
 	public static void fileRead(String file_location) throws IOException{

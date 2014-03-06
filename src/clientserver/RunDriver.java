@@ -8,11 +8,13 @@ public class RunDriver {
 	final static int PROPAGATING_DATA = 1;
 	final static int RECEIVE_ONLY = 0;
 	final static int GOSSIP = 1;
-	
+
 	public static int STATUS = ACCEPTING_DATA;
 	public static int MODE;
 	
 	public static void main(String[] args) throws OutOfMemoryError, IOException{
+		Server server = new Server(9999);
+		
 		MODE = (Integer) Integer.parseInt(args[0]);
 		if(MODE != RECEIVE_ONLY && MODE != GOSSIP){
 			System.err.print("You have specified an invalid mode");
@@ -23,8 +25,9 @@ public class RunDriver {
 			switch(STATUS){
 			case ACCEPTING_DATA:
 				//read in new data
-				Server.acceptUpdate();
-				
+
+				System.out.print("WAITING FOR INCOMING UPDATE");
+				server.acceptUpdate();
 				//Depending on mode specified, either continuously accept data, or propagate as well
 				switch(MODE){
 				case RECEIVE_ONLY: 	
@@ -39,7 +42,7 @@ public class RunDriver {
 				break;
 			case PROPAGATING_DATA:
 				//Connect to other nodes, and send data.
-				Server.propagate();
+				server.propagate();
 				STATUS=ACCEPTING_DATA;
 				break;
 			default:
@@ -47,5 +50,7 @@ public class RunDriver {
 			}
 		}
 	}
+	
+	
 
 }
