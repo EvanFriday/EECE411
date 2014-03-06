@@ -36,8 +36,9 @@ public class Server implements Remote {
 	private byte[] error_code = new byte[1];
 	private byte[] return_value = new byte[1024];
 	
-	public static ArrayList<KeyValuePair> KVStore;
-	public static ArrayList<String> addressList;
+	public ArrayList<KeyValuePair> KVStore;
+	public ArrayList<String> addressList;
+	public  ArrayList<String> propagateAddressList;
 	private String address1,address2,address3;
 	private int port = 9999;
 	
@@ -46,11 +47,13 @@ public class Server implements Remote {
 		this.port = port;
 		serverSocket = new ServerSocket(port);
 		serverSocket.setSoTimeout(10000);
-		
+		KVStore = new ArrayList<KeyValuePair>();
+		addressList = new ArrayList<String>();
+		propagateAddressList = new ArrayList<>();		
 	}
 	
 	public void propagate(){
-		//TODO: CREATE A RANDOM IP PICKER AFTER CALLING FILE READ.
+		//TODO:  Call selectAddresses() to get addresses to propagate to.
 		address1 = address2 = address3 = "localhost";
 		// Create three threads, to propagate to three nodes
 		Propagate p1 = new Propagate(address1, "First node" , this);
@@ -135,8 +138,10 @@ public class Server implements Remote {
 									break;
 								}
 							}
-							if(matchingKeyFound)
+							if(matchingKeyFound){
 								matchingKeyFound = false;
+								error_code[0] = 0x00;
+							}
 							else // Only add a new entry if there was none already with matching key
 							{
 								if(KVStore.size() < 40000)
@@ -150,7 +155,7 @@ public class Server implements Remote {
 								}
 							}
 								
-							error_code[0] = 0x00;
+							
 							break;
 				case 0x02: // search operation
 
@@ -220,12 +225,14 @@ public class Server implements Remote {
 		}
 	}
 	public void fileRead(String file_location) throws IOException{
-		//TODO: read the IP list file dawg.
 		FileReader file = new FileReader(file_location);
-		//TODO: pick three random files to propagate to
+		//TODO: Populate addressList with IP values
 		
 		file.close();
-		
+	}
+	
+	public void selectAddresses(){
+		//TODO: Randomly select a number of items from addressList and populate propagateAddressList with them
 	}
 	
 	

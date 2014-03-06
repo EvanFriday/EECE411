@@ -14,6 +14,10 @@ public class RunDriver {
 	
 	public static void main(String[] args) throws OutOfMemoryError, IOException{
 		Server server = new Server(9999);
+		
+		//TODO: Call fileReader(), to populate addressList
+		//server.fileReader(file_name);
+		
 		try{
 		 MODE = (Integer) Integer.parseInt(args[0]);
 		}
