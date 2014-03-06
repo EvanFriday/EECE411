@@ -3,13 +3,12 @@ package clientserver;
 import java.io.IOException;
 
 public class Propagate implements Runnable{
-	private int port;
+	
 	private String address;
 	private Server server;
 	Thread t;
-	public Propagate(String address,int port,String threadname, Server server){
+	public Propagate(String address,String threadname, Server server){
 		this.address = address;
-		this.port = port;
 		this.server = server;
 		t = new Thread(this, threadname);
 	}

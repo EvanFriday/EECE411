@@ -53,9 +53,9 @@ public class Server implements Remote {
 		//TODO: CREATE A RANDOM IP PICKER AFTER CALLING FILE READ.
 		address1 = address2 = address3 = "localhost";
 		// Create three threads, to propagate to three nodes
-		Propagate p1 = new Propagate(address1, port, "First node" , this);
-		Propagate p2 = new Propagate(address2, port, "Second node", this);
-		Propagate p3 = new Propagate(address3, port, "Third node", this);
+		Propagate p1 = new Propagate(address1, "First node" , this);
+		Propagate p2 = new Propagate(address2, "Second node", this);
+		Propagate p3 = new Propagate(address3, "Third node", this);
 		p1.propagate();
 		p2.propagate();
 		p3.propagate();
