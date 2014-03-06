@@ -1,8 +1,6 @@
 package clientserver;
 import java.io.IOException;
 
-import clientserver.Server;
-
 
 public class RunDriver {
 	
@@ -14,11 +12,11 @@ public class RunDriver {
 	public static int STATUS = ACCEPTING_DATA;
 	public static int MODE;
 	
-	public static int main(String[] args) throws OutOfMemoryError, IOException {
+	public static void main(String[] args) throws OutOfMemoryError, IOException{
 		MODE = (Integer) Integer.parseInt(args[0]);
 		if(MODE != RECEIVE_ONLY || MODE != GOSSIP){
 			System.err.print("You have specified an invalid mode");
-			return 1;
+			
 		}
 		
 		while(true){
