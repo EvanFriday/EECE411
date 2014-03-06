@@ -28,9 +28,6 @@ public class Server implements Remote {
 	
 	
 	private ServerSocket serverSocket;
-	
-	public static int i;
-	
 	private boolean matchingKeyFound = false;
 	private boolean isGetOperation = false;
 	private byte[] command = new byte[1];
@@ -64,7 +61,7 @@ public class Server implements Remote {
 		p3.propagate();
 	}
 	
-	public synchronized void propagateUpdate(String address, int port) throws IOException, OutOfMemoryError {
+	public synchronized void propagateUpdate(String address) throws IOException, OutOfMemoryError {
 			
 			Socket connection = new Socket(address,port);
 			InputStream is = connection.getInputStream();
@@ -128,7 +125,7 @@ public class Server implements Remote {
 				switch((int)command[0]){
 				case 0x01: //put operation
 						
-							for(i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
+							for(int i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
 							{
 								localKey=KVStore.get(i);
 								if(localKey.getKey() == key) // Match found
@@ -158,7 +155,7 @@ public class Server implements Remote {
 				case 0x02: // search operation
 
 					isGetOperation = true;
-							for(i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
+							for(int i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
 							{
 								localKey = KVStore.get(i);
 								if(localKey.getKey() == key) // Match found
@@ -175,7 +172,7 @@ public class Server implements Remote {
 								error_code[0] = 0x01;
 							break;
 				case 0x03: //remove operation
-							for(i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
+							for(int i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
 							{
 								localKey=KVStore.get(i);
 								if(localKey.getKey() == key) // Match found

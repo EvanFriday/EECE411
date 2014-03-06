@@ -16,7 +16,7 @@ public class Propagate implements Runnable{
 
 	public void run() {
 		try {
-			server.propagateUpdate(address, port);
+			server.propagateUpdate(address);
 		} catch (OutOfMemoryError e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
