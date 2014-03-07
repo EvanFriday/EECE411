@@ -46,7 +46,7 @@ public class Server implements Remote {
 	public Server(int port) throws IOException{
 		this.port = port;
 		serverSocket = new ServerSocket(port);
-		serverSocket.setSoTimeout(10000);
+		//serverSocket.setSoTimeout(10000);
 		KVStore = new ArrayList<KeyValuePair>();
 		addressList = new ArrayList<String>();
 		propagateAddressList = new ArrayList<>();		
