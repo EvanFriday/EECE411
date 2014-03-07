@@ -50,7 +50,7 @@ public class Server implements Remote {
 		KVStore = new ArrayList<KeyValuePair>();
 		
 		addressList = new ArrayList<String>();
-		propagateAddressList = new ArrayList<>();		
+		propagateAddressList = new ArrayList<String>();		
 	}
 	
 	public void propagate(){
@@ -120,13 +120,22 @@ public class Server implements Remote {
 				//	InputStream(connection.getInputStream());
 			OutputStream os = connection.getOutputStream();
 			KeyValuePair localKey = new KeyValuePair();
+			byte[] input_read = new byte[1+32+1024];
 			
 			
 				//Read values
-				is.read(command, 0, 1);
-				is.read(key, 1, 32);
-				if(command[0] == 0x01) // There is only a value input if it's a put operation
-					is.read(value, 33, 1024);
+				is.read(input_read, 0, 1+32+1024);
+				command[0] = input_read[0];
+				for(int ii=0; ii<32; ii++)
+					key[ii] = input_read[ii+1];
+				if(command[0] == 0x01) {
+					for(int ii=0; ii<1024; ii++)
+						value[ii] = input_read[ii+33];
+				}
+				//is.read(command, 0, 1);
+				//is.read(key, 1, 32);
+				// if(command[0] == 0x01) // There is only a value input if it's a put operation
+					// is.read(value, 33, 1024);
 				
 				switch((int)command[0]){
 				case 0x01: //put operation
@@ -136,7 +145,7 @@ public class Server implements Remote {
 								localKey=KVStore.get(i);
 								if(localKey.getKey() == key) // Match found
 								{
-									localKey.setValue(value);
+									KVStore.set(i, new KeyValuePair(key, value));
 									matchingKeyFound = true;
 									break;
 								}
