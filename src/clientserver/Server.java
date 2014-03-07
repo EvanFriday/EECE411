@@ -28,13 +28,13 @@ public class Server implements Remote {
 	
 	
 	private ServerSocket serverSocket;
-	private boolean matchingKeyFound = false;
-	private boolean isGetOperation = false;
-	private byte[] command = new byte[1];
-	private byte[] key = new byte[32];
-	private byte[] value = new byte[1024];
-	private byte[] error_code = new byte[1];
-	private byte[] return_value = new byte[1024];
+	public static boolean matchingKeyFound = false;
+	public static boolean isGetOperation = false;
+	public static byte[] command = new byte[1];
+	public static byte[] key = new byte[32];
+	public static byte[] value = new byte[1024];
+	public static byte[] error_code = new byte[1];
+	public static byte[] return_value = new byte[1024];
 	
 	public ArrayList<KeyValuePair> KVStore;
 	public ArrayList<String> addressList;
@@ -48,6 +48,7 @@ public class Server implements Remote {
 		serverSocket = new ServerSocket(port);
 		//serverSocket.setSoTimeout(10000);
 		KVStore = new ArrayList<KeyValuePair>();
+		
 		addressList = new ArrayList<String>();
 		propagateAddressList = new ArrayList<>();		
 	}
@@ -113,12 +114,14 @@ public class Server implements Remote {
 	public synchronized void acceptUpdate() throws IOException, OutOfMemoryError, SocketTimeoutException{
 		//TODO: properly read in commands from propagate
 		try {
+			while(true){
 			Socket connection = serverSocket.accept();
 			InputStream is = connection.getInputStream();
+				//	InputStream(connection.getInputStream());
 			OutputStream os = connection.getOutputStream();
 			KeyValuePair localKey = new KeyValuePair();
 			
-			while(true) {
+			
 				//Read values
 				is.read(command, 0, 1);
 				is.read(key, 1, 32);
