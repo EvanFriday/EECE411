@@ -49,7 +49,7 @@ public class Server implements Remote {
 		//serverSocket.setSoTimeout(10000);
 		KVStore = new ArrayList<KeyValuePair>();
 		addressList = new ArrayList<String>();
-		propagateAddressList = new ArrayList<>();		
+		propagateAddressList = new ArrayList<String>();		
 	}
 	
 	public void propagate(){
