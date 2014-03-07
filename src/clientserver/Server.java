@@ -133,7 +133,7 @@ public class Server implements Remote {
 								localKey=KVStore.get(i);
 								if(localKey.getKey() == key) // Match found
 								{
-									localKey.setValue(value);
+									KVStore.set(i, new KeyValuePair(key, value));
 									matchingKeyFound = true;
 									break;
 								}
