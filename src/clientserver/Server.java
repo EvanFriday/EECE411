@@ -79,10 +79,10 @@ public class Server implements Remote {
 				byte[] b = new byte[1+32+1024];
 				b[0] = 0x01; // Put command
 				for(int k=0; k<32; k++) { // Copy "key" value into b
-					b[k+1] = KVP.key[k];
+					b[k+1] = KVP.getKey(k);
 				}
 				for(int k=0; k<1024; k++) { // Copy "value" value into b
-					b[k+33] = KVP.value[k];
+					b[k+33] = KVP.getValue(k);
 				}
 				os.write(b);
 				os.flush();
@@ -120,6 +120,7 @@ public class Server implements Remote {
 				//	InputStream(connection.getInputStream());
 			OutputStream os = connection.getOutputStream();
 			KeyValuePair localKey = new KeyValuePair();
+			KeyValuePair newKey = new KeyValuePair();
 			byte[] input_read = new byte[1+32+1024];
 			
 			
@@ -137,16 +138,26 @@ public class Server implements Remote {
 				// if(command[0] == 0x01) // There is only a value input if it's a put operation
 					// is.read(value, 33, 1024);
 				
-				switch((int)command[0]){
+				switch(command[0]){
 				case 0x01: //put operation
 						
 							for(int i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
 							{
 								localKey=KVStore.get(i);
-								if(localKey.getKey() == key) // Match found
+								matchingKeyFound = true;
+								for(int j=0; j<32; j++) { // Compare each byte of key
+									if(localKey.getKey(j) != key[j]) { // Mismatch
+										matchingKeyFound = false;
+										break;
+									}
+								}
+								if(matchingKeyFound) // Match has been found
 								{
-									KVStore.set(i, new KeyValuePair(key, value));
-									matchingKeyFound = true;
+									for(int j=0; j<32; j++) // Copy key bytes one by one
+										newKey.setKey(key[j], j);
+									for(int j=0; j<1024; j++) // Copy value bytes one by one
+										newKey.setValue(value[j],  j);
+									KVStore.set(i, newKey); // Copy new KVP into KVStore
 									break;
 								}
 							}
@@ -158,7 +169,11 @@ public class Server implements Remote {
 							{
 								if(KVStore.size() < 40000)
 								{
-									KVStore.add(new KeyValuePair(key, value));
+									for(int j=0; j<32; j++) // Copy key bytes one by one
+										newKey.setKey(key[j], j);
+									for(int j=0; j<1024; j++) // Copy value bytes one by one
+										newKey.setValue(value[j],  j);
+									KVStore.add(newKey); // Add new KVP to KVStore
 									error_code[0] = 0x00;
 								}
 								else // Out of space
@@ -174,39 +189,48 @@ public class Server implements Remote {
 					isGetOperation = true;
 							for(int i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
 							{
-								localKey = KVStore.get(i);
-								if(localKey.getKey() == key) // Match found
+								localKey=KVStore.get(i);
+								matchingKeyFound = true;
+								for(int j=0; j<32; j++) { // Compare each byte of key
+									if(localKey.getKey(j) != key[j]) { // Mismatch
+										matchingKeyFound = false;
+										break;
+									}
+								}
+								if(matchingKeyFound) // Match has been found
 								{
-									return_value = localKey.getValue();
+									for(int j=0; j<1024; j++) // Copy value bytes one by one
+										return_value[j] = localKey.getValue(j);
 									error_code[0] = 0x00;
-									matchingKeyFound = true;
 									break;
 								}
+								else
+									error_code[0] = 0x01; // Inexistent key
 							}
-							if(matchingKeyFound)
-								matchingKeyFound = false;
-							else
-								error_code[0] = 0x01;
 							break;
 				case 0x03: //remove operation
 							for(int i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
 							{
 								localKey=KVStore.get(i);
-								if(localKey.getKey() == key) // Match found
+								matchingKeyFound = true;
+								for(int j=0; j<32; j++) { // Compare each byte of key
+									if(localKey.getKey(j) != key[j]) { // Mismatch
+										matchingKeyFound = false;
+										break;
+									}
+								}
+								if(matchingKeyFound) // Match found
 								{
 									KVStore.remove(i);
 									error_code[0] = 0x00;
-									matchingKeyFound = true;
 									break;
 								}
 							}
-							if(matchingKeyFound)
-								matchingKeyFound = false;
-							else
-								error_code[0] = 0x01;
+							if(!matchingKeyFound)
+								error_code[0] = 0x01; // Inexistent key
 							break;
 				default:
-							//Command wasn't anything we wanted... derp!
+							//Command wasn't anything we wanted... Derp!
 							error_code[0] = 0x05;
 							break;
 				}
