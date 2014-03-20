@@ -1,12 +1,7 @@
-/*
- * Authors: Evan Friday, Cameron Johnston, Kevin Petersen
+/* Authors: Evan Friday, Cameron Johnston, Kevin Petersen
  * Date: 2014-03-02
  * EECE 411 Project Phase 2 Server:
- * 
- * 
  */
-
-
 
 package clientserver;
 
@@ -15,20 +10,25 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.MalformedURLException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.rmi.Remote;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
+import clientserver.message.Command;
+import clientserver.message.ErrorCode;
+import clientserver.message.Key;
+import clientserver.message.Message;
+import clientserver.message.Value;
 
 public class Server implements Remote {
-	
-	
-	
 	private ServerSocket serverSocket;
+	private int port = 9999;
+	private Map<Key, Value> kvStore;
+	
 	public static boolean matchingKeyFound = false;
 	public static boolean isGetOperation = false;
 	public static byte[] command = new byte[1];
@@ -45,25 +45,78 @@ public class Server implements Remote {
 	public static ArrayList<String> set_seven;
 	public static ArrayList<String> set_eight;
 
-	
-	
-	
 	public ArrayList<KeyValuePair> KVStore;
 	public ArrayList<KeyValuePair> DirtyStore;
 	public ArrayList<String> addressList;
 	public  ArrayList<String> propagateAddressList;
 	private String address1,address2,address3;
-	private int port = 9999;
 	
 	
-	public Server(int port) throws IOException{
+	public Server(int port) throws IOException {
 		this.port = port;
-		serverSocket = new ServerSocket(port);
-		//serverSocket.setSoTimeout(10000);
-		KVStore = new ArrayList<KeyValuePair>();
-		
-		addressList = new ArrayList<String>();
-		propagateAddressList = new ArrayList<String>();		
+		this.serverSocket = new ServerSocket(port);
+		this.kvStore = new HashMap<Key, Value>();
+	}
+	
+	public synchronized void acceptUpdate() throws IOException, OutOfMemoryError, SocketTimeoutException{
+		//TODO: properly read in commands from propagate
+		try {
+			while(true) {
+				Socket connection = this.serverSocket.accept();
+				InputStream is = connection.getInputStream();
+				OutputStream os = connection.getOutputStream();
+				
+				byte[] raw = new byte[Message.MAX_SIZE];
+				Message message, reply;
+				Key k;
+				Value v;
+				
+				// Read values
+				is.read(raw, 0, Message.MAX_SIZE);
+				message = new Message(raw);
+				reply = new Message();
+				k = message.getKey();
+				v = message.getValue();
+				//is.read(command, 0, 1);
+				//is.read(key, 1, 32);
+				// if(command[0] == 0x01) // There is only a value input if it's a put operation
+					// is.read(value, 33, 1024);
+				
+				switch((Command) message.getLeadByte()){
+				case PUT: // 152
+					if (kvStore.size() < Key.MAX_NUM) {
+						kvStore.put(k, v);
+						reply.setLeadByte(ErrorCode.OK);
+					} else {
+						reply.setLeadByte(ErrorCode.OUT_OF_SPACE);
+					}
+					break;
+				case GET:
+					if (kvStore.containsKey(k)) {
+						reply.setValue(kvStore.get(k));
+						reply.setLeadByte(ErrorCode.OK);
+					} else {
+						reply.setLeadByte(ErrorCode.KEY_DNE);
+					}
+					break;
+				case REMOVE:
+					if (kvStore.containsKey(k)) {
+						kvStore.remove(k);
+						reply.setLeadByte(ErrorCode.OK);
+					} else {
+						reply.setLeadByte(ErrorCode.KEY_DNE);
+					}
+					break;
+				default:
+					reply.setLeadByte(ErrorCode.BAD_COMMAND);
+					break;
+				}
+				
+					os.write(reply.getRaw());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public void propagate(){
@@ -129,157 +182,7 @@ public class Server implements Remote {
 		connection.close();
 		
 	}
-	public synchronized void acceptUpdate() throws IOException, OutOfMemoryError, SocketTimeoutException{
-		//TODO: properly read in commands from propagate
-		try {
-			while(true){
-			Socket connection = serverSocket.accept();
-			InputStream is = connection.getInputStream();
-				//	InputStream(connection.getInputStream());
-			OutputStream os = connection.getOutputStream();
-			KeyValuePair localKey = new KeyValuePair();
-			KeyValuePair newKey = new KeyValuePair();
-			byte[] input_read = new byte[1+32+1024];
-			
-			
-				//Read values
-			/*	
-			is.read(input_read, 0, 1+32+1024);
-				command[0] = input_read[0];
-				for(int ii=0; ii<32; ii++)
-					key[ii] = input_read[ii+1];
-				if(command[0] == 0x01) {
-					for(int ii=0; ii<1024; ii++)
-						value[ii] = input_read[ii+33];
-				}*/
-				
-				is.read(command, 0, 1);
-				is.read(key, 1, 32);
-				if(command[0] == 0x01) // There is only a value input if it's a put operation
-				is.read(value, 33, 1024);
-				
-				switch(command[0]){
-				case 0x01: //put operation
-						
-							for(int i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
-							{
-								localKey=KVStore.get(i);
-								matchingKeyFound = true;
-								for(int j=0; j<32; j++) { // Compare each byte of key
-									if(localKey.getKey(j) != key[j]) { // Mismatch
-										matchingKeyFound = false;
-										break;
-									}
-								}
-								if(matchingKeyFound) // Match has been found
-								{
-									for(int j=0; j<32; j++) // Copy key bytes one by one
-										newKey.setKey(key[j], j);
-									for(int j=0; j<1024; j++) // Copy value bytes one by one
-										newKey.setValue(value[j],  j);
-									KVStore.set(i, newKey); // Copy new KVP into KVStore
-									break;
-								}
-							}
-							if(matchingKeyFound){
-								matchingKeyFound = false;
-								error_code[0] = 0x00;
-							}
-							else // Only add a new entry if there was none already with matching key
-							{
-								if(KVStore.size() < 40000)
-								{
-									for(int j=0; j<32; j++) // Copy key bytes one by one
-										newKey.setKey(key[j], j);
-									for(int j=0; j<1024; j++) // Copy value bytes one by one
-										newKey.setValue(value[j],  j);
-									KVStore.add(newKey); // Add new KVP to KVStore
-									error_code[0] = 0x00;
-								}
-								else // Out of space
-								{
-									error_code[0] = 0x02;
-								}
-							}
-								
-							
-							break;
-				case 0x02: // search operation
-
-					isGetOperation = true;
-							for(int i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
-							{
-								localKey=KVStore.get(i);
-								matchingKeyFound = true;
-								for(int j=0; j<32; j++) { // Compare each byte of key
-									if(localKey.getKey(j) != key[j]) { // Mismatch
-										matchingKeyFound = false;
-										break;
-									}
-								}
-								if(matchingKeyFound) // Match has been found
-								{
-									for(int j=0; j<1024; j++) // Copy value bytes one by one
-										return_value[j] = localKey.getValue(j);
-									error_code[0] = 0x00;
-									break;
-								}
-								else
-									error_code[0] = 0x01; // Inexistent key
-							}
-							break;
-				case 0x03: //remove operation
-							for(int i=0; i<KVStore.size(); i++) // Search for a KV pair with matching key
-							{
-								localKey=KVStore.get(i);
-								matchingKeyFound = true;
-								for(int j=0; j<32; j++) { // Compare each byte of key
-									if(localKey.getKey(j) != key[j]) { // Mismatch
-										matchingKeyFound = false;
-										break;
-									}
-								}
-								if(matchingKeyFound) // Match found
-								{
-									KVStore.remove(i);
-									error_code[0] = 0x00;
-									break;
-								}
-							}
-							if(!matchingKeyFound)
-								error_code[0] = 0x01; // Inexistent key
-							break;
-				default:
-							//Command wasn't anything we wanted... Derp!
-							error_code[0] = 0x05;
-							break;
-				}
-				
-				// Send result
-				if(isGetOperation)
-				{
-					os.write(error_code);
-					os.write(return_value);
-					isGetOperation = false;
-				}
-				else
-					os.write(error_code);
-			}
-			
-		} catch (RemoteException e) {
-			e.printStackTrace();
-			error_code[0] = 0x04; // Internal KV Store failure?
-		} catch (MalformedURLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			error_code[0] = 0x04; // Internal KV Store failure?
-		} catch (OutOfMemoryError e) {
-			e.printStackTrace();
-			error_code[0] = 0x02; // Out of space
-		} catch (SocketTimeoutException e){
-			e.printStackTrace();
-		}
-	}
+	
 	public void fileRead(String file_location) throws IOException{
 		FileReader file = new FileReader(file_location);
 		BufferedReader in = new BufferedReader(file);
