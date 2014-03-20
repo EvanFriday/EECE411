@@ -8,12 +8,13 @@ public class RunDriver {
 	final static int PROPAGATING_DATA = 1;
 	final static int RECEIVE_ONLY = 0;
 	final static int GOSSIP = 1;
-
+	final static String file_location = "NODE_IP.txt";
 	public static int STATUS = ACCEPTING_DATA;
 	public static int MODE;
 	
 	public static void main(String[] args) throws OutOfMemoryError, IOException{
 		Server server = new Server(9999);
+		server.fileRead(file_location);
 		
 		//TODO: Call fileReader(), to populate addressList
 		//server.fileReader(file_name);

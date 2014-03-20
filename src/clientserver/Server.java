@@ -10,6 +10,7 @@
 
 package clientserver;
 
+import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +36,17 @@ public class Server implements Remote {
 	public static byte[] value = new byte[1024];
 	public static byte[] error_code = new byte[1];
 	public static byte[] return_value = new byte[1024];
+	public static ArrayList<String> set_one;
+	public static ArrayList<String> set_two;
+	public static ArrayList<String> set_three;
+	public static ArrayList<String> set_four;
+	public static ArrayList<String> set_five;
+	public static ArrayList<String> set_six;
+	public static ArrayList<String> set_seven;
+	public static ArrayList<String> set_eight;
+
+	
+	
 	
 	public ArrayList<KeyValuePair> KVStore;
 	public ArrayList<String> addressList;
@@ -75,7 +87,11 @@ public class Server implements Remote {
 			
 			// Write data to OutputStream about each KeyValuePair
 			for(int j=0; j<KVStore.size(); j++) {
+				
 				KeyValuePair KVP = KVStore.get(j);
+				
+				
+				
 				byte[] b = new byte[1+32+1024];
 				b[0] = 0x01; // Put command
 				for(int k=0; k<32; k++) { // Copy "key" value into b
@@ -262,9 +278,70 @@ public class Server implements Remote {
 	}
 	public void fileRead(String file_location) throws IOException{
 		FileReader file = new FileReader(file_location);
+		BufferedReader in = new BufferedReader(file);
+		for(int i=1;i<=8;i++)
+
+			for(int j=1;j<=10;j++){
+				switch(i){	
+				case 1:
+					set_one.add(in.readLine());
+					break;
+				case 2:
+					set_two.add(in.readLine());
+					break;
+				case 3:
+					set_three.add(in.readLine());
+					break;
+				case 4:
+					set_four.add(in.readLine());
+					break;
+				case 5:
+					set_five.add(in.readLine());
+					break;
+				case 6:
+					set_six.add(in.readLine());
+					break;
+				case 7:
+					set_seven.add(in.readLine());
+					break;
+				case 8:
+					set_eight.add(in.readLine());
+					break;
+				default:
+					System.err.println("oops, your IP list has too many lines!");
+					break;
+			}
+			
+			
+			
+			}
+		
 		//TODO: Populate addressList with IP values
 		
 		file.close();
+	}
+	public int getFirstThreeBits(byte byte_in)
+	{
+		int ret=0;
+		byte temp = byte_in;
+		byte temp2;
+		temp2 = (byte) (temp | (1 << 8));
+		if (temp2==1)
+		{
+			ret += 4;
+		}
+		temp2 = (byte) (temp | (1 << 7));
+		if (temp2==1)
+		{
+			ret += 2;
+		}
+		temp2 = (byte) (temp | (1 << 6));
+		if (temp2==1)
+		{
+			ret += 1;
+		}
+		
+		return ret + 1;
 	}
 	
 	public void selectAddresses(){
