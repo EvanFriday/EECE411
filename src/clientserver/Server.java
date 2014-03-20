@@ -7,7 +7,6 @@ package clientserver;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
@@ -37,12 +36,7 @@ public class Server implements Remote {
 	public static ArrayList<String> set_seven;
 	public static ArrayList<String> set_eight;
 
-	public ArrayList<KeyValuePair> KVStore;
-	public ArrayList<KeyValuePair> DirtyStore;
-	public ArrayList<String> addressList;
-	public  ArrayList<String> propagateAddressList;
-	
-	public Server(int port) throws IOException {
+	public Server(int port) throws Exception {
 		this.port = port;
 		this.serverSocket = new ServerSocket(port);
 		this.kvStore = new HashMap<Key, Value>();
@@ -106,70 +100,56 @@ public class Server implements Remote {
 	
 	public void propagate() {
 		String address1, address2, address3;
-		//TODO:  Call selectAddresses() to get addresses to propagate to.
+		// TODO:  Call selectAddresses() to get addresses to propagate to.
 		address1 = address2 = address3 = "localhost";
 		// Create three threads, to propagate to three nodes
-		Propagate p1 = new Propagate(address1, "First node" , this);
-		Propagate p2 = new Propagate(address2, "Second node", this);
-		Propagate p3 = new Propagate(address3, "Third node", this);
-		p1.propagate();
-		p2.propagate();
-		p3.propagate();
+		new Propagate(address1, "First node" , this).propagate();
+		new Propagate(address2, "Second node", this).propagate();
+		new Propagate(address3, "Third node", this).propagate();
 	}
 	
-	public synchronized void propagateUpdate(String address) throws IOException, OutOfMemoryError {
-			
-			Socket connection = new Socket(address,port);
-			InputStream is = connection.getInputStream();
-			OutputStream os = connection.getOutputStream();
-			byte[] returnedErrorCode = new byte[1];
-			// byte[] returnedValue = new byte[1024];
-			
-			// Write data to OutputStream about each KeyValuePair
-			for(int j=0; j<KVStore.size(); j++) {
-				
-				KeyValuePair KVP = KVStore.get(j);
-				//gets a value 1-8 for the keyspace division
-				int key_space_division_value = this.getFirstThreeBits(KVP.getKey(0));
-				
-				
-				byte[] b = new byte[1+32+1024];
-				b[0] = 0x01; // Put command
-				for(int k=0; k<32; k++) { // Copy "key" value into b
-					b[k+1] = KVP.getKey(k);
-				}
-				for(int k=0; k<1024; k++) { // Copy "value" value into b
-					b[k+33] = KVP.getValue(k);
-				}
-				os.write(b);
-				os.flush();
-			}
-			
-			// Read error codes
-			is.read(returnedErrorCode, 0, 1);
-			
-			switch(returnedErrorCode[0]) {
-			case 0x00:
-				System.out.println("Operation successful.");
-			case 0x01:
-				System.out.println("Error: Inexistent key.");
-			case 0x02:
-				System.out.println("Error: Out of space.");
-			case 0x03:
-				System.out.println("Error: System overload.");
-			case 0x04:
-				System.out.println("Error: Internal KVStore failure.");
-			case 0x05:
-				System.out.println("Error: Unrecognized command.");
-			default:
-				System.out.println("Error: Unknown error.");
-			}
-			
-		connection.close();
+	public synchronized void propagateUpdate(String address) throws Exception {
+		Socket connection = new Socket(address,port);
+		InputStream is = connection.getInputStream();
+		OutputStream os = connection.getOutputStream();
+		byte[] replyRaw = new byte[Message.MAX_SIZE];
+		Message reply;
 		
+		// Write data to OutputStream about each KeyValuePair
+		for(Key k : kvStore.keySet()) {
+			// Gets a value 1-8 for the keyspace division
+			int key_space_division_value = this.getFirstThreeBits(k.getValue()[0]);
+			
+			Message toSend = new Message(Command.PUT, k, kvStore.get(k));
+			os.write(toSend.getRaw());
+			os.flush();
+		}
+		
+		// Read error codes
+		is.read(replyRaw, 0, Message.MAX_SIZE);
+		reply = new Message(replyRaw);
+		
+		switch((ErrorCode) reply.getLeadByte()) {
+		case OK:
+			System.out.println("Operation successful.");
+		case KEY_DNE:
+			System.out.println("Error: Inexistent key.");
+		case OUT_OF_SPACE:
+			System.out.println("Error: Out of space.");
+		case OVERLOAD:
+			System.out.println("Error: System overload.");
+		case KVSTORE_FAIL:
+			System.out.println("Error: Internal KVStore failure.");
+		case BAD_COMMAND:
+			System.out.println("Error: Unrecognized command.");
+		default:
+			System.out.println("Error: Unknown error.");
+		}
+		
+		connection.close();
 	}
 	
-	public void fileRead(String file_location) throws IOException{
+	public void fileRead(String file_location) throws Exception{
 		FileReader file = new FileReader(file_location);
 		BufferedReader in = new BufferedReader(file);
 		for(int i=1;i<=8;i++)
