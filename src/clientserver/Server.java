@@ -12,7 +12,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketTimeoutException;
 import java.rmi.Remote;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,13 +28,6 @@ public class Server implements Remote {
 	private int port = 9999;
 	private Map<Key, Value> kvStore;
 	
-	public static boolean matchingKeyFound = false;
-	public static boolean isGetOperation = false;
-	public static byte[] command = new byte[1];
-	public static byte[] key = new byte[32];
-	public static byte[] value = new byte[1024];
-	public static byte[] error_code = new byte[1];
-	public static byte[] return_value = new byte[1024];
 	public static ArrayList<String> set_one;
 	public static ArrayList<String> set_two;
 	public static ArrayList<String> set_three;
@@ -49,8 +41,6 @@ public class Server implements Remote {
 	public ArrayList<KeyValuePair> DirtyStore;
 	public ArrayList<String> addressList;
 	public  ArrayList<String> propagateAddressList;
-	private String address1,address2,address3;
-	
 	
 	public Server(int port) throws IOException {
 		this.port = port;
@@ -58,8 +48,7 @@ public class Server implements Remote {
 		this.kvStore = new HashMap<Key, Value>();
 	}
 	
-	public synchronized void acceptUpdate() throws IOException, OutOfMemoryError, SocketTimeoutException{
-		//TODO: properly read in commands from propagate
+	public synchronized void acceptUpdate() {
 		try {
 			while(true) {
 				Socket connection = this.serverSocket.accept();
@@ -77,13 +66,9 @@ public class Server implements Remote {
 				reply = new Message();
 				k = message.getKey();
 				v = message.getValue();
-				//is.read(command, 0, 1);
-				//is.read(key, 1, 32);
-				// if(command[0] == 0x01) // There is only a value input if it's a put operation
-					// is.read(value, 33, 1024);
 				
 				switch((Command) message.getLeadByte()){
-				case PUT: // 152
+				case PUT:
 					if (kvStore.size() < Key.MAX_NUM) {
 						kvStore.put(k, v);
 						reply.setLeadByte(ErrorCode.OK);
@@ -112,14 +97,15 @@ public class Server implements Remote {
 					break;
 				}
 				
-					os.write(reply.getRaw());
+				os.write(reply.getRaw());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public void propagate(){
+	public void propagate() {
+		String address1, address2, address3;
 		//TODO:  Call selectAddresses() to get addresses to propagate to.
 		address1 = address2 = address3 = "localhost";
 		// Create three threads, to propagate to three nodes
@@ -254,6 +240,4 @@ public class Server implements Remote {
 	public void selectAddresses(){
 		//TODO: Randomly select a number of items from addressList and populate propagateAddressList with them
 	}
-	
-	
 }

@@ -5,18 +5,19 @@
 
 package clientserver;
 
+@Deprecated
 public class KeyValuePair {
-
 	private byte[] key = new byte[32];
 	private byte[] value = new byte[1024];
 	
-	// Constructor
-	KeyValuePair(byte[] k, byte[] v)
-	{
+	@Deprecated
+	KeyValuePair(byte[] k, byte[] v) {
 		key = k;
 		value = v;
 	}
-	KeyValuePair(){
+	
+	@Deprecated
+	KeyValuePair() {
 		int i;
 		for(i=0; i<32; i++)
 			key[i] = 0;
@@ -24,16 +25,22 @@ public class KeyValuePair {
 			value[i] = 0;
 	}
 	
-	// Get and Set methods
+	@Deprecated
 	public byte getKey(int index) {
 		return key[index];
 	}
+	
+	@Deprecated
 	public void setKey(byte k, int index) {
 		key[index] = k;
 	}
+	
+	@Deprecated
 	public byte getValue(int index) {
 		return value[index];
 	}
+	
+	@Deprecated
 	public void setValue(byte v, int index) {
 		value[index] = v;
 	}	
