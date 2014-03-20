@@ -49,6 +49,7 @@ public class Server implements Remote {
 	
 	
 	public ArrayList<KeyValuePair> KVStore;
+	public ArrayList<KeyValuePair> DirtyStore;
 	public ArrayList<String> addressList;
 	public  ArrayList<String> propagateAddressList;
 	private String address1,address2,address3;
@@ -89,7 +90,8 @@ public class Server implements Remote {
 			for(int j=0; j<KVStore.size(); j++) {
 				
 				KeyValuePair KVP = KVStore.get(j);
-				
+				//gets a value 1-8 for the keyspace division
+				int key_space_division_value = this.getFirstThreeBits(KVP.getKey(0));
 				
 				
 				byte[] b = new byte[1+32+1024];
