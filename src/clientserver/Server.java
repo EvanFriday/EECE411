@@ -10,12 +10,10 @@ import java.io.FileReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.Remote;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import clientserver.message.Command;
 import clientserver.message.ErrorCode;
@@ -45,7 +43,7 @@ public class Server implements Remote {
 		this.PublicIP = IpTools.getHostnameFromIp(IpTools.getIp());
 	}
 	
-	public synchronized void acceptUpdate() {
+	public void acceptUpdate() {
 		try {
 			//Accept incoming connections
 			Socket con = this.socket.accept();
