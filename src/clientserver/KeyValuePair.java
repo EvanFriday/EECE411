@@ -1,28 +1,25 @@
 /* Authors: Evan Friday, Cameron Johnston, Kevin Petersen
- * Date: 2014-03-02
- * EECE 411 Project Phase 2 Server:
+ * Date: 2014-03-21
+ * EECE 411 Project Phase 3 Server
  */
 
 package clientserver;
 
 @Deprecated
 public class KeyValuePair {
-
-
-	public byte[] key; 
-	public byte[] value;
+	private byte[] key; 
+	private byte[] value;
 	
-	// Constructor
-	KeyValuePair(byte[] k, byte[] v)
-	{
+	@Deprecated
+	public KeyValuePair(byte[] k, byte[] v) {
 		key = new byte[32];
 		value = new byte[1024];
 		key = k;
 		value = v;
 	}
 
-	KeyValuePair(){
-		
+	@Deprecated
+	public KeyValuePair() {
 		//key = new byte[32];
 		//value = new byte[1024];
 		//for(int i=0; i<32; i++)

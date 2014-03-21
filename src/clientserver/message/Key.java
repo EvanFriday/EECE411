@@ -1,6 +1,6 @@
 /* Authors: Evan Friday, Cameron Johnston, Kevin Petersen
- * Date: 2014-03-02
- * EECE 411 Project Phase 2 Server:
+ * Date: 2014-03-21
+ * EECE 411 Project Phase 3 Server
  */
 
 package clientserver.message;
@@ -8,6 +8,7 @@ package clientserver.message;
 public class Key {
 	public static final int SIZE = 32;
 	public static final int MAX_NUM = 40000;
+	
 	private byte[] value;
 	
 	public Key() {

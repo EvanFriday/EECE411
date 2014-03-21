@@ -1,3 +1,8 @@
+/* Authors: Evan Friday, Cameron Johnston, Kevin Petersen
+ * Date: 2014-03-21
+ * EECE 411 Project Phase 3 Server
+ */
+
 package clientserver.message;
 
 public enum ErrorCode implements LeadByte {
@@ -9,6 +14,7 @@ public enum ErrorCode implements LeadByte {
 	BAD_COMMAND((byte) 0x05);
 	
 	public static final int SIZE = 1;
+	
 	private byte hexValue;
 	
 	private ErrorCode(byte hex) {
