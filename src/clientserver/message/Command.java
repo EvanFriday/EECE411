@@ -1,0 +1,29 @@
+package clientserver.message;
+
+public enum Command implements LeadByte {
+	PUT((byte) 0x01),
+	GET((byte) 0x02),
+	REMOVE((byte) 0x03),
+	SHUTDOWN((byte) 0x04);
+	
+	public static final int SIZE = 1;
+	private byte hexValue;
+	
+	private Command(byte hex) {
+		this.hexValue = hex;
+	}
+	
+	public static Command getCommand(byte hex) {
+		for (Command c : Command.values()) {
+			if (c.hexValue == hex) {
+				return c;
+			}
+		}
+		
+		return null;
+	}
+
+	public byte getHex() {
+		return this.hexValue;
+	}
+}
