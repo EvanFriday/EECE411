@@ -79,6 +79,10 @@ public class Server implements Remote {
 				 * 		If it is	-- put in this node, and other 9 nodes in keyspace
 				 * 		If it is not-- propagate the put to the ten nodes that have it
 				 * 
+				 */
+				int key_space_division_value = this.getFirstThreeBits(k.getValue()[0]);
+				
+				/*
 				 * GET: check if the value in dirtyGet is within this node's keyspace.
 				 * 
 				 *  	If it is 	-- return the value
@@ -271,6 +275,30 @@ public class Server implements Remote {
 		}
 		
 		return ret + 1;
+	}
+	
+	public ArrayList<String> getIPs(Key k) {
+		int key_space_division_value = this.getFirstThreeBits(k.getValue()[0]);
+		switch(key_space_division_value) {
+		case 1:
+			return this.set_one;
+		case 2:
+			return this.set_two;
+		case 3:
+			return this.set_three;
+		case 4:
+			return this.set_four;
+		case 5:
+			return this.set_five;
+		case 6:
+			return this.set_six;
+		case 7:
+			return this.set_seven;
+		case 8:
+			return this.set_eight;
+		default:
+			return this.set_one;
+		}
 	}
 	
 	public void selectAddresses(){

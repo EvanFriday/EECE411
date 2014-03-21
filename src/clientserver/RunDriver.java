@@ -15,7 +15,7 @@ public class RunDriver {
 
 	private static final String file_location = "NODE_IP.txt";
 	
-	public static void main(String[] args) throws OutOfMemoryError, IOException{
+	public static void main(String[] args) throws OutOfMemoryError, Exception{
 		Server server = new Server(9999);
 		int status = ACCEPTING_DATA;
 		int mode;
