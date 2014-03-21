@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import clientserver.message.Command;
 import clientserver.message.ErrorCode;
@@ -66,7 +67,8 @@ public class Server implements Remote {
 			
 			
 			//Create list of replies from the 9/10 propagations
-			List<Message> nodeReplies = new ArrayList<Message>();
+			Map<String,Message> nodeReplies = new HashMap<String,Message>();
+			//List<Message> nodeReplies = new ArrayList<Message>();
 			
 			
 			
@@ -109,15 +111,42 @@ public class Server implements Remote {
 				for(String nodeAddress : nodeList){
 				Propagate p = new Propagate("Propagation Thread",this,nodeAddress,original);
 				//nodeReplies holds all of the replies
-				nodeReplies.add(p.propagate());
+				nodeReplies.put(nodeAddress, p.propagate());
 				}
 				
 				
 				//If we call a get, and it is locally stored and found, we don't need to process replies from other nodes
 				if(!in_local_and_get_ok){
-					//TODO: Handle replies from nodes.
+					//TODO: Handle replies from nodes
+					for(Entry<String,Message> nodeReply : nodeReplies.entrySet() ){
+						Message message = nodeReply.getValue();
+						String address = nodeReply.getKey();
+						ErrorCode e = (ErrorCode) message.getLeadByte();
+						
+						switch(e) {
+						case OK:
+							System.out.println("Operation successful at: " + address);
+						case KEY_DNE:
+							System.out.println("Error: Inexistent key at: " + address);
+						case OUT_OF_SPACE:
+							System.out.println("Error: Out of space at: " + address);
+						case OVERLOAD:
+							System.out.println("Error: System overload at: " + address);
+						case KVSTORE_FAIL:
+							System.out.println("Error: Internal KVStore failure at: " + address);
+						case BAD_COMMAND:
+							System.out.println("Error: Unrecognized command at: " + address);
+						default:
+							System.out.println("Error: Unknown error at: " + address);
+							}
+						}
+						
+					}
+					
+					
+					
 				}
-			}
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
