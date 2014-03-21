@@ -156,6 +156,8 @@ public class Server implements Remote {
 	
 	public void propagate(){
 		
+		
+		
 	}
 	
 	
