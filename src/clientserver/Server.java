@@ -40,7 +40,7 @@ public class Server implements Remote {
 		this.port = port;
 		this.socket = new ServerSocket(port);
 		this.kvStore = new HashMap<Key, Value>();
-		this.PublicIP = IpChecker.getIp();
+		this.PublicIP = IpTools.getHostnameFromIp(IpTools.getIp());
 	}
 	
 	public synchronized void acceptUpdate() {
@@ -61,6 +61,13 @@ public class Server implements Remote {
 			List<String> nodeList = getIpListForKeySpace(k);
 			//Is this node responsible for this key?
 			Boolean in_local = nodeList.contains(this.PublicIP);
+			//If this node is responsible, and it is a get, and we successfully get it?
+			Boolean in_local_and_get_ok = false;
+			
+			
+			//Create list of replies from the 9/10 propagations
+			List<Message> nodeReplies;
+			
 			
 			
 			if (in_local) {
@@ -79,6 +86,7 @@ public class Server implements Remote {
 					if (kvStore.containsKey(k)) {
 						reply.setValue(kvStore.get(k));
 						reply.setLeadByte(ErrorCode.OK);
+						in_local_and_get_ok = true;
 					} else {
 						reply.setLeadByte(ErrorCode.KEY_DNE);
 					}
@@ -98,9 +106,14 @@ public class Server implements Remote {
 				reply.sendTo(con);
 			} else {
 				// Send it along to proper nodes in new thread!
-				//TODO: have the badList return a value that is more useful...
-				new Propagate("Propagation Thread",this,nodeList,original).propagate();
 				
+				Propagate p = new Propagate("Propagation Thread",this,nodeList,original);
+				nodeReplies = p.propagate();
+				
+				//If we call a get, and it is locally stored and found, we don't need to process replies from other nodes
+				if(!in_local_and_get_ok){
+					//TODO: Handle replies from nodes.
+				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -112,19 +125,14 @@ public class Server implements Remote {
 	 */
 	
 	// Sends m to the necessary 9 or 10 nodes
-	public List<String> propagateMessage(Message m,List<String> list) throws Exception {
-		Key k = m.getKey();
-		Value v = m.getValue();
-
-		//Message to reply
-		Message reply = new Message();
-		//Nodes which return an error code other than ErrorCode.OK
-		List<String> badNodes = new ArrayList<String>();
+	public List<Message> propagateMessage(Message m,List<String> list) throws Exception {
+		//Nodes replies
+		List<Message> nodeReplies = new ArrayList<Message>();
 
 		for(String s : list){
-			m.sendTo(s, this.port);
+			nodeReplies.add(m.sendTo(s, this.port));
 		}
-		return badNodes;
+		return nodeReplies;
 		}
 		
 	
