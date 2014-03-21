@@ -15,6 +15,9 @@ import java.rmi.Remote;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+
+import com.sun.xml.internal.bind.v2.schemagen.xmlschema.List;
 
 import clientserver.message.Command;
 import clientserver.message.ErrorCode;
@@ -104,15 +107,7 @@ public class Server implements Remote {
 					break;
 						
 				}
-				
-				
-				
-				
-				
-				
-				
-				
-				
+
 				/*
 				switch((Command) message.getLeadByte()){
 				case PUT:
@@ -158,36 +153,22 @@ public class Server implements Remote {
 	 * 
 	 */
 	
-	public void propagate() {
-		String address1, address2, address3;
-		// TODO:  Call selectAddresses() to get addresses to propagate to.
-		address1 = address2 = address3 = "localhost";
-		// Create three threads, to propagate to three nodes
-		new Propagate(address1, "First node" , this).propagate();
-		new Propagate(address2, "Second node", this).propagate();
-		new Propagate(address3, "Third node", this).propagate();
+	
+	public void propagate(){
+		
 	}
 	
-	public synchronized void propagateUpdate(String address) throws Exception {
+	
+	public Message sendMessageToNode(Message message, String address) throws Exception {
 		Socket connection = new Socket(address,port);
 		InputStream is = connection.getInputStream();
 		OutputStream os = connection.getOutputStream();
-		byte[] replyRaw = new byte[Message.MAX_SIZE];
-		Message reply;
+		os.write(message.getRaw());
+		os.flush();
+		byte[] replyByteForm = new byte[Message.MAX_SIZE];
+		is.read(replyByteForm,0,Message.MAX_SIZE);
 		
-		// Write data to OutputStream about each KeyValuePair
-		for(Key k : kvStore.keySet()) {
-			// Gets a value 1-8 for the keyspace division
-			int key_space_division_value = this.getFirstThreeBits(k.getValue()[0]);
-			
-			Message toSend = new Message(Command.PUT, k, kvStore.get(k));
-			os.write(toSend.getRaw());
-			os.flush();
-		}
-		
-		// Read error codes
-		is.read(replyRaw, 0, Message.MAX_SIZE);
-		reply = new Message(replyRaw);
+		Message reply = new Message(replyByteForm);
 		
 		switch((ErrorCode) reply.getLeadByte()) {
 		case OK:
@@ -205,9 +186,13 @@ public class Server implements Remote {
 		default:
 			System.out.println("Error: Unknown error.");
 		}
-		
 		connection.close();
+		return reply;
+		
 	}
+		
+	
+
 
 	
 	
