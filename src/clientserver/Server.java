@@ -97,7 +97,6 @@ public class Server implements Remote {
 					reply.setLeadByte(ErrorCode.BAD_COMMAND);
 					break;
 				}
-				
 			} else {
 				
 				//Create list of replies from the 9/10 propagations

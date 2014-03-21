@@ -5,9 +5,6 @@
 
 package clientserver;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import clientserver.message.Message;
 
 public class Propagate implements Runnable {
