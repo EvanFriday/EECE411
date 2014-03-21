@@ -48,7 +48,6 @@ public class Server implements Remote {
 		serverSocket = new ServerSocket(port);
 		//serverSocket.setSoTimeout(10000);
 		KVStore = new ArrayList<KeyValuePair>();
-		
 		addressList = new ArrayList<String>();
 		propagateAddressList = new ArrayList<String>();		
 	}
@@ -114,14 +113,15 @@ public class Server implements Remote {
 	public synchronized void acceptUpdate() throws IOException, OutOfMemoryError, SocketTimeoutException{
 		//TODO: properly read in commands from propagate
 		try {
-			while(true){
+			
 			Socket connection = serverSocket.accept();
 			InputStream is = connection.getInputStream();
 				//	InputStream(connection.getInputStream());
 			OutputStream os = connection.getOutputStream();
 			KeyValuePair localKey = new KeyValuePair();
 			byte[] input_read = new byte[1+32+1024];
-			
+			byte[] output_write = new byte [1 + 1024];
+			matchingKeyFound = false;
 			
 				//Read values
 				is.read(input_read, 0, 1+32+1024);
@@ -145,7 +145,9 @@ public class Server implements Remote {
 								localKey=KVStore.get(i);
 								if(localKey.getKey() == key) // Match found
 								{
+									System.out.println("match found at key: " + key + "\nUpdating Value to: "+ value + "\n");
 									KVStore.set(i, new KeyValuePair(key, value));
+									System.out.println(KVStore.get(i));
 									matchingKeyFound = true;
 									break;
 								}
@@ -159,6 +161,7 @@ public class Server implements Remote {
 								if(KVStore.size() < 40000)
 								{
 									KVStore.add(new KeyValuePair(key, value));
+									System.out.println("New pair added");
 									error_code[0] = 0x00;
 								}
 								else // Out of space
@@ -177,6 +180,7 @@ public class Server implements Remote {
 								localKey = KVStore.get(i);
 								if(localKey.getKey() == key) // Match found
 								{
+									System.out.println("Match found in get operation, index =" + i + KVStore.get(i) + "\n");
 									return_value = localKey.getValue();
 									error_code[0] = 0x00;
 									matchingKeyFound = true;
@@ -194,6 +198,7 @@ public class Server implements Remote {
 								localKey=KVStore.get(i);
 								if(localKey.getKey() == key) // Match found
 								{
+									System.out.println("Removing item: "+ i + " where key is: " + key + "\n" );
 									KVStore.remove(i);
 									error_code[0] = 0x00;
 									matchingKeyFound = true;
@@ -214,13 +219,17 @@ public class Server implements Remote {
 				// Send result
 				if(isGetOperation)
 				{
-					os.write(error_code);
-					os.write(return_value);
+					output_write[1] = error_code[0];
+					for(int ii=0; ii<1024; ii++)
+						output_write[ii+1] = return_value[ii];
+					//os.write(error_code);
+					//os.write(return_value);
+					os.write(output_write);
 					isGetOperation = false;
 				}
 				else
 					os.write(error_code);
-			}
+			connection.close();
 			
 		} catch (RemoteException e) {
 			e.printStackTrace();

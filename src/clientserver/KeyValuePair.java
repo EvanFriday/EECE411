@@ -2,21 +2,25 @@ package clientserver;
 
 public class KeyValuePair {
 
-	public byte[] key = new byte[32];
-	public byte[] value = new byte[1024];
+	public byte[] key; 
+	public byte[] value;
 	
 	// Constructor
 	KeyValuePair(byte[] k, byte[] v)
 	{
+		key = new byte[32];
 		key = k;
+		value = new byte[1024];
 		value = v;
 	}
 	KeyValuePair(){
-		int i;
-		for(i=0; i<32; i++)
-			key[i] = 0;
-		for(i=0; i<1024; i++)
-			value[i] = 0;
+		
+		//key = new byte[32];
+		//value = new byte[1024];
+		//for(int i=0; i<32; i++)
+		//	key[i] = 0;
+		//for(int i=0; i<1024; i++)
+		//	value[i] = 0;
 	}
 	
 	// Get and Set methods
