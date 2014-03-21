@@ -5,17 +5,16 @@
 
 package clientserver;
 
-import java.io.IOException;
-
 public class RunDriver {
 
 	private static final String file_location = "NODE_IP.txt";
 	
 	public static void main(String[] args) throws Exception{
+		//Create new Server Object
 		Server server = new Server(9999);		
+		//Read in node list
 		server.fileRead(file_location);
-		server.acceptUpdate();
-		
-		
+		//Begin accepting client connections
+		server.acceptUpdate();	
 	}
 }
