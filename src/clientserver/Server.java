@@ -10,7 +10,6 @@ import java.io.FileReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.Remote;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,11 +104,12 @@ public class Server implements Remote {
 					reply.setLeadByte(ErrorCode.BAD_COMMAND);
 					break;
 				}
-				reply.sendTo(con);
+				
 			} else {
 				// Send it along to proper nodes in new thread!
 				for(String nodeAddress : nodeList){
 				Propagate p = new Propagate("Propagation Thread",this,nodeAddress,original);
+				
 				//nodeReplies holds all of the replies
 				nodeReplies.put(nodeAddress, p.propagate());
 				}
@@ -117,35 +117,47 @@ public class Server implements Remote {
 				
 				//If we call a get, and it is locally stored and found, we don't need to process replies from other nodes
 				if(!in_local_and_get_ok){
-					//TODO: Handle replies from nodes
 					for(Entry<String,Message> nodeReply : nodeReplies.entrySet() ){
 						Message message = nodeReply.getValue();
+						Message reply_rerun;
 						String address = nodeReply.getKey();
-						ErrorCode e = (ErrorCode) message.getLeadByte();
+						ErrorCode e = (ErrorCode) message.getLeadByte();	
+						/* MAY NEED, MAY NOT? W/B PUT system overload?
+							if(e == ErrorCode.KVSTORE_FAIL){
+								Propagate p = new Propagate("Propagation Thread Re-run", this, address, message);
+								while(reply.getLeadByte()==ErrorCode.KVSTORE_FAIL){
+									reply_rerun = p.propagate();
+									}
+							}
+							*/	
 						
-						switch(e) {
-						case OK:
-							System.out.println("Operation successful at: " + address);
-						case KEY_DNE:
-							System.out.println("Error: Inexistent key at: " + address);
-						case OUT_OF_SPACE:
-							System.out.println("Error: Out of space at: " + address);
-						case OVERLOAD:
-							System.out.println("Error: System overload at: " + address);
-						case KVSTORE_FAIL:
-							System.out.println("Error: Internal KVStore failure at: " + address);
-						case BAD_COMMAND:
-							System.out.println("Error: Unrecognized command at: " + address);
+						switch(c){
+						case PUT:
+							if(e == ErrorCode.OK){
+							System.out.println("Put operation successful at: " + address);
+							}
+							break;
+						case GET:
+							if(e == ErrorCode.OK){
+							reply.setValue(message.getValue());
+							reply.setLeadByte(e);
+							}
+							break;
+						case REMOVE:
+							if(reply.getLeadByte()==ErrorCode.KEY_DNE){
+								if(e == ErrorCode.KEY_DNE)
+								reply.setLeadByte(e);
+								}
+							break;
 						default:
-							System.out.println("Error: Unknown error at: " + address);
+							break;
+						
 							}
 						}
-						
 					}
-					
-					
-					
 				}
+			
+			reply.sendTo(con);
 			
 		} catch (Exception e) {
 			e.printStackTrace();
