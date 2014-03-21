@@ -5,27 +5,33 @@
 
 package clientserver;
 
+import java.util.List;
+
+import clientserver.message.Message;
+
 public class Propagate implements Runnable {
-	private String address;
+	private List<String> addressList;
 	private Server server;
+	private Message message;
 	private Thread t;
 	
-	public Propagate(String address, String threadname, Server server) {
-		this.address = address;
+	public Propagate(String threadname, Server server,List<String> addressList ,Message message) {
+		this.addressList = addressList;
 		this.server = server;
+		this.message = message;
 		this.t = new Thread(this, threadname);
 	}
 
 	public void run() {
 		try {
-			server.propagateUpdate(address);
+			server.propagateMessage(this.message, this.addressList);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
 	public void propagate() {
-		System.out.println("Propagating Changes to: " + address);
+		System.out.println("Propagating Changes to: " + addressList.toString());
 		t.start();
 	}
 }

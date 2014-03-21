@@ -10,6 +10,7 @@ import java.io.FileReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.Remote;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +25,7 @@ public class Server implements Remote {
 	private ServerSocket socket;
 	private int port = 9999;
 	private Map<Key, Value> kvStore;
-	
+	private String PublicIP;
 	// I still think we can do this better
 	private List<String> set_one;
 	private List<String> set_two;
@@ -39,36 +40,33 @@ public class Server implements Remote {
 		this.port = port;
 		this.socket = new ServerSocket(port);
 		this.kvStore = new HashMap<Key, Value>();
+		this.PublicIP = IpChecker.getIp();
 	}
 	
 	public synchronized void acceptUpdate() {
 		try {
+			//Accept incoming connections
 			Socket con = this.socket.accept();
+			//Incoming message from client
 			Message original = Message.getFrom(con);
+			//Reply message to send to client
 			Message reply = new Message();
+			
+			//Get Command, Key and Value from Message
 			Key k = original.getKey();
 			Value v = original.getValue();
+			Command c = (Command) original.getLeadByte();
 			
-			/* Logic to check if stored locally, or on other node sets.
-			 * 
-			 * PUT: check if the value in dirtyPut is within this node's keyspace,
-			 * 		
-			 * 		If it is	-- put in this node, and other 9 nodes in keyspace
-			 * 		If it is not-- propagate the put to the ten nodes that have it
-			 * 
-		 	 * GET: check if the value in dirtyGet is within this node's keyspace.
-			 * 
-			 *  	If it is 	-- return the value
-			 * 		If it is not-- query a node who is within the keyspace for this key
-			 * 
-			 * REMOVE: check if the value in dirtyRemove is within this node's keyspace, if it is remove it from this node and other nodes in keyspace. If not, forward
-			 * 		
-			 * 		If it is	-- remove the value locally, and on other 9 nodes
-			 * 		If it is not-- call remove on 10 nodes in the proper keyspace
-			 */
+			//Create list of nodes responsible for this key
+			List<String> nodeList = getIpListForKeySpace(k);
+			//Is this node responsible for this key?
+			Boolean in_local = nodeList.contains(this.PublicIP);
 			
-//			if (inThisKeySpace) {
-				switch((Command) original.getLeadByte()){
+			
+			if (in_local) {
+				//As we are handling this node locally, remove it from propagation list
+				nodeList.remove(this.PublicIP);
+				switch(c){
 				case PUT:
 					if (kvStore.size() < Key.MAX_NUM) {
 						kvStore.put(k, v);
@@ -97,11 +95,13 @@ public class Server implements Remote {
 					reply.setLeadByte(ErrorCode.BAD_COMMAND);
 					break;
 				}
-				
 				reply.sendTo(con);
-//			} else {
-//				// Send it along
-//			}
+			} else {
+				// Send it along to proper nodes in new thread!
+				//TODO: have the badList return a value that is more useful...
+				new Propagate("Propagation Thread",this,nodeList,original).propagate();
+				
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -112,56 +112,22 @@ public class Server implements Remote {
 	 */
 	
 	// Sends m to the necessary 9 or 10 nodes
-	private void propagateMessage(Message m) throws Exception {
-		int key_space_division_value = getFirstThreeBits(m.getKey().getValue()[0]);
-		
-		// Does nobody else see how we could make this easier for us?
-		switch(key_space_division_value) {
-		case 1:
-			for(int i=0; i<set_one.size(); i++) {
-				m.sendTo(set_one.get(i), this.port);
-			}
-			break;
-		case 2:
-			for(int i=0; i<set_two.size(); i++) {
-				m.sendTo(set_two.get(i), this.port);
-			}
-			break;
-		case 3:
-			for(int i=0; i<set_three.size(); i++) {
-				m.sendTo(set_three.get(i), this.port);
-			}
-			break;
-		case 4:
-			for(int i=0; i<set_four.size(); i++) {
-				m.sendTo(set_four.get(i), this.port);
-			}
-			break;
-		case 5:
-			for(int i=0; i<set_five.size(); i++) {
-				m.sendTo(set_five.get(i), this.port);
-			}
-			break;
-		case 6:
-			for(int i=0; i<set_six.size(); i++) {
-				m.sendTo(set_six.get(i), this.port);
-			}
-			break;
-		case 7:
-			for(int i=0; i<set_seven.size(); i++) {
-				m.sendTo(set_seven.get(i), this.port);
-			}
-			break;
-		case 8:
-			for(int i=0; i<set_eight.size(); i++) {
-				m.sendTo(set_eight.get(i), this.port);
-			}
-			break;
-		default:
-			
+	public List<String> propagateMessage(Message m,List<String> list) throws Exception {
+		Key k = m.getKey();
+		Value v = m.getValue();
+
+		//Message to reply
+		Message reply = new Message();
+		//Nodes which return an error code other than ErrorCode.OK
+		List<String> badNodes = new ArrayList<String>();
+
+		for(String s : list){
+			m.sendTo(s, this.port);
+		}
+		return badNodes;
 		}
 		
-	}
+	
 	
 	public void fileRead(String file_location) throws Exception{
 		FileReader file = new FileReader(file_location);
@@ -226,7 +192,9 @@ public class Server implements Remote {
 		return ret + 1;
 	}
 	
-	public List<String> getIPs(Key k) {
+	//Returns the appropriate list of IP's for a given keyspace
+	public List<String> getIpListForKeySpace(Key k) {
+
 		int key_space_division_value = this.getFirstThreeBits(k.getValue()[0]);
 		switch(key_space_division_value) {
 		case 1:
@@ -248,9 +216,5 @@ public class Server implements Remote {
 		default:
 			return this.set_one;
 		}
-	}
-	
-	public void selectAddresses(){
-		//TODO: Randomly select a number of items from addressList and populate propagateAddressList with them
 	}
 }
