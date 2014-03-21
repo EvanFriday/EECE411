@@ -10,9 +10,9 @@ import java.io.FileReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.Remote;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import clientserver.message.Command;
 import clientserver.message.ErrorCode;
@@ -38,7 +38,7 @@ public class Server implements Remote {
 	public Server(int port) throws Exception {
 		this.port = port;
 		this.socket = new ServerSocket(port);
-		this.kvStore = new HashMap<Key, Value>();
+		this.kvStore = new ConcurrentHashMap<Key, Value>();
 	}
 	
 	public synchronized void acceptUpdate() {

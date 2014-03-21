@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 
+import clientserver.NodeList;
 import clientserver.message.Command;
 import clientserver.message.ErrorCode;
 import clientserver.message.Key;
@@ -18,12 +19,14 @@ import clientserver.message.Message;
 import clientserver.message.Value;
 
 public abstract class AbstractServer {
-	private ServerSocket socket;
-	private Map<Key, Value> kvStore;
+	protected ServerSocket socket;
+	protected Map<Key, Value> kvStore;
+	protected NodeList ipList;
 	
 	protected AbstractServer(int port) throws IOException {
 		this.socket = new ServerSocket(port);
 		this.kvStore = new HashMap<Key, Value>();
+		this.ipList = new NodeList("localhost");
 	}
 	
 	public void run() {

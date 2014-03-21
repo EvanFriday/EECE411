@@ -5,27 +5,31 @@
 
 package clientserver;
 
+import clientserver.message.Message;
+
 public class Propagate implements Runnable {
+	private Message message, reply;
 	private String address;
-	private Server server;
-	private Thread t;
+	private int port;
+	private Thread thread;
 	
-	public Propagate(String address, String threadname, Server server) {
+	public Propagate(Message m, String address, int port) {
 		this.address = address;
-		this.server = server;
-		this.t = new Thread(this, threadname);
+		this.port = port;
+		this.thread = new Thread(this);
 	}
 
 	public void run() {
 		try {
-			server.propagateUpdate(address);
+			this.reply = this.message.sendTo(address, port);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public void propagate() {
+	public Message propagate() {
 		System.out.println("Propagating Changes to: " + address);
-		t.start();
+		this.thread.start();
+		return reply;
 	}
 }

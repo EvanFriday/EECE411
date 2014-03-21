@@ -10,7 +10,6 @@ import java.io.IOException;
 import clientserver.message.Command;
 
 public class ReadOnlyServer extends AbstractServer {
-
 	public ReadOnlyServer(int port) throws IOException {
 		super(port);
 	}
@@ -22,5 +21,4 @@ public class ReadOnlyServer extends AbstractServer {
 	protected void shutdown() {
 		// TODO Add shutdown code
 	}
-	
 }

@@ -5,14 +5,17 @@
 
 package clientserver.server;
 
+import java.io.FileReader;
 import java.io.IOException;
 
+import clientserver.NodeList;
 import clientserver.message.Command;
 import clientserver.message.Message;
 
 public class GossipServer extends AbstractServer {
-	protected GossipServer(int port, String filename) throws IOException {
+	public GossipServer(int port, String fileName) throws IOException {
 		super(port);
+		this.ipList = new NodeList(new FileReader(fileName));
 	}
 
 	protected Command action() throws IOException {
