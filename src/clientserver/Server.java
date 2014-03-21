@@ -134,7 +134,7 @@ public class Server implements Remote {
 							}
 							break;
 						case GET:
-							if(e == ErrorCode.OK){
+							if(e == ErrorCode.OK && in_local_and_get_ok){
 							reply.setValue(message.getValue());
 							reply.setLeadByte(e);
 							}
