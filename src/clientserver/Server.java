@@ -66,7 +66,7 @@ public class Server implements Remote {
 			
 			
 			//Create list of replies from the 9/10 propagations
-			List<Message> nodeReplies;
+			List<Message> nodeReplies = new ArrayList<Message>();
 			
 			
 			
@@ -106,10 +106,10 @@ public class Server implements Remote {
 				reply.sendTo(con);
 			} else {
 				// Send it along to proper nodes in new thread!
-				
-				Propagate p = new Propagate("Propagation Thread",this,nodeList,original);
-				nodeReplies = p.propagate();
-				
+				for(String nodeAddress : nodeList){
+				Propagate p = new Propagate("Propagation Thread",this,nodeAddress,original);
+				nodeReplies.add(p.propagate());
+				}
 				//If we call a get, and it is locally stored and found, we don't need to process replies from other nodes
 				if(!in_local_and_get_ok){
 					//TODO: Handle replies from nodes.
@@ -125,14 +125,14 @@ public class Server implements Remote {
 	 */
 	
 	// Sends m to the necessary 9 or 10 nodes
-	public List<Message> propagateMessage(Message m,List<String> list) throws Exception {
+	public Message propagateMessage(Message m,String address) throws Exception {
 		//Nodes replies
-		List<Message> nodeReplies = new ArrayList<Message>();
+		Message nodeReply; 
 
-		for(String s : list){
-			nodeReplies.add(m.sendTo(s, this.port));
-		}
-		return nodeReplies;
+		
+			nodeReply=(m.sendTo(address, this.port));
+		
+		return nodeReply;
 		}
 		
 	

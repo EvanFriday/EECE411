@@ -11,30 +11,30 @@ import java.util.List;
 import clientserver.message.Message;
 
 public class Propagate implements Runnable {
-	private List<String> addressList;
-	private List<Message> nodeReplies;
+	private String address;
+	private Message nodeReply;
 	private Server server;
 	private Message message;
 	private Thread t;
 	
-	public Propagate(String threadname, Server server,List<String> addressList ,Message message) {
-		this.addressList = addressList;
+	public Propagate(String threadname, Server server,String address ,Message message) {
+		this.address = address;
 		this.server = server;
 		this.message = message;
-		this.nodeReplies = new ArrayList<Message>();
+		this.nodeReply = new Message();
 		this.t = new Thread(this, threadname);
 	}
 
 	public void run() {
 		try {
-			nodeReplies = server.propagateMessage(this.message, this.addressList);
+			nodeReply = server.propagateMessage(this.message, this.address);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public List<Message> propagate() {
-		System.out.println("Propagating Changes to: " + addressList.toString());
+	public Message propagate() {
+		System.out.println("Propagating Changes to: " + address.toString());
 		t.start();
 		try {
 			t.join();
@@ -42,7 +42,7 @@ public class Propagate implements Runnable {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return this.nodeReplies;
+		return this.nodeReply;
 	}
 	
 }
