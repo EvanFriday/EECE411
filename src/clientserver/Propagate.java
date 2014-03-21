@@ -36,12 +36,7 @@ public class Propagate implements Runnable {
 	public Message propagate() {
 		System.out.println("Propagating Changes to: " + address.toString());
 		t.start();
-		try {
-			t.join();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		
 		return this.nodeReply;
 	}
 	

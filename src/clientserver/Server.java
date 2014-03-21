@@ -108,8 +108,11 @@ public class Server implements Remote {
 				// Send it along to proper nodes in new thread!
 				for(String nodeAddress : nodeList){
 				Propagate p = new Propagate("Propagation Thread",this,nodeAddress,original);
+				//nodeReplies holds all of the replies
 				nodeReplies.add(p.propagate());
 				}
+				
+				
 				//If we call a get, and it is locally stored and found, we don't need to process replies from other nodes
 				if(!in_local_and_get_ok){
 					//TODO: Handle replies from nodes.
