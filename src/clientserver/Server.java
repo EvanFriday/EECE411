@@ -72,9 +72,22 @@ public class Server implements Remote {
 				
 				/*
 				 * 
-				 * Need to recode following section to check location of put,get,remove.
+				 * Logic to check if stored locally, or on other node sets.
 				 * 
+				 * PUT: check if the value in dirtyPut is within this node's keyspace,
+				 * 		
+				 * 		If it is	-- put in this node, and other 9 nodes in keyspace
+				 * 		If it is not-- propagate the put to the ten nodes that have it
 				 * 
+				 * GET: check if the value in dirtyGet is within this node's keyspace.
+				 * 
+				 *  	If it is 	-- return the value
+				 * 		If it is not-- query a node who is within the keyspace for this key
+				 * 
+				 * REMOVE: check if the value in dirtyRemove is within this node's keyspace, if it is remove it from this node and other nodes in keyspace. If not, forward
+				 * 		
+				 * 		If it is	-- remove the value locally, and on other 9 nodes
+				 * 		If it is not-- call remove on 10 nodes in the proper keyspace
 				 */
 				switch((Command) message.getLeadByte()){
 				case PUT:
@@ -91,6 +104,8 @@ public class Server implements Remote {
 					break;
 						
 				}
+				
+				
 				
 				
 				
@@ -129,13 +144,19 @@ public class Server implements Remote {
 					break;
 				}
 				
-				os.write(reply.getRaw());
+				os.write(reply.getRaw());*/
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-		}*/
+		}
 
 	}
+	
+	/*
+	 * 
+	 * Need to totally re-create to push to nodes in keyspaces.
+	 * 
+	 */
 	
 	public void propagate() {
 		String address1, address2, address3;
