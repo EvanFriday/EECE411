@@ -165,7 +165,7 @@ public class Server implements Remote {
 		LeadByte l = m.getLeadByte();
 		Key k = m.getKey();
 		Value v = m.getValue();
-		int key_space_division_value = this.getFirstThreeBits(k.getValue()[0]);
+		int key_space_division_value = getFirstThreeBits(k.getValue()[0]);
 		
 		switch(key_space_division_value) {
 		case 1:
