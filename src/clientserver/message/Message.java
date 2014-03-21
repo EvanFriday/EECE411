@@ -5,6 +5,7 @@
 
 package clientserver.message;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
@@ -61,17 +62,17 @@ public class Message {
 		}
 	}
 	
-	public static Message getFrom(Socket con) throws Exception {
+	public static Message getFrom(Socket con) throws IOException {
 		return getFrom(con.getInputStream());
 	}
 	
-	public static Message getFrom(InputStream is) throws Exception {
+	public static Message getFrom(InputStream is) throws IOException {
 		byte[] raw = new byte[MAX_SIZE];
 		is.read(raw, 0, MAX_SIZE);
 		return new Message(raw);
 	}
 	
-	public Message sendTo(String address, int port) throws Exception {
+	public Message sendTo(String address, int port) throws IOException {
 		Socket con = new Socket(address, port);
 		Message reply = this.sendTo(con);
 		
@@ -79,11 +80,11 @@ public class Message {
 		return reply;
 	}
 	
-	public Message sendTo(Socket con) throws Exception {
+	public Message sendTo(Socket con) throws IOException {
 		return this.sendTo(con.getOutputStream(), con.getInputStream());
 	}
 	
-	public Message sendTo(OutputStream os, InputStream replyStream) throws Exception {
+	public Message sendTo(OutputStream os, InputStream replyStream) throws IOException {
 		Message reply = null;
 		
 		os.write(this.getRaw());
