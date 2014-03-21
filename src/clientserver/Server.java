@@ -27,6 +27,12 @@ public class Server implements Remote {
 	private int port = 9999;
 	private Map<Key, Value> kvStore;
 	
+	//Map for possibly non local values;
+	private Map<Key, Value> dirtyPut;
+	private Map<Key, Value> dirtyGet;
+	private Map<Key, Value> dirtyRemove;
+	
+	
 	public static ArrayList<String> set_one;
 	public static ArrayList<String> set_two;
 	public static ArrayList<String> set_three;
@@ -40,6 +46,9 @@ public class Server implements Remote {
 		this.port = port;
 		this.serverSocket = new ServerSocket(port);
 		this.kvStore = new HashMap<Key, Value>();
+		this.dirtyPut = new HashMap<Key, Value>();
+		this.dirtyGet = new HashMap<Key, Value>();
+		this.dirtyRemove = new HashMap<Key, Value>();
 	}
 	
 	public synchronized void acceptUpdate() {
@@ -61,10 +70,39 @@ public class Server implements Remote {
 				k = message.getKey();
 				v = message.getValue();
 				
+				/*
+				 * 
+				 * Need to recode following section to check location of put,get,remove.
+				 * 
+				 * 
+				 */
+				switch((Command) message.getLeadByte()){
+				case PUT:
+					dirtyPut.put(k,v);
+					break;
+				case GET:
+					dirtyGet.put(k,v);
+					break;
+				case REMOVE:
+					dirtyRemove.put(k,v);
+					break;
+				default:
+						//error
+					break;
+						
+				}
+				
+				
+				
+				
+				
+				
+				
+				/*
 				switch((Command) message.getLeadByte()){
 				case PUT:
 					if (kvStore.size() < Key.MAX_NUM) {
-						kvStore.put(k, v);
+						dirtyList.put(k, v);
 						reply.setLeadByte(ErrorCode.OK);
 					} else {
 						reply.setLeadByte(ErrorCode.OUT_OF_SPACE);
@@ -95,7 +133,7 @@ public class Server implements Remote {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-		}
+		}*/
 
 	}
 	
