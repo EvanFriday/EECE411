@@ -15,6 +15,14 @@ public class RunDriver {
 		//Read in node list
 		server.fileRead(file_location);
 		//Begin accepting client connections
-		server.acceptUpdate();	
+		
+		while(true){
+		if(server.getShutdownStatus()){
+			Thread.sleep(5*60*1000);
+			server.setShutdownStatus(false);
+		}
+		else
+			server.acceptUpdate();
+		}
 	}
 }

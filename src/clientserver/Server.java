@@ -26,7 +26,7 @@ public class Server implements Remote {
 	private int port = 9999;
 	private Map<Key, Value> kvStore;
 	private String PublicIP;
-	// I still think we can do this better
+	private Boolean shutdown;
 	private List<String> set_one;
 	private List<String> set_two;
 	private List<String> set_three;
@@ -41,6 +41,7 @@ public class Server implements Remote {
 		this.socket = new ServerSocket(port);
 		this.kvStore = new ConcurrentHashMap<Key, Value>();
 		this.PublicIP = IpTools.getHostnameFromIp(IpTools.getIp());
+		this.shutdown = false;
 	}
 	
 	public void acceptUpdate() {
@@ -63,94 +64,101 @@ public class Server implements Remote {
 			Boolean in_local = nodeList.contains(this.PublicIP);
 			//If this node is responsible, and it is a get, and we successfully get it?
 			Boolean in_local_and_get_ok = false;
-
-			if (in_local) {
-				//As we are handling this node locally, remove it from propagation list
-				nodeList.remove(this.PublicIP);
-				switch(c){
-				case PUT:
-					if (kvStore.size() < Key.MAX_NUM) {
-						kvStore.put(k, v);
-						reply.setLeadByte(ErrorCode.OK);
-					} else {
-						reply.setLeadByte(ErrorCode.OUT_OF_SPACE);
-					}
-					break;
-				case GET:
-					if (kvStore.containsKey(k)) {
-						reply.setValue(kvStore.get(k));
-						reply.setLeadByte(ErrorCode.OK);
-						in_local_and_get_ok = true;
-					} else {
-						reply.setLeadByte(ErrorCode.KEY_DNE);
-					}
-					break;
-				case REMOVE:
-					if (kvStore.containsKey(k)) {
-						kvStore.remove(k);
-						reply.setLeadByte(ErrorCode.OK);
-					} else {
-						reply.setLeadByte(ErrorCode.KEY_DNE);
-					}
-					break;
-				default:
-					reply.setLeadByte(ErrorCode.BAD_COMMAND);
-					break;
-				}
-			} else {
-				
-				//Create list of replies from the 9/10 propagations
-				Map<String,Message> nodeReplies = new ConcurrentHashMap<String,Message>();
-				
-				// Send it along to proper nodes in new thread!
-				for(String nodeAddress : nodeList){
-					Propagate p = new Propagate("Propagation Thread for: "+nodeAddress,this,nodeAddress,original);
-					//nodeReplies holds all of the replies
-					nodeReplies.put(nodeAddress, p.propagate());
-				}
-
-				//If we call a get, and it is locally stored and found, we don't need to process replies from other nodes
-				if(!in_local_and_get_ok){
-					for(Entry<String,Message> nodeReply : nodeReplies.entrySet() ){
-						Message message = nodeReply.getValue();
-						
-						String address = nodeReply.getKey();
-						ErrorCode e = (ErrorCode) message.getLeadByte();	
-						/* MAY NEED, MAY NOT? W/B PUT system overload?
-						Message reply_rerun;
-						if(e == ErrorCode.KVSTORE_FAIL){
-							Propagate p = new Propagate("Propagation Thread Re-run", this, address, message);
-							while(reply.getLeadByte()==ErrorCode.KVSTORE_FAIL){
-								reply_rerun = p.propagate();
-								}
+			if(c==Command.SHUTDOWN){
+				this.setShutdownStatus(true);
+				reply.setLeadByte(ErrorCode.OK);
+			}
+			else{
+				if (in_local) {
+					//As we are handling this node locally, remove it from propagation list
+					nodeList.remove(this.PublicIP);
+					switch(c){
+					case PUT:
+						if (kvStore.size() < Key.MAX_NUM) {
+							kvStore.put(k, v);
+							reply.setLeadByte(ErrorCode.OK);
+						} else {
+							reply.setLeadByte(ErrorCode.OUT_OF_SPACE);
 						}
-						*/	
-						
-						switch(c){
-						case PUT:
-							if(e == ErrorCode.OK){
-							System.out.println("Put operation successful at: " + address);
+						break;
+					case GET:
+						if (kvStore.containsKey(k)) {
+							reply.setValue(kvStore.get(k));
+							reply.setLeadByte(ErrorCode.OK);
+							in_local_and_get_ok = true;
+						} else {
+							reply.setLeadByte(ErrorCode.KEY_DNE);
+						}
+						break;
+					case REMOVE:
+						if (kvStore.containsKey(k)) {
+							kvStore.remove(k);
+							reply.setLeadByte(ErrorCode.OK);
+						} else {
+							reply.setLeadByte(ErrorCode.KEY_DNE);
+						}
+						break;						
+					default:
+						reply.setLeadByte(ErrorCode.BAD_COMMAND);
+						break;
+					}
+					
+				} else {
+				
+					//Create list of replies from the 9/10 propagations
+					Map<String,Message> nodeReplies = new ConcurrentHashMap<String,Message>();
+					
+					// Send it along to proper nodes in new thread!
+					for(String nodeAddress : nodeList){
+						Propagate p = new Propagate("Propagation Thread for: "+nodeAddress,this,nodeAddress,original);
+						//nodeReplies holds all of the replies
+						nodeReplies.put(nodeAddress, p.propagate());
+					}
+
+					//If we call a get, and it is locally stored and found, we don't need to process replies from other nodes
+					if(!in_local_and_get_ok){
+						for(Entry<String,Message> nodeReply : nodeReplies.entrySet() ){
+							Message message = nodeReply.getValue();
+							
+							String address = nodeReply.getKey();
+							ErrorCode e = (ErrorCode) message.getLeadByte();	
+							/* MAY NEED, MAY NOT? W/B PUT system overload?
+							Message reply_rerun;
+							if(e == ErrorCode.KVSTORE_FAIL){
+								Propagate p = new Propagate("Propagation Thread Re-run", this, address, message);
+								while(reply.getLeadByte()==ErrorCode.KVSTORE_FAIL){
+									reply_rerun = p.propagate();
+									}
 							}
-							break;
-						case GET:
-							if(e == ErrorCode.OK && in_local_and_get_ok){
-							reply.setValue(message.getValue());
-							reply.setLeadByte(e);
-							}
-							break;
-						case REMOVE:
-							if(reply.getLeadByte()==ErrorCode.KEY_DNE){
-								if(e == ErrorCode.KEY_DNE)
+							*/	
+							
+							switch(c){
+							case PUT:
+								if(e == ErrorCode.OK){
+								System.out.println("Put operation successful at: " + address);
+								}
+								break;
+							case GET:
+								if(e == ErrorCode.OK && in_local_and_get_ok){
+								reply.setValue(message.getValue());
 								reply.setLeadByte(e);
 								}
-							break;
-						default:
-							break;
-						
+								break;
+							case REMOVE:
+								if(reply.getLeadByte()==ErrorCode.KEY_DNE){
+									if(e == ErrorCode.KEY_DNE)
+									reply.setLeadByte(e);
+									}
+								break;
+							default:
+								break;
+							
+								}
 							}
 						}
 					}
-				}
+			}
+			
 			
 			reply.sendTo(con);
 			
@@ -255,5 +263,13 @@ public class Server implements Remote {
 		default:
 			return this.set_one;
 		}
+	}
+
+	public Boolean getShutdownStatus() {
+		return shutdown;
+	}
+
+	public void setShutdownStatus(Boolean shutdown) {
+		this.shutdown = shutdown;
 	}
 }
