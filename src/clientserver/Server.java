@@ -63,14 +63,7 @@ public class Server implements Remote {
 			Boolean in_local = nodeList.contains(this.PublicIP);
 			//If this node is responsible, and it is a get, and we successfully get it?
 			Boolean in_local_and_get_ok = false;
-			
-			
-			//Create list of replies from the 9/10 propagations
-			Map<String,Message> nodeReplies = new HashMap<String,Message>();
-			//List<Message> nodeReplies = new ArrayList<Message>();
-			
-			
-			
+
 			if (in_local) {
 				//As we are handling this node locally, remove it from propagation list
 				nodeList.remove(this.PublicIP);
@@ -106,30 +99,33 @@ public class Server implements Remote {
 				}
 				
 			} else {
+				
+				//Create list of replies from the 9/10 propagations
+				Map<String,Message> nodeReplies = new HashMap<String,Message>();
+				
 				// Send it along to proper nodes in new thread!
 				for(String nodeAddress : nodeList){
-				Propagate p = new Propagate("Propagation Thread",this,nodeAddress,original);
-				
-				//nodeReplies holds all of the replies
-				nodeReplies.put(nodeAddress, p.propagate());
+					Propagate p = new Propagate("Propagation Thread",this,nodeAddress,original);
+					//nodeReplies holds all of the replies
+					nodeReplies.put(nodeAddress, p.propagate());
 				}
-				
-				
+
 				//If we call a get, and it is locally stored and found, we don't need to process replies from other nodes
 				if(!in_local_and_get_ok){
 					for(Entry<String,Message> nodeReply : nodeReplies.entrySet() ){
 						Message message = nodeReply.getValue();
-						Message reply_rerun;
+						
 						String address = nodeReply.getKey();
 						ErrorCode e = (ErrorCode) message.getLeadByte();	
 						/* MAY NEED, MAY NOT? W/B PUT system overload?
-							if(e == ErrorCode.KVSTORE_FAIL){
-								Propagate p = new Propagate("Propagation Thread Re-run", this, address, message);
-								while(reply.getLeadByte()==ErrorCode.KVSTORE_FAIL){
-									reply_rerun = p.propagate();
-									}
-							}
-							*/	
+						Message reply_rerun;
+						if(e == ErrorCode.KVSTORE_FAIL){
+							Propagate p = new Propagate("Propagation Thread Re-run", this, address, message);
+							while(reply.getLeadByte()==ErrorCode.KVSTORE_FAIL){
+								reply_rerun = p.propagate();
+								}
+						}
+						*/	
 						
 						switch(c){
 						case PUT:
