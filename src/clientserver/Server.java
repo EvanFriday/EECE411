@@ -160,23 +160,14 @@ public class Server implements Remote {
 		}
 	}
 	
-	/* Need to totally re-create to push to nodes in keyspaces.
-	 * 
-	 */
-	
-	// Sends m to the necessary 9 or 10 nodes
+	// Sends m to the given node
 	public Message propagateMessage(Message m,String address) throws Exception {
-		//Nodes replies
 		Message nodeReply; 
-
-		
-			nodeReply=(m.sendTo(address, this.port));
-		
+		nodeReply=(m.sendTo(address, this.port));
 		return nodeReply;
 		}
-		
-	
-	
+
+	// Reads in a file of IPs
 	public void fileRead(String file_location) throws Exception{
 		FileReader file = new FileReader(file_location);
 		BufferedReader in = new BufferedReader(file);
@@ -216,6 +207,7 @@ public class Server implements Remote {
 		file.close();
 	}
 	
+	// Returns the first three bits of the key, and splits it into a value 1-8 for keyspaces
 	public int getFirstThreeBits(byte byte_in)
 	{
 		int ret=0;
