@@ -104,7 +104,7 @@ public class Server implements Remote {
 				
 				// Send it along to proper nodes in new thread!
 				for(String nodeAddress : nodeList){
-					Propagate p = new Propagate("Propagation Thread",this,nodeAddress,original);
+					Propagate p = new Propagate("Propagation Thread for: "+nodeAddress,this,nodeAddress,original);
 					//nodeReplies holds all of the replies
 					nodeReplies.put(nodeAddress, p.propagate());
 				}
