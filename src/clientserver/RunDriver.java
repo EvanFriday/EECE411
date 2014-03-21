@@ -15,7 +15,7 @@ public class RunDriver {
 
 	private static final String file_location = "NODE_IP.txt";
 	
-	public static void main(String[] args) throws OutOfMemoryError, Exception{
+	public static void main(String[] args) throws Exception{
 		Server server = new Server(9999);
 		int status = ACCEPTING_DATA;
 		int mode;
@@ -53,7 +53,7 @@ public class RunDriver {
 				break;
 			case PROPAGATING_DATA:
 				// Connect to other nodes, and send data.
-				server.propagate();
+				server.propagateMessage(m);
 				status=ACCEPTING_DATA;
 				break;
 			default:
@@ -62,7 +62,4 @@ public class RunDriver {
 			}
 		}
 	}
-	
-	
-
 }

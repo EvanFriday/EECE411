@@ -5,6 +5,10 @@
 
 package clientserver.message;
 
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+
 public class Message {
 	public static final int MAX_SIZE = Command.SIZE + Key.SIZE + Value.SIZE;
 	private LeadByte lead;
@@ -56,7 +60,59 @@ public class Message {
 		}
 	}
 	
-	public byte[] getRaw() {
+	public static Message getFrom(Socket con) throws Exception {
+		return getFrom(con.getInputStream());
+	}
+	
+	public static Message getFrom(InputStream is) throws Exception {
+		byte[] raw = new byte[MAX_SIZE];
+		is.read(raw, 0, MAX_SIZE);
+		return new Message(raw);
+	}
+	
+	public Message sendTo(String address, int port) throws Exception {
+		Socket con = new Socket(address, port);
+		Message reply = this.sendTo(con);
+		
+		con.close();
+		return reply;
+	}
+	
+	public Message sendTo(Socket con) throws Exception {
+		return this.sendTo(con.getOutputStream(), con.getInputStream());
+	}
+	
+	public Message sendTo(OutputStream os, InputStream replyStream) throws Exception {
+		Message reply = null;
+		
+		os.write(this.getRaw());
+		os.flush();
+		
+		if (replyStream != null) {
+			reply = Message.getFrom(replyStream);
+			
+			switch((ErrorCode) reply.getLeadByte()) {
+			case OK:
+				System.out.println("Operation successful.");
+			case KEY_DNE:
+				System.out.println("Error: Inexistent key.");
+			case OUT_OF_SPACE:
+				System.out.println("Error: Out of space.");
+			case OVERLOAD:
+				System.out.println("Error: System overload.");
+			case KVSTORE_FAIL:
+				System.out.println("Error: Internal KVStore failure.");
+			case BAD_COMMAND:
+				System.out.println("Error: Unrecognized command.");
+			default:
+				System.out.println("Error: Unknown error.");
+			}
+		}
+		
+		return reply;
+	}
+	
+	private byte[] getRaw() {
 		int size = 0;
 		size += (this.lead != null ? Command.SIZE : 0);
 		size += (this.key != null ? Key.SIZE : 0);

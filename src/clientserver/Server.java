@@ -7,119 +7,71 @@ package clientserver;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.rmi.Remote;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
-
-import com.sun.xml.internal.bind.v2.schemagen.xmlschema.List;
 
 import clientserver.message.Command;
 import clientserver.message.ErrorCode;
 import clientserver.message.Key;
-import clientserver.message.LeadByte;
 import clientserver.message.Message;
 import clientserver.message.Value;
 
 public class Server implements Remote {
-	private ServerSocket serverSocket;
+	private ServerSocket socket;
 	private int port = 9999;
 	private Map<Key, Value> kvStore;
 	
-	//Map for possibly non local values;
-	private Map<Key, Value> dirtyPut;
-	private Map<Key, Value> dirtyGet;
-	private Map<Key, Value> dirtyRemove;
-	
-	
-	public static ArrayList<String> set_one;
-	public static ArrayList<String> set_two;
-	public static ArrayList<String> set_three;
-	public static ArrayList<String> set_four;
-	public static ArrayList<String> set_five;
-	public static ArrayList<String> set_six;
-	public static ArrayList<String> set_seven;
-	public static ArrayList<String> set_eight;
+	// I still think we can do this better
+	private List<String> set_one;
+	private List<String> set_two;
+	private List<String> set_three;
+	private List<String> set_four;
+	private List<String> set_five;
+	private List<String> set_six;
+	private List<String> set_seven;
+	private List<String> set_eight;
 
 	public Server(int port) throws Exception {
 		this.port = port;
-		this.serverSocket = new ServerSocket(port);
+		this.socket = new ServerSocket(port);
 		this.kvStore = new HashMap<Key, Value>();
-		this.dirtyPut = new HashMap<Key, Value>();
-		this.dirtyGet = new HashMap<Key, Value>();
-		this.dirtyRemove = new HashMap<Key, Value>();
 	}
 	
 	public synchronized void acceptUpdate() {
 		try {
-			while(true) {
-				Socket connection = this.serverSocket.accept();
-				InputStream is = connection.getInputStream();
-				OutputStream os = connection.getOutputStream();
-				
-				byte[] raw = new byte[Message.MAX_SIZE];
-				Message message, reply;
-				Key k;
-				Value v;
-				
-				// Read values
-				is.read(raw, 0, Message.MAX_SIZE);
-				message = new Message(raw);
-				reply = new Message();
-				k = message.getKey();
-				v = message.getValue();
-				
-				/*
-				 * 
-				 * Logic to check if stored locally, or on other node sets.
-				 * 
-				 * PUT: check if the value in dirtyPut is within this node's keyspace,
-				 * 		
-				 * 		If it is	-- put in this node, and other 9 nodes in keyspace
-				 * 		If it is not-- propagate the put to the ten nodes that have it
-				 * 
-				 */
-				
-				
-				/*
-				 * GET: check if the value in dirtyGet is within this node's keyspace.
-				 * 
-				 *  	If it is 	-- return the value
-				 * 		If it is not-- query a node who is within the keyspace for this key
-				 * 
-				 * REMOVE: check if the value in dirtyRemove is within this node's keyspace, if it is remove it from this node and other nodes in keyspace. If not, forward
-				 * 		
-				 * 		If it is	-- remove the value locally, and on other 9 nodes
-				 * 		If it is not-- call remove on 10 nodes in the proper keyspace
-				 */
-				switch((Command) message.getLeadByte()){
-				case PUT:
-					dirtyPut.put(k,v);
-					break;
-				case GET:
-					dirtyGet.put(k,v);
-					break;
-				case REMOVE:
-					dirtyRemove.put(k,v);
-					break;
-				default:
-						//error
-					break;
-						
-				}
-
-				/*
-				switch((Command) message.getLeadByte()){
+			Socket con = this.socket.accept();
+			Message original = Message.getFrom(con);
+			Message reply = new Message();
+			Key k = original.getKey();
+			Value v = original.getValue();
+			
+			/* Logic to check if stored locally, or on other node sets.
+			 * 
+			 * PUT: check if the value in dirtyPut is within this node's keyspace,
+			 * 		
+			 * 		If it is	-- put in this node, and other 9 nodes in keyspace
+			 * 		If it is not-- propagate the put to the ten nodes that have it
+			 * 
+		 	 * GET: check if the value in dirtyGet is within this node's keyspace.
+			 * 
+			 *  	If it is 	-- return the value
+			 * 		If it is not-- query a node who is within the keyspace for this key
+			 * 
+			 * REMOVE: check if the value in dirtyRemove is within this node's keyspace, if it is remove it from this node and other nodes in keyspace. If not, forward
+			 * 		
+			 * 		If it is	-- remove the value locally, and on other 9 nodes
+			 * 		If it is not-- call remove on 10 nodes in the proper keyspace
+			 */
+			
+//			if (inThisKeySpace) {
+				switch((Command) original.getLeadByte()){
 				case PUT:
 					if (kvStore.size() < Key.MAX_NUM) {
-						dirtyList.put(k, v);
+						kvStore.put(k, v);
 						reply.setLeadByte(ErrorCode.OK);
 					} else {
 						reply.setLeadByte(ErrorCode.OUT_OF_SPACE);
@@ -146,106 +98,63 @@ public class Server implements Remote {
 					break;
 				}
 				
-				os.write(reply.getRaw());*/
-			}
+				reply.sendTo(con);
+//			} else {
+//				// Send it along
+//			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
 	}
 	
-	/*
-	 * 
-	 * Need to totally re-create to push to nodes in keyspaces.
+	/* Need to totally re-create to push to nodes in keyspaces.
 	 * 
 	 */
 	
 	// Sends m to the necessary 9 or 10 nodes
-	public void propagateMessage(Message m) throws UnknownHostException, IOException{
-		LeadByte l = m.getLeadByte();
-		Key k = m.getKey();
-		Value v = m.getValue();
-		int key_space_division_value = getFirstThreeBits(k.getValue()[0]);
+	private void propagateMessage(Message m) throws Exception {
+		int key_space_division_value = getFirstThreeBits(m.getKey().getValue()[0]);
 		
+		// Does nobody else see how we could make this easier for us?
 		switch(key_space_division_value) {
 		case 1:
 			for(int i=0; i<set_one.size(); i++) {
-				String IP = set_one.get(i); // Read next IP address to send to
-				Socket s = new Socket(IP, 9999);
-				OutputStream os = s.getOutputStream();
-				os.write(m.getRaw()); // Send message to other node
-				os.flush();
-				s.close();
+				m.sendTo(set_one.get(i), this.port);
 			}
 			break;
 		case 2:
 			for(int i=0; i<set_two.size(); i++) {
-				String IP = set_two.get(i); // Read next IP address to send to
-				Socket s = new Socket(IP, 9999);
-				OutputStream os = s.getOutputStream();
-				os.write(m.getRaw()); // Send message to other node
-				os.flush();
-				s.close();
+				m.sendTo(set_two.get(i), this.port);
 			}
 			break;
 		case 3:
 			for(int i=0; i<set_three.size(); i++) {
-				String IP = set_three.get(i); // Read next IP address to send to
-				Socket s = new Socket(IP, 9999);
-				OutputStream os = s.getOutputStream();
-				os.write(m.getRaw()); // Send message to other node
-				os.flush();
-				s.close();
+				m.sendTo(set_three.get(i), this.port);
 			}
 			break;
 		case 4:
 			for(int i=0; i<set_four.size(); i++) {
-				String IP = set_four.get(i); // Read next IP address to send to
-				Socket s = new Socket(IP, 9999);
-				OutputStream os = s.getOutputStream();
-				os.write(m.getRaw()); // Send message to other node
-				os.flush();
-				s.close();
+				m.sendTo(set_four.get(i), this.port);
 			}
 			break;
 		case 5:
 			for(int i=0; i<set_five.size(); i++) {
-				String IP = set_five.get(i); // Read next IP address to send to
-				Socket s = new Socket(IP, 9999);
-				OutputStream os = s.getOutputStream();
-				os.write(m.getRaw()); // Send message to other node
-				os.flush();
-				s.close();
+				m.sendTo(set_five.get(i), this.port);
 			}
 			break;
 		case 6:
 			for(int i=0; i<set_six.size(); i++) {
-				String IP = set_six.get(i); // Read next IP address to send to
-				Socket s = new Socket(IP, 9999);
-				OutputStream os = s.getOutputStream();
-				os.write(m.getRaw()); // Send message to other node
-				os.flush();
-				s.close();
+				m.sendTo(set_six.get(i), this.port);
 			}
 			break;
 		case 7:
 			for(int i=0; i<set_seven.size(); i++) {
-				String IP = set_seven.get(i); // Read next IP address to send to
-				Socket s = new Socket(IP, 9999);
-				OutputStream os = s.getOutputStream();
-				os.write(m.getRaw()); // Send message to other node
-				os.flush();
-				s.close();
+				m.sendTo(set_seven.get(i), this.port);
 			}
 			break;
 		case 8:
 			for(int i=0; i<set_eight.size(); i++) {
-				String IP = set_eight.get(i); // Read next IP address to send to
-				Socket s = new Socket(IP, 9999);
-				OutputStream os = s.getOutputStream();
-				os.write(m.getRaw()); // Send message to other node
-				os.flush();
-				s.close();
+				m.sendTo(set_eight.get(i), this.port);
 			}
 			break;
 		default:
@@ -253,44 +162,6 @@ public class Server implements Remote {
 		}
 		
 	}
-	
-	
-	public Message sendMessageToNode(Message message, String address) throws Exception {
-		Socket connection = new Socket(address,port);
-		InputStream is = connection.getInputStream();
-		OutputStream os = connection.getOutputStream();
-		os.write(message.getRaw());
-		os.flush();
-		byte[] replyByteForm = new byte[Message.MAX_SIZE];
-		is.read(replyByteForm,0,Message.MAX_SIZE);
-		
-		Message reply = new Message(replyByteForm);
-		
-		switch((ErrorCode) reply.getLeadByte()) {
-		case OK:
-			System.out.println("Operation successful.");
-		case KEY_DNE:
-			System.out.println("Error: Inexistent key.");
-		case OUT_OF_SPACE:
-			System.out.println("Error: Out of space.");
-		case OVERLOAD:
-			System.out.println("Error: System overload.");
-		case KVSTORE_FAIL:
-			System.out.println("Error: Internal KVStore failure.");
-		case BAD_COMMAND:
-			System.out.println("Error: Unrecognized command.");
-		default:
-			System.out.println("Error: Unknown error.");
-		}
-		connection.close();
-		return reply;
-		
-	}
-		
-	
-
-
-	
 	
 	public void fileRead(String file_location) throws Exception{
 		FileReader file = new FileReader(file_location);
@@ -330,6 +201,7 @@ public class Server implements Remote {
 			}
 		file.close();
 	}
+	
 	public int getFirstThreeBits(byte byte_in)
 	{
 		int ret=0;
@@ -354,7 +226,7 @@ public class Server implements Remote {
 		return ret + 1;
 	}
 	
-	public ArrayList<String> getIPs(Key k) {
+	public List<String> getIPs(Key k) {
 		int key_space_division_value = this.getFirstThreeBits(k.getValue()[0]);
 		switch(key_space_division_value) {
 		case 1:
