@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import clientserver.message.Command;
 import clientserver.message.ErrorCode;
@@ -39,7 +41,7 @@ public class Server implements Remote {
 	public Server(int port) throws Exception {
 		this.port = port;
 		this.socket = new ServerSocket(port);
-		this.kvStore = new HashMap<Key, Value>();
+		this.kvStore = new ConcurrentHashMap<Key, Value>();
 		this.PublicIP = IpTools.getHostnameFromIp(IpTools.getIp());
 	}
 	
@@ -101,7 +103,7 @@ public class Server implements Remote {
 			} else {
 				
 				//Create list of replies from the 9/10 propagations
-				Map<String,Message> nodeReplies = new HashMap<String,Message>();
+				Map<String,Message> nodeReplies = new ConcurrentHashMap<String,Message>();
 				
 				// Send it along to proper nodes in new thread!
 				for(String nodeAddress : nodeList){
