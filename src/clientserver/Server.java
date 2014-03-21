@@ -7,10 +7,12 @@ package clientserver;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.rmi.Remote;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,6 +24,7 @@ import com.sun.xml.internal.bind.v2.schemagen.xmlschema.List;
 import clientserver.message.Command;
 import clientserver.message.ErrorCode;
 import clientserver.message.Key;
+import clientserver.message.LeadByte;
 import clientserver.message.Message;
 import clientserver.message.Value;
 
@@ -83,7 +86,7 @@ public class Server implements Remote {
 				 * 		If it is not-- propagate the put to the ten nodes that have it
 				 * 
 				 */
-				int key_space_division_value = this.getFirstThreeBits(k.getValue()[0]);
+				
 				
 				/*
 				 * GET: check if the value in dirtyGet is within this node's keyspace.
@@ -157,10 +160,97 @@ public class Server implements Remote {
 	 * 
 	 */
 	
-	
-	public void propagate(){
+	// Sends m to the necessary 9 or 10 nodes
+	public void propagateMessage(Message m) throws UnknownHostException, IOException{
+		LeadByte l = m.getLeadByte();
+		Key k = m.getKey();
+		Value v = m.getValue();
+		int key_space_division_value = this.getFirstThreeBits(k.getValue()[0]);
 		
-		
+		switch(key_space_division_value) {
+		case 1:
+			for(int i=0; i<set_one.size(); i++) {
+				String IP = set_one.get(i); // Read next IP address to send to
+				Socket s = new Socket(IP, 9999);
+				OutputStream os = s.getOutputStream();
+				os.write(m.getRaw()); // Send message to other node
+				os.flush();
+				s.close();
+			}
+			break;
+		case 2:
+			for(int i=0; i<set_two.size(); i++) {
+				String IP = set_two.get(i); // Read next IP address to send to
+				Socket s = new Socket(IP, 9999);
+				OutputStream os = s.getOutputStream();
+				os.write(m.getRaw()); // Send message to other node
+				os.flush();
+				s.close();
+			}
+			break;
+		case 3:
+			for(int i=0; i<set_three.size(); i++) {
+				String IP = set_three.get(i); // Read next IP address to send to
+				Socket s = new Socket(IP, 9999);
+				OutputStream os = s.getOutputStream();
+				os.write(m.getRaw()); // Send message to other node
+				os.flush();
+				s.close();
+			}
+			break;
+		case 4:
+			for(int i=0; i<set_four.size(); i++) {
+				String IP = set_four.get(i); // Read next IP address to send to
+				Socket s = new Socket(IP, 9999);
+				OutputStream os = s.getOutputStream();
+				os.write(m.getRaw()); // Send message to other node
+				os.flush();
+				s.close();
+			}
+			break;
+		case 5:
+			for(int i=0; i<set_five.size(); i++) {
+				String IP = set_five.get(i); // Read next IP address to send to
+				Socket s = new Socket(IP, 9999);
+				OutputStream os = s.getOutputStream();
+				os.write(m.getRaw()); // Send message to other node
+				os.flush();
+				s.close();
+			}
+			break;
+		case 6:
+			for(int i=0; i<set_six.size(); i++) {
+				String IP = set_six.get(i); // Read next IP address to send to
+				Socket s = new Socket(IP, 9999);
+				OutputStream os = s.getOutputStream();
+				os.write(m.getRaw()); // Send message to other node
+				os.flush();
+				s.close();
+			}
+			break;
+		case 7:
+			for(int i=0; i<set_seven.size(); i++) {
+				String IP = set_seven.get(i); // Read next IP address to send to
+				Socket s = new Socket(IP, 9999);
+				OutputStream os = s.getOutputStream();
+				os.write(m.getRaw()); // Send message to other node
+				os.flush();
+				s.close();
+			}
+			break;
+		case 8:
+			for(int i=0; i<set_eight.size(); i++) {
+				String IP = set_eight.get(i); // Read next IP address to send to
+				Socket s = new Socket(IP, 9999);
+				OutputStream os = s.getOutputStream();
+				os.write(m.getRaw()); // Send message to other node
+				os.flush();
+				s.close();
+			}
+			break;
+		default:
+			
+		}
 		
 	}
 	
