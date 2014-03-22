@@ -10,6 +10,7 @@ import java.io.FileReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.Remote;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -42,6 +43,14 @@ public class Server implements Remote {
 		this.kvStore = new ConcurrentHashMap<Key, Value>();
 		this.PublicIP = IpTools.getHostnameFromIp(IpTools.getIp());
 		this.shutdown = false;
+		this.set_one = new ArrayList<String>();
+		this.set_two = new ArrayList<String>();
+		this.set_three = new ArrayList<String>();
+		this.set_four = new ArrayList<String>();
+		this.set_five = new ArrayList<String>();
+		this.set_six = new ArrayList<String>();
+		this.set_seven = new ArrayList<String>();
+		this.set_eight = new ArrayList<String>();
 	}
 	
 	public void acceptUpdate() {
@@ -108,6 +117,16 @@ public class Server implements Remote {
 					//Create list of replies from the 9/10 propagations
 					Map<String,Message> nodeReplies = new ConcurrentHashMap<String,Message>();
 					
+					switch(c){
+					case PUT: original.setLeadByte(Command.PROP_PUT);
+						break;
+					case GET: original.setLeadByte(Command.PROP_GET);
+						break;
+					case REMOVE: original.setLeadByte(Command.PROP_REMOVE);
+						break;
+						default:
+							break;
+					}
 					// Send it along to proper nodes in new thread!
 					for(String nodeAddress : nodeList){
 						Propagate p = new Propagate("Propagation Thread for: "+nodeAddress,this,nodeAddress,original);
@@ -179,7 +198,7 @@ public class Server implements Remote {
 		FileReader file = new FileReader(file_location);
 		BufferedReader in = new BufferedReader(file);
 		for(int i=1;i<=8;i++)
-
+			
 			for(int j=1;j<=10;j++){
 				switch(i){	
 				case 1:
