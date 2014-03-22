@@ -1,4 +1,4 @@
-package clientserver;
+package clientserver.ip;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

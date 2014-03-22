@@ -5,6 +5,7 @@
 
 package clientserver;
 
+import clientserver.message.Command;
 import clientserver.message.Message;
 
 public class Propagate implements Runnable {
@@ -17,6 +18,20 @@ public class Propagate implements Runnable {
 		this.address = address;
 		this.port = port;
 		this.thread = new Thread(this);
+		
+		switch ((Command) m.getLeadByte()) {
+		case PUT:
+			m.setLeadByte(Command.PROP_PUT);
+			break;
+		case GET:
+			m.setLeadByte(Command.PROP_GET);
+			break;
+		case REMOVE:
+			m.setLeadByte(Command.PROP_REMOVE);
+			break;
+		default:
+			break;
+		}
 	}
 
 	public void run() {

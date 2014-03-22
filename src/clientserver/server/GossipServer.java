@@ -7,8 +7,12 @@ package clientserver.server;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import clientserver.NodeList;
+import clientserver.Propagate;
+import clientserver.ip.NodeList;
 import clientserver.message.Command;
 import clientserver.message.Message;
 
@@ -22,14 +26,24 @@ public class GossipServer extends AbstractServer {
 		Message toPropogate = this.acceptUpdate();
 		
 		if (toPropogate.getLeadByte() != Command.SHUTDOWN) {
-			this.propagateMessage(toPropogate);
+			this.propagateUpdate(toPropogate);
 		}
 		
 		return (Command) toPropogate.getLeadByte();
 	}
 	
-	private void propagateMessage(Message toSend) {
-		// TODO: Implement propagation
+	private void propagateUpdate(Message toSend) {
+		List<String> propList = this.ipList.getKeySpace(toSend.getKey());
+		Map<String, Message> replyList = new ConcurrentHashMap<String, Message>();
+				
+		for (String node : propList) {
+			if (node != this.myAddress) {
+				Message reply = new Propagate(toSend, node, this.port).propagate();
+				replyList.put(node, reply);
+			}
+		}
+		
+		// TODO: Analyze replies
 	}
 
 	protected void shutdown() {
