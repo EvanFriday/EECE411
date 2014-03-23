@@ -84,14 +84,19 @@ public class Message {
 	
 	public Message sendTo(OutputStream os, InputStream replyStream) throws Exception {
 		Message reply = null;
-		
+		ErrorCode error = null;
 		os.write(this.getRaw());
 		os.flush();
 		
 		if (replyStream != null) {
 			reply = Message.getFrom(replyStream);
-			
-			switch((ErrorCode) reply.getLeadByte()) {
+			try{
+			error = (ErrorCode) reply.getLeadByte();
+			}
+			catch (NullPointerException e) {
+				System.err.println("Error: replystream has no lead byte. NPE");
+			}
+			switch(error) {
 			case OK:
 				System.out.println("Operation successful.");
 			case KEY_DNE:
@@ -110,6 +115,10 @@ public class Message {
 		}
 		
 		return reply;
+	}
+	public void sendReplyTo(OutputStream os) throws Exception {
+		os.write(this.getRaw());
+		os.flush();
 	}
 	
 	private byte[] getRaw() {

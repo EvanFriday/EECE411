@@ -73,6 +73,7 @@ public class Server implements Remote {
 			Boolean in_local = nodeList.contains(this.PublicIP);
 			//If this node is responsible, and it is a get, and we successfully get it?
 			Boolean in_local_and_get_ok = false;
+			Boolean is_a_propagation = false;
 			if(c==Command.SHUTDOWN){
 				this.setShutdownStatus(true);
 				reply.setLeadByte(ErrorCode.OK);
@@ -82,7 +83,9 @@ public class Server implements Remote {
 					//As we are handling this node locally, remove it from propagation list
 					nodeList.remove(this.PublicIP);
 					switch(c){
+					
 					case PUT:
+						System.out.println("Handing PUT command locally");
 						if (kvStore.size() < Key.MAX_NUM) {
 							kvStore.put(k, v);
 							reply.setLeadByte(ErrorCode.OK);
@@ -91,6 +94,7 @@ public class Server implements Remote {
 						}
 						break;
 					case GET:
+						System.out.println("Handing GET command locally");
 						if (kvStore.containsKey(k)) {
 							reply.setValue(kvStore.get(k));
 							reply.setLeadByte(ErrorCode.OK);
@@ -100,19 +104,49 @@ public class Server implements Remote {
 						}
 						break;
 					case REMOVE:
+						System.out.println("Handing REMOVE command locally");
 						if (kvStore.containsKey(k)) {
 							kvStore.remove(k);
 							reply.setLeadByte(ErrorCode.OK);
 						} else {
 							reply.setLeadByte(ErrorCode.KEY_DNE);
 						}
-						break;						
+						break;
+					case PROP_PUT:
+						if (kvStore.size() < Key.MAX_NUM) {
+							kvStore.put(k, v);
+							reply.setLeadByte(ErrorCode.OK);
+						} else {
+							reply.setLeadByte(ErrorCode.OUT_OF_SPACE);
+						}
+						is_a_propagation = true;
+						break;
+					case PROP_GET:
+						if (kvStore.containsKey(k)) {
+							reply.setValue(kvStore.get(k));
+							reply.setLeadByte(ErrorCode.OK);
+							in_local_and_get_ok = true;
+						} else {
+							reply.setLeadByte(ErrorCode.KEY_DNE);
+						}
+						is_a_propagation = true;
+						break;
+					case PROP_REMOVE:
+						if (kvStore.containsKey(k)) {
+							kvStore.remove(k);
+							reply.setLeadByte(ErrorCode.OK);
+						} else {
+							reply.setLeadByte(ErrorCode.KEY_DNE);
+						}
+						is_a_propagation = true;
+						break;
+					
 					default:
 						reply.setLeadByte(ErrorCode.BAD_COMMAND);
 						break;
 					}
 					
-				} else {
+				} else if (!is_a_propagation) {
 				
 					//Create list of replies from the 9/10 propagations
 					Map<String,Message> nodeReplies = new ConcurrentHashMap<String,Message>();
@@ -129,6 +163,18 @@ public class Server implements Remote {
 					}
 					// Send it along to proper nodes in new thread!
 					for(String nodeAddress : nodeList){
+						System.out.println("Propagating");
+						switch(c){
+						case PUT: System.out.println("PUT command to: " + nodeAddress);
+							break;
+						case GET:  System.out.println("GET command to: " + nodeAddress);
+							break;
+						case REMOVE: System.out.println("REMOVE command to: " + nodeAddress);
+							break;
+							default:
+								break;
+						}
+						
 						Propagate p = new Propagate("Propagation Thread for: "+nodeAddress,this,nodeAddress,original);
 						//nodeReplies holds all of the replies
 						nodeReplies.put(nodeAddress, p.propagate());
@@ -179,7 +225,7 @@ public class Server implements Remote {
 			}
 			
 			
-			reply.sendTo(con);
+			reply.sendReplyTo(con.getOutputStream());
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -188,7 +234,7 @@ public class Server implements Remote {
 	
 	// Sends m to the given node
 	public Message propagateMessage(Message m,String address) throws Exception {
-		Message nodeReply; 
+		Message nodeReply = new Message(); 
 		nodeReply=(m.sendTo(address, this.port));
 		return nodeReply;
 		}
