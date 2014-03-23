@@ -28,6 +28,7 @@ public class Server implements Remote {
 	private Map<Key, Value> kvStore;
 	private String PublicIP;
 	private Boolean shutdown;
+	private Boolean debug_mode;
 	private List<String> set_one;
 	private List<String> set_two;
 	private List<String> set_three;
@@ -161,23 +162,38 @@ public class Server implements Remote {
 						default:
 							break;
 					}
-					// Send it along to proper nodes in new thread!
-					for(String nodeAddress : nodeList){
-						System.out.println("Propagating");
-						switch(c){
-						case PUT: System.out.println("PUT command to: " + nodeAddress);
-							break;
-						case GET:  System.out.println("GET command to: " + nodeAddress);
-							break;
-						case REMOVE: System.out.println("REMOVE command to: " + nodeAddress);
-							break;
-							default:
+					if(!getDebug_mode()){
+						// Send it along to proper nodes in new thread!
+						for(String nodeAddress : nodeList){
+							System.out.println("Propagating");
+							switch(c){
+							case PUT: System.out.println("PUT command to: " + nodeAddress);
 								break;
+							case GET:  System.out.println("GET command to: " + nodeAddress);
+								break;
+							case REMOVE: System.out.println("REMOVE command to: " + nodeAddress);
+								break;
+								default:
+									break;
+							}
+							
+							Propagate p = new Propagate("Propagation Thread for: "+nodeAddress,this,nodeAddress,original);
+							//nodeReplies holds all of the replies
+							nodeReplies.put(nodeAddress, p.propagate());
 						}
+					}
+					else{
 						
-						Propagate p = new Propagate("Propagation Thread for: "+nodeAddress,this,nodeAddress,original);
-						//nodeReplies holds all of the replies
-						nodeReplies.put(nodeAddress, p.propagate());
+						Propagate p = new Propagate("Propagation Thread for: "+ "pl002.ece.upatras.gr",this,"pl002.ece.upatras.gr",original);
+						nodeReplies.put("pl002.ece.upatras.gr",p.propagate());
+						Propagate p1 = new Propagate("Propagation Thread for: "+ "gschembra3.diit.unict.it",this,"gschembra3.diit.unict.it",original);
+						nodeReplies.put("pl002.ece.upatras.gr",p1.propagate());
+						Propagate p2 = new Propagate("Propagation Thread for: "+ "pl1.cis.uab.edu",this,"pl1.cis.uab.edu",original);
+						nodeReplies.put("pl002.ece.upatras.gr",p2.propagate());
+						Propagate p3 = new Propagate("Propagation Thread for: "+ "pl2.rcc.uottawa.ca",this,"pl2.rcc.uottawa.ca",original);
+						nodeReplies.put("pl002.ece.upatras.gr",p3.propagate());
+
+						
 					}
 
 					//If we call a get, and it is locally stored and found, we don't need to process replies from other nodes
@@ -336,5 +352,13 @@ public class Server implements Remote {
 
 	public void setShutdownStatus(Boolean shutdown) {
 		this.shutdown = shutdown;
+	}
+
+	public Boolean getDebug_mode() {
+		return debug_mode;
+	}
+
+	public void setDebug_mode(Boolean debug_mode) {
+		this.debug_mode = debug_mode;
 	}
 }

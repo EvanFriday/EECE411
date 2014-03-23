@@ -88,14 +88,15 @@ public class Message {
 		os.write(this.getRaw());
 		os.flush();
 		
-		if (replyStream != null) {
-			reply = Message.getFrom(replyStream);
-			try{
-			error = (ErrorCode) reply.getLeadByte();
-			}
-			catch (NullPointerException e) {
-				System.err.println("Error: replystream has no lead byte. NPE");
-			}
+		
+		reply = Message.getFrom(replyStream);
+		try{
+		error = reply.getErrorByte();
+		}
+		catch (NullPointerException e) {
+			System.err.println("Error: replystream has no lead byte. NPE");
+		}
+			if (error != null) {
 			switch(error) {
 			case OK:
 				System.out.println("Operation successful.");
@@ -162,7 +163,8 @@ public class Message {
 			}
 			break;
 		default:
-			throw new NullPointerException("Message is a strange length.");
+			
+			throw new NullPointerException("Message is a strange length, size of message ="+size);
 		}
 		
 		return raw;
@@ -174,6 +176,10 @@ public class Message {
 
 	public void setLeadByte(LeadByte lead) {
 		this.lead = lead;
+	}
+	
+	public ErrorCode getErrorByte(){
+		return (ErrorCode) this.lead;
 	}
 
 	public Key getKey() {

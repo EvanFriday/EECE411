@@ -14,8 +14,13 @@ public class RunDriver {
 		Server server = new Server(9999);		
 		//Read in node list
 		server.fileRead(file_location);
-		//Begin accepting client connections
 		
+		//Check for debug mode
+		if(args[0]!=null){
+			server.setDebug_mode(true);
+		}
+		
+		//Begin accepting client connections
 		while(true){
 		if(server.getShutdownStatus()){
 			Thread.sleep(5*60*1000);
