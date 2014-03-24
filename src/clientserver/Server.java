@@ -59,7 +59,6 @@ public class Server implements Remote {
 			//Accept incoming connections
 			System.out.println("waiting for incoming connection");
 			Socket con = this.socket.accept();
-			System.out.println("incoming connection from: "+con.getRemoteSocketAddress().toString());
 			//Incoming message from client
 			Message original = Message.getFrom(con);
 			//Reply message to send to client
@@ -69,6 +68,7 @@ public class Server implements Remote {
 			Key k = original.getKey();
 			Value v = original.getValue();
 			Command c = (Command) original.getLeadByte();
+			
 			String remoteAddress = con.getRemoteSocketAddress().toString();
 			switch(c){
 			case PUT: System.out.println("Receiving PUT command from: " + remoteAddress);
@@ -105,11 +105,12 @@ public class Server implements Remote {
 				in_local = nodeList.contains(this.PublicIP);
 			}	
 			//If this node is responsible, and it is a get, and we successfully get it?
-			Boolean in_local_and_get_ok = false;
+			Boolean in_local_and_get = false;
 			
 			//Is this a propagated message?
 			Boolean is_a_propagation = false;
 			
+
 			//Are we shutting down?
 			if(c==Command.SHUTDOWN){
 				this.setShutdownStatus(true);
@@ -123,6 +124,7 @@ public class Server implements Remote {
 					switch(c){
 						case PUT:
 							System.out.println("Handing PUT command locally");
+							is_a_propagation =false;
 							if (kvStore.size() < Key.MAX_NUM) {
 								kvStore.put(k, v);
 								reply.setLeadByte(ErrorCode.OK);
@@ -133,10 +135,12 @@ public class Server implements Remote {
 							break;
 						case GET:
 							System.out.println("Handing GET command locally");
+							in_local_and_get = true;
+							is_a_propagation =false;
 							if (kvStore.containsKey(k)) {
 								reply.setValue(kvStore.get(k));
 								reply.setLeadByte(ErrorCode.OK);
-								in_local_and_get_ok = true;
+								
 							} 
 							else {
 								reply.setLeadByte(ErrorCode.KEY_DNE);
@@ -144,6 +148,7 @@ public class Server implements Remote {
 							break;
 						case REMOVE:
 							System.out.println("Handing REMOVE command locally");
+							is_a_propagation =false;
 							if (kvStore.containsKey(k)) {
 								kvStore.remove(k);
 								reply.setLeadByte(ErrorCode.OK);
@@ -164,10 +169,11 @@ public class Server implements Remote {
 							is_a_propagation = true;
 							break;
 						case PROP_GET:
+							in_local_and_get = true;
 							if (kvStore.containsKey(k)) {
 								reply.setValue(kvStore.get(k));
 								reply.setLeadByte(ErrorCode.OK);
-								in_local_and_get_ok = true;
+								
 							} 
 							else {
 								reply.setLeadByte(ErrorCode.KEY_DNE);
@@ -188,75 +194,75 @@ public class Server implements Remote {
 							reply.setLeadByte(ErrorCode.BAD_COMMAND);
 							break;
 						}
-				}
-				else if (!is_a_propagation){
-				if(!in_local_and_get_ok){
-					//Create list of replies from the 9/10 propagations
-					Map<String,Message> nodeReplies = new ConcurrentHashMap<String,Message>();
 					
-						//Change Command to send to have PROP status.
-						switch(c){
-							case PUT: original.setLeadByte(Command.PROP_PUT);
-								break;
-							case GET: original.setLeadByte(Command.PROP_GET);
-								break;
-							case REMOVE: original.setLeadByte(Command.PROP_REMOVE);
-								break;
-							default:
-								break;
-						}
-						// Send it along to proper nodes in new thread!
-						for(String nodeAddress : nodeList){
-							System.out.println("Propagating");
+				}
+				if(!in_local_and_get){
+					if (!is_a_propagation){
+					
+						//Create list of replies from the 9/10 propagations
+						Map<String,Message> nodeReplies = new ConcurrentHashMap<String,Message>();
+						
+							//Change Command to send to have PROP status.
 							switch(c){
-							case PUT: System.out.println("PUT command to: " + nodeAddress);
-								break;
-							case GET:  System.out.println("GET command to: " + nodeAddress);
-								break;
-							case REMOVE: System.out.println("REMOVE command to: " + nodeAddress);
-								break;
+								case PUT: original.setLeadByte(Command.PROP_PUT);
+									break;
+								case GET: original.setLeadByte(Command.PROP_GET);
+									break;
+								case REMOVE: original.setLeadByte(Command.PROP_REMOVE);
+									break;
 								default:
 									break;
-							}
-							
-							Propagate p = new Propagate("Propagation Thread for: "+nodeAddress,this,nodeAddress,original);
-							//nodeReplies holds all of the replies
-							nodeReplies.put(nodeAddress, p.propagate());
-						}
-					
-
-					//If we call a get, and it is locally stored and found, we don't need to process replies from other nodes
-					
-						for(Entry<String,Message> nodeReply : nodeReplies.entrySet() ){
-							Message message = nodeReply.getValue();
-							
-							String address = nodeReply.getKey();
-							ErrorCode e = (ErrorCode) message.getLeadByte();	
-							
-							switch(c){
-							case PUT:
-								if(e == ErrorCode.OK){
-								System.out.println("Put operation successful at: " + address);
 								}
-								break;
-							case GET:
-								if(e == ErrorCode.OK && in_local_and_get_ok){
-								reply.setValue(message.getValue());
-								reply.setLeadByte(e);
+							// Propagate to all nodes in nodeList
+							for(String nodeAddress : nodeList){
+									
+									switch(c){
+									case PUT: System.out.println("Propagating PUT command to: " + nodeAddress);
+										break;
+									case GET:  System.out.println("Propagating GET command to: " + nodeAddress);
+										break;
+									case REMOVE: System.out.println("Propagating REMOVE command to: " + nodeAddress);
+										break;
+										default:
+											break;
+									}
+									
+									Propagate p = new Propagate("Propagation Thread for: "+nodeAddress,this,nodeAddress,original);
+									//nodeReplies holds all of the replies
+									nodeReplies.put(nodeAddress, p.propagate());
 								}
-								break;
-							case REMOVE:
-								if(reply.getLeadByte()==ErrorCode.KEY_DNE){
-									if(e == ErrorCode.KEY_DNE)
+						
+							//Handle Replies
+							for(Entry<String,Message> nodeReply : nodeReplies.entrySet() ){
+								Message message = nodeReply.getValue();
+								
+								String address = nodeReply.getKey();
+								ErrorCode e = (ErrorCode) message.getLeadByte();	
+								
+								switch(c){
+								case PROP_PUT:
+									if(e == ErrorCode.OK){
+									System.out.println("Put operation successful at: " + address);
+									}
+									break;
+								case PROP_GET:
+									if(e == ErrorCode.OK && in_local_and_get){
+									reply.setValue(message.getValue());
 									reply.setLeadByte(e);
 									}
-								break;
-							default:
-								break;
-							
+									break;
+								case PROP_REMOVE:
+									if(reply.getLeadByte()==ErrorCode.KEY_DNE){
+										if(e == ErrorCode.KEY_DNE)
+										reply.setLeadByte(e);
+										}
+									break;
+								default:
+									break;
+								
+									}
 								}
 							}
-						}
 				}
 			}
 			
