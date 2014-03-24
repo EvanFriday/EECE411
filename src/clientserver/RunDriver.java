@@ -14,11 +14,11 @@ public class RunDriver {
 		Server server = new Server(9999);		
 		//Read in node list
 		server.fileRead(file_location);
-		
+
 		//Check for debug mode
-		if(args[0]!=null){
+
 			server.setDebug_mode(true);
-		}
+			System.out.println("Running in Debug Mode");
 		
 		//Begin accepting client connections
 		while(true){
