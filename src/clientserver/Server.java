@@ -71,17 +71,17 @@ public class Server implements Remote {
 			Command c = (Command) original.getLeadByte();
 			String remoteAddress = con.getRemoteSocketAddress().toString();
 			switch(c){
-			case PUT: System.out.println("Receiving PUT command from: "+remoteAddress);
+			case PUT: System.out.println("Receiving PUT command from: " + remoteAddress);
 				break;
-			case GET:	System.out.println("Receiving GET command from: "+remoteAddress);
+			case GET:	System.out.println("Receiving GET command from: " + remoteAddress);
 				break;
-			case REMOVE: System.out.println("Receiving REMOVE command from: "+remoteAddress);
+			case REMOVE: System.out.println("Receiving REMOVE command from: " + remoteAddress);
 				break;
-			case PROP_PUT: System.out.println("Receiving PROP_PUT command from: "+remoteAddress);
+			case PROP_PUT: System.out.println("Receiving PROP_PUT command from: " + remoteAddress);
 				break;
-			case PROP_GET: System.out.println("Receiving PROP_GET command from: "+remoteAddress);
+			case PROP_GET: System.out.println("Receiving PROP_GET command from: " + remoteAddress);
 				break;
-			case PROP_REMOVE: System.out.println("Receiving PROP_REMOVE command from: "+remoteAddress);
+			case PROP_REMOVE: System.out.println("Receiving PROP_REMOVE command from: " + remoteAddress);
 				break;
 			default:
 				break;
@@ -92,11 +92,11 @@ public class Server implements Remote {
 			//Is this node responsible for this key?
 			Boolean in_local;
 			if(this.debug_mode){
-				nodeList.add("planetlab2.cs.ubc.ca");
-				nodeList.add("pl002.ece.upatras.gr");
-				nodeList.add("gschembra3.diit.unict.it");
-				nodeList.add("pl1.cis.uab.edu");
-				nodeList.add("pl2.rcc.uottawa.ca");
+				nodeList.add("pl1.tailab.eu");
+				nodeList.add("ricepl-5.cs.rice.edu");
+				nodeList.add("planet-lab4.uba.ar");
+				nodeList.add("aguila2.lsi.upc.edu");
+				nodeList.add("earth.cs.brown.edu");
 				in_local = true;
 
 			}
