@@ -8,14 +8,16 @@ package clientserver.message;
 public class Key {
 	public static final int SIZE = 32;
 	public static final int MAX_NUM = 40000;
-	private byte[] value;
+	private byte[] value = new byte[32];
 	
 	public Key() {
-		this.value = new byte[SIZE];
+	//	this.value = new byte[SIZE];
 	}
 	
 	public Key(byte[] key) {
-		this.value = key;
+		for(int i = 0; i< Key.SIZE; i++){
+			this.value[i]=key[i];
+		}
 	}
 	
 	public Key(byte[] message, int offset) {
@@ -25,7 +27,9 @@ public class Key {
 		}
 	}
 	
-	public byte[] getValue() {
-		return this.value;
+	public byte getValue(int index) {
+		
+		return value[index];
 	}
+	
 }

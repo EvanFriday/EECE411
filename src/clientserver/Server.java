@@ -65,8 +65,10 @@ public class Server implements Remote {
 			Message reply = new Message();
 			
 			//Get Command, Key and Value from Message
-			Key k = original.getKey();
-			Value v = original.getValue();
+			Key k = new Key();
+			Value v = new Value();
+			k = original.getKey();
+			v = original.getValue();
 			Command c = (Command) original.getLeadByte();
 			
 			String remoteAddress = con.getRemoteSocketAddress().toString();
@@ -126,7 +128,10 @@ public class Server implements Remote {
 							System.out.println("Handing PUT command locally");
 							is_a_propagation =false;
 							if (kvStore.size() < Key.MAX_NUM) {
+								System.err.println("KvStore size before put ="+kvStore.size());
 								kvStore.put(k, v);
+								System.err.println("KvStore size after put ="+kvStore.size());
+								System.out.println("key:"+k+"value:"+v);
 								reply.setLeadByte(ErrorCode.OK);
 							} 
 							else {
@@ -137,8 +142,12 @@ public class Server implements Remote {
 							System.out.println("Handing GET command locally");
 							in_local_and_get = true;
 							is_a_propagation =false;
+							System.err.println("Check key:"+k+"Get value:"+v);
+							System.err.println(kvStore.containsKey(k));
+							System.err.println(kvStore.get(k));
 							if (kvStore.containsKey(k)) {
 								reply.setValue(kvStore.get(k));
+								
 								reply.setLeadByte(ErrorCode.OK);
 								
 							} 
@@ -349,7 +358,7 @@ public class Server implements Remote {
 	//Returns the appropriate list of IP's for a given keyspace
 	public List<String> getIpListForKeySpace(Key k) {
 
-		int key_space_division_value = this.getFirstThreeBits(k.getValue()[0]);
+		int key_space_division_value = this.getFirstThreeBits(k.getValue(0));
 		switch(key_space_division_value) {
 		case 1:
 			return this.set_one;

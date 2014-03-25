@@ -12,8 +12,8 @@ import java.net.Socket;
 public class Message {
 	public static final int MAX_SIZE = Command.SIZE + Key.SIZE + Value.SIZE;
 	private LeadByte lead;
-	private Key key;
-	private Value value;
+	private Key key = new Key();
+	private Value value = new Value();
 	
 	public Message() {
 		this(null, null, null);
@@ -128,7 +128,8 @@ public class Message {
 		size += (this.key != null ? Key.SIZE : 0);
 		size += (this.value != null ? Value.SIZE : 0);
 		byte[] raw = new byte[size];
-		byte[] keyRaw, valueRaw;
+		byte[] keyRaw = new byte [Key.SIZE];
+		byte[] valueRaw = new byte [Value.SIZE];
 		
 		switch (size) {
 		case Command.SIZE:
@@ -136,8 +137,9 @@ public class Message {
 			break;
 		case Command.SIZE + Key.SIZE:
 			raw[0] = this.lead.getHex();
-			keyRaw = this.key.getValue();
-			
+		for(int i = 0; i< Key.SIZE; i++){
+			keyRaw[i] = this.key.getValue(i);
+			}
 			for (int i = 0; i < Key.SIZE; i++) {
 				raw[Command.SIZE + i] = keyRaw[i];
 			}
@@ -152,7 +154,9 @@ public class Message {
 			break;
 		case Command.SIZE + Key.SIZE + Value.SIZE:
 			raw[0] = this.lead.getHex();
-			keyRaw = this.key.getValue();
+			for(int i = 0; i< Key.SIZE; i++){
+				keyRaw[i] = this.key.getValue(i);
+			}
 			valueRaw = this.value.getValue();
 			
 			for (int i = 0; i < Key.SIZE; i++) {

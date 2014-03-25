@@ -14,7 +14,9 @@ public class Value {
 	}
 	
 	public Value(byte[] value) {
-		this.value = value;
+		for(int i = 0; i< Value.SIZE; i++){
+			this.value[i]=value[i];
+		}
 	}
 	
 	public Value(byte[] message, int offset) {
@@ -25,6 +27,11 @@ public class Value {
 	}
 	
 	public byte[] getValue() {
-		return this.value;
+		byte[] temp = new byte[Value.SIZE];
+		
+		for(int i=0;i<Key.SIZE;i++){
+			temp[i]=value[i];
+		}
+		return temp;
 	}
 }
