@@ -25,7 +25,7 @@ import clientserver.message.Value;
 public class Server implements Remote {
 	private ServerSocket socket;
 	private int port = 5050;
-	private Map<Key, Value> kvStore;
+	private ConcurrentHashMap<Key, Value> kvStore;
 	private String PublicIP;
 	private Boolean shutdown;
 	private Boolean debug_mode = false;
@@ -125,8 +125,8 @@ public class Server implements Remote {
 						case PUT:
 							System.out.println("Handing PUT command locally");
 							is_a_propagation =false;
-							if (kvStore.size() < Key.MAX_NUM) {
-								kvStore.put(k, v);
+							if (this.kvStore.size() < Key.MAX_NUM) {
+								this.kvStore.put(k, v);
 								reply.setLeadByte(ErrorCode.OK);
 							} 
 							else {
@@ -136,11 +136,10 @@ public class Server implements Remote {
 						case GET:
 							System.out.println("Handing GET command locally");
 							in_local_and_get = true;
-							is_a_propagation =false;
-							if (kvStore.containsKey(k)) {
-								reply.setValue(kvStore.get(k));
-								reply.setLeadByte(ErrorCode.OK);
-								
+							is_a_propagation = false;
+							if (this.kvStore.containsKey(k)) {
+								reply.setValue(this.kvStore.get(k));
+								reply.setLeadByte(ErrorCode.OK);	
 							} 
 							else {
 								reply.setLeadByte(ErrorCode.KEY_DNE);
@@ -149,8 +148,8 @@ public class Server implements Remote {
 						case REMOVE:
 							System.out.println("Handing REMOVE command locally");
 							is_a_propagation =false;
-							if (kvStore.containsKey(k)) {
-								kvStore.remove(k);
+							if (this.kvStore.containsKey(k)) {
+								this.kvStore.remove(k);
 								reply.setLeadByte(ErrorCode.OK);
 							} 
 							else {
@@ -159,8 +158,8 @@ public class Server implements Remote {
 							break;
 						case PROP_PUT:
 							
-							if (kvStore.size() < Key.MAX_NUM) {
-								kvStore.put(k, v);
+							if (this.kvStore.size() < Key.MAX_NUM) {
+								this.kvStore.put(k, v);
 								reply.setLeadByte(ErrorCode.OK);
 							} 
 							else {
@@ -170,8 +169,8 @@ public class Server implements Remote {
 							break;
 						case PROP_GET:
 							in_local_and_get = true;
-							if (kvStore.containsKey(k)) {
-								reply.setValue(kvStore.get(k));
+							if (this.kvStore.containsKey(k)) {
+								reply.setValue(this.kvStore.get(k));
 								reply.setLeadByte(ErrorCode.OK);
 								
 							} 
@@ -181,8 +180,8 @@ public class Server implements Remote {
 							is_a_propagation = true;
 							break;
 						case PROP_REMOVE:
-							if (kvStore.containsKey(k)) {
-								kvStore.remove(k);
+							if (this.kvStore.containsKey(k)) {
+								this.kvStore.remove(k);
 								reply.setLeadByte(ErrorCode.OK);
 							} 
 							else {
