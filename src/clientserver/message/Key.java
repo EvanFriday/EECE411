@@ -28,4 +28,12 @@ public class Key {
 	public byte[] getValue() {
 		return this.value;
 	}
+	
+	public byte getKey(int index) {
+		return this.value[index];
+	}
+	
+	public void setKey(byte b, int index) {
+		this.value[index] = b;
+	}
 }

@@ -27,4 +27,8 @@ public class Value {
 	public byte[] getValue() {
 		return this.value;
 	}
+	
+	public void setValue(byte[] raw) {
+		this.value = raw;
+	}
 }

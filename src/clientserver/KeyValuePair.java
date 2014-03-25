@@ -5,32 +5,36 @@
 
 package clientserver;
 
-@Deprecated
+import java.util.Map;
+
+//@Deprecated
 public class KeyValuePair {
 
-
-	public byte[] key; 
-	public byte[] value;
+	private Map<Keyy, Valuee> hm;
 	
-	// Constructor
-	KeyValuePair(byte[] k, byte[] v)
+	// Constructors
+	KeyValuePair(byte[] kk, byte[] vv)
 	{
-		key = new byte[32];
-		value = new byte[1024];
-		key = k;
-		value = v;
+		Keyy k = new Keyy(kk);
+		Valuee v = new Valuee(vv);
+		if(this.hm.containsKey(k))
+			this.hm.remove(k);
+		this.hm.put(k, v);
+	}
+	
+	KeyValuePair(Keyy k, Valuee v) {
+		if(this.hm.containsKey(k))
+			this.hm.remove(k);
+		this.hm.put(k, v);
 	}
 
 	KeyValuePair(){
-		
-		//key = new byte[32];
-		//value = new byte[1024];
-		//for(int i=0; i<32; i++)
-		//	key[i] = 0;
-		//for(int i=0; i<1024; i++)
-		//	value[i] = 0;
+		Keyy k = new Keyy();
+		Valuee v = new Valuee();
+		this.hm.put(k,  v);
 	}
 	
+	/*
 	@Deprecated
 	public byte getKey(int index) {
 		return key[index];
@@ -49,5 +53,6 @@ public class KeyValuePair {
 	@Deprecated
 	public void setValue(byte v, int index) {
 		value[index] = v;
-	}	
+	}
+	*/	
 }
