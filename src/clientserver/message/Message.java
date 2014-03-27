@@ -12,11 +12,13 @@ import java.net.Socket;
 public class Message {
 	public static final int MAX_SIZE = Command.SIZE + Key.SIZE + Value.SIZE;
 	private LeadByte lead;
-	private Key key = new Key();
-	private Value value = new Value();
+	private Key key;
+	private Value value;
 	
 	public Message() {
-		this(null, null, null);
+		this.setLeadByte(null);
+		this.key = new Key();
+		this.value = new Value();
 	}
 	
 	public Message(LeadByte l) {
@@ -33,31 +35,41 @@ public class Message {
 	
 	public Message(LeadByte l, Key k, Value v) {
 		this.setLeadByte(l);
-		this.setKey(k);
-		this.setValue(v);
+		this.setMessageKey(k);
+		this.setMessageValue(v);
 	}
 	
 	public Message(byte[] message) {
-		switch (message.length) {
+		byte[] temp_key = new byte[Key.SIZE];
+		byte[] temp_value = new byte[Value.SIZE];
+		for(int i = 0; i < Key.SIZE; i++){
+			temp_key[i] = message[i+1];
+		}
+		for(int i = 0; i < Value.SIZE; i++){
+			temp_value[i] = message[i+1+Key.SIZE];
+		}
+		
+		/*switch (message.length) {
 		case Command.SIZE:
 			this.setLeadByte(Command.getCommand(message[0]));
 			break;
 		case Command.SIZE + Key.SIZE:
 			this.setLeadByte(Command.getCommand(message[0]));
-			this.setKey(new Key(message, Command.SIZE));
+			this.setMessageKey(new Key(message, Command.SIZE));
 			break;
 		case Command.SIZE + Value.SIZE:
 			this.setLeadByte(Command.getCommand(message[0]));
-			this.setValue(new Value(message, Command.SIZE));
+			this.setMessageValue(new Value(message, Command.SIZE));
 			break;
-		case Command.SIZE + Key.SIZE + Value.SIZE:
+			
+		case Command.SIZE + Key.SIZE + Value.SIZE:*/
 			this.setLeadByte(Command.getCommand(message[0]));
-			this.setKey(new Key(message, Command.SIZE));
-			this.setValue(new Value(message, Command.SIZE + Key.SIZE));
-			break;
+			this.setMessageKey(temp_key);
+			this.setMessageValue(temp_value);
+			/*	break;
 		default:
 			throw new NullPointerException("Message is a strange length.");
-		}
+		}*/
 	}
 	
 	public static Message getFrom(Socket con) throws Exception {
@@ -128,47 +140,37 @@ public class Message {
 		size += (this.key != null ? Key.SIZE : 0);
 		size += (this.value != null ? Value.SIZE : 0);
 		byte[] raw = new byte[size];
-		byte[] keyRaw = new byte [Key.SIZE];
-		byte[] valueRaw = new byte [Value.SIZE];
-		
 		switch (size) {
 		case Command.SIZE:
-			raw[0] = this.lead.getHex();
-			break;
+				raw[0] = this.lead.getHex();
+				break;
+				
 		case Command.SIZE + Key.SIZE:
-			raw[0] = this.lead.getHex();
-		for(int i = 0; i< Key.SIZE; i++){
-			keyRaw[i] = this.key.getValue(i);
-			}
-			for (int i = 0; i < Key.SIZE; i++) {
-				raw[Command.SIZE + i] = keyRaw[i];
-			}
-			break;
+				raw[0] = this.lead.getHex();
+				for (int i = 0; i < Key.SIZE; i++) {
+					raw[Command.SIZE + i] = key.getValue(i);
+				}
+				break;
+				
 		case Command.SIZE + Value.SIZE:
-			raw[0] = this.lead.getHex();
-			valueRaw = this.value.getValue();
+				raw[0] = this.lead.getHex();
+				for (int i = 0; i < Value.SIZE; i++) {
+					raw[Command.SIZE + i] = value.getValue(i);
+				}
+				break;
 			
-			for (int i = 0; i < Value.SIZE; i++) {
-				raw[Command.SIZE + i] = valueRaw[i];
-			}
-			break;
 		case Command.SIZE + Key.SIZE + Value.SIZE:
-			raw[0] = this.lead.getHex();
-			for(int i = 0; i< Key.SIZE; i++){
-				keyRaw[i] = this.key.getValue(i);
-			}
-			valueRaw = this.value.getValue();
+				raw[0] = this.lead.getHex();
+				for (int i = 0; i < Key.SIZE; i++) {
+					raw[Command.SIZE + i] = key.getValue(i);
+				}
+				for (int i = 0; i < Value.SIZE; i++) {
+					raw[Command.SIZE + Key.SIZE + i] = value.getValue(i);
+				}
+				break;
 			
-			for (int i = 0; i < Key.SIZE; i++) {
-				raw[Command.SIZE + i] = keyRaw[i];
-			}
-			for (int i = 0; i < Value.SIZE; i++) {
-				raw[Command.SIZE + Key.SIZE + i] = valueRaw[i];
-			}
-			break;
 		default:
-			
-			throw new NullPointerException("Message is a strange length, size of message ="+size);
+				throw new NullPointerException("Message is a strange length, size of message ="+size);
 		}
 		
 		return raw;
@@ -186,27 +188,48 @@ public class Message {
 		return (ErrorCode) this.lead;
 	}
 
-	public Key getKey() {
-		return this.key;
+	public Key getMessageKey() {
+		Key temp = new Key();
+		for(int i = 0; i < Key.SIZE; i++){
+			temp.setValue(this.key.getValue(i), i);
+		}
+		return temp;
 	}
 
-	public void setKey(Key key) {
-		this.key = key;
+	public void setMessageKey(Key key_in) {
+		this.key = new Key();
+		for(int i = 0; i< Key.SIZE; i++){
+			this.key.setValue(key_in.getValue(i), i);
+		}
+		
 	}
 
-	public void setKey(byte[] raw) {
-		this.key = new Key(raw);
+	public void setMessageKey(byte[] raw) {
+		this.key = new Key();
+		for(int i = 0; i < Key.SIZE; i++){
+			this.key.setValue(raw[i], i);
+		}
 	}
 
-	public Value getValue() {
-		return this.value;
+	public Value getMessageValue() {
+		Value temp = new Value();
+		for(int i = 0; i < Value.SIZE; i++){
+			temp.setValue(this.value.getValue(i), i);
+		}
+		return temp;
 	}
 
-	public void setValue(Value value) {
-		this.value = value;
+	public void setMessageValue(Value value) {
+		this.value = new Value();
+		for(int i = 0; i< Value.SIZE; i++){
+			this.value.setValue(value.getValue(i), i);
+		}
 	}
 
-	public void setValue(byte[] raw) {
-		this.value = new Value(raw);
+	public void setMessageValue(byte[] raw) {
+		this.value = new Value();
+		for(int i = 0; i< Value.SIZE; i++){
+			this.value.setValue(raw[i], i);
+		}
 	}
 }

@@ -7,6 +7,8 @@ package clientserver;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.Remote;
@@ -59,16 +61,20 @@ public class Server implements Remote {
 			//Accept incoming connections
 			System.out.println("waiting for incoming connection");
 			Socket con = this.socket.accept();
+			InputStream in = con.getInputStream();
+			OutputStream out = con.getOutputStream();
 			//Incoming message from client
-			Message original = Message.getFrom(con);
-			//Reply message to send to client
-			Message reply = new Message();
+			Message original = new Message();
+			original = Message.getFrom(in);
 			
+			//Reply message to send to client
+			Message reply = Message.getFrom(in);
+			System.err.println(original.getLeadByte());
+			
+
 			//Get Command, Key and Value from Message
-			Key k = new Key();
-			Value v = new Value();
-			k = original.getKey();
-			v = original.getValue();
+			Key k = new Key(original.getMessageKey());
+			Value v = new Value(original.getMessageValue());
 			Command c = (Command) original.getLeadByte();
 			
 			String remoteAddress = con.getRemoteSocketAddress().toString();
@@ -89,6 +95,7 @@ public class Server implements Remote {
 				break;
 			}
 			
+		
 			//Create list of nodes responsible for this key
 			List<String> nodeList = new ArrayList<String>();
 			//Is this node responsible for this key?
@@ -142,11 +149,11 @@ public class Server implements Remote {
 							System.out.println("Handing GET command locally");
 							in_local_and_get = true;
 							is_a_propagation =false;
-							System.err.println("Check key:"+k+"Get value:"+v);
+							System.err.println("Check key:"+k+"\nGet value:"+v);
 							System.err.println(kvStore.containsKey(k));
 							System.err.println(kvStore.get(k));
 							if (kvStore.containsKey(k)) {
-								reply.setValue(kvStore.get(k));
+								reply.setMessageValue(kvStore.get(k));
 								
 								reply.setLeadByte(ErrorCode.OK);
 								
@@ -180,7 +187,7 @@ public class Server implements Remote {
 						case PROP_GET:
 							in_local_and_get = true;
 							if (kvStore.containsKey(k)) {
-								reply.setValue(kvStore.get(k));
+								reply.setMessageValue(kvStore.get(k));
 								reply.setLeadByte(ErrorCode.OK);
 								
 							} 
@@ -256,7 +263,7 @@ public class Server implements Remote {
 									break;
 								case PROP_GET:
 									if(e == ErrorCode.OK && in_local_and_get){
-									reply.setValue(message.getValue());
+									reply.setMessageValue(message.getMessageValue());
 									reply.setLeadByte(e);
 									}
 									break;

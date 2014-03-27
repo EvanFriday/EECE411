@@ -14,24 +14,29 @@ public class Value {
 	}
 	
 	public Value(byte[] value) {
+		this();
 		for(int i = 0; i< Value.SIZE; i++){
 			this.value[i]=value[i];
+		}
+	}
+	public Value(Value v){
+		this();
+		for(int i = 0; i< Value.SIZE; i++){
+			this.value[i]=v.getValue(i);
 		}
 	}
 	
 	public Value(byte[] message, int offset) {
 		this();
 		for (int i = 0; i < SIZE; i++) {
-			this.value[i] = message[offset + i];
+			this.setValue(message[offset + i], i);
 		}
 	}
 	
-	public byte[] getValue() {
-		byte[] temp = new byte[Value.SIZE];
-		
-		for(int i=0;i<Key.SIZE;i++){
-			temp[i]=value[i];
-		}
-		return temp;
+	public byte getValue(int index) {
+		return this.value[index];
+	}
+	public void setValue(byte value, int index){
+		this.value[index] = value;
 	}
 }
