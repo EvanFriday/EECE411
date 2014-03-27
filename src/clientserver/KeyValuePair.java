@@ -7,6 +7,8 @@ package clientserver;
 
 import java.util.Map;
 
+import clientserver.message.Value;
+
 //@Deprecated
 public class KeyValuePair {
 
@@ -17,14 +19,10 @@ public class KeyValuePair {
 	{
 		Keyy k = new Keyy(kk);
 		Valuee v = new Valuee(vv);
-		if(this.hm.containsKey(k))
-			this.hm.remove(k);
 		this.hm.put(k, v);
 	}
 	
 	KeyValuePair(Keyy k, Valuee v) {
-		if(this.hm.containsKey(k))
-			this.hm.remove(k);
 		this.hm.put(k, v);
 	}
 
@@ -32,6 +30,31 @@ public class KeyValuePair {
 		Keyy k = new Keyy();
 		Valuee v = new Valuee();
 		this.hm.put(k,  v);
+	}
+
+	public int size() {
+		// TODO Auto-generated method stub
+		return this.hm.size();
+	}
+
+	public void add(Keyy kk, Valuee vv) {
+		// TODO Auto-generated method stub
+		this.hm.put(kk, vv);
+	}
+
+	public boolean containsKey(Keyy kk) {
+		// TODO Auto-generated method stub
+		return this.hm.containsKey(kk);
+	}
+
+	public Valuee get(Keyy kk) {
+		// TODO Auto-generated method stub
+		return this.hm.get(kk);
+	}
+
+	public void remove(Keyy kk) {
+		// TODO Auto-generated method stub
+		this.hm.remove(kk);
 	}
 	
 	/*

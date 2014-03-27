@@ -9,10 +9,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
+import clientserver.Valuee;
+
 public class Message {
 	public static final int MAX_SIZE = Command.SIZE + Key.SIZE + Value.SIZE;
 	private LeadByte lead;
-	private Key key;
+	public Key key;
 	private Value value;
 	
 	public Message() {
@@ -72,6 +74,7 @@ public class Message {
 	
 	public Message sendTo(String address, int port) throws Exception {
 		Socket con = new Socket(address, port);
+
 		Message reply = this.sendTo(con);
 		
 		con.close();
@@ -122,7 +125,7 @@ public class Message {
 		os.flush();
 	}
 	
-	private byte[] getRaw() {
+	public byte[] getRaw() {
 		int size = 0;
 		size += (this.lead != null ? Command.SIZE : 0);
 		size += (this.key != null ? Key.SIZE : 0);
@@ -198,8 +201,8 @@ public class Message {
 		return this.value;
 	}
 
-	public void setValue(Value value) {
-		this.value = value;
+	public void setValue(Value value2) {
+		this.value = value2;
 	}
 
 	public void setValue(byte[] raw) {

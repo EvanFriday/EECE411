@@ -12,6 +12,17 @@ public class Valuee {
 		this.value = b;
 	}
 	
+	public Valuee(byte[] message, int offset) {
+		this();
+		for (int i = 0; i < SIZE; i++) {
+			this.value[i] = message[offset + i];
+		}
+	}
+	
+	public byte[] getRaw() {
+		return this.value;
+	}
+	
 	public byte getValue(int index) {
 		return value[index];
 	}

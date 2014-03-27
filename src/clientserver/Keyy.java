@@ -24,6 +24,10 @@ public class Keyy {
 		return this.value[index];
 	}
 	
+	public byte[] getRaw() {
+		return this.value;
+	}
+	
 	public void setKey(byte[] k) {
 		for(int i=0; i<k.length; i++) 
 			this.value[i] = k[i];

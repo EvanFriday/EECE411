@@ -25,7 +25,7 @@ import clientserver.message.Value;
 public class Server implements Remote {
 	private ServerSocket socket;
 	private int port = 5050;
-	private ConcurrentHashMap<Key, Value> kvStore;
+	private KeyValuePair kvStore;
 	private String PublicIP;
 	private Boolean shutdown;
 	private Boolean debug_mode = false;
@@ -41,7 +41,7 @@ public class Server implements Remote {
 	public Server(int port) throws Exception {
 		this.port = port;
 		this.socket = new ServerSocket(port);
-		this.kvStore = new ConcurrentHashMap<Key, Value>();
+		this.kvStore = new KeyValuePair();
 		this.PublicIP = IpTools.getHostnameFromIp(IpTools.getIp());
 		this.shutdown = false;
 		this.set_one = new ArrayList<String>();
@@ -69,6 +69,13 @@ public class Server implements Remote {
 			Value v = original.getValue();
 			Command c = (Command) original.getLeadByte();
 			
+			byte[] b = original.getRaw();
+			Keyy kk = new Keyy(original.getRaw(), 1);
+			Valuee vv = new Valuee();
+			if(original.getRaw().length > 1025) { // Contains a 1024-byte value
+				vv = new Valuee(original.getRaw(), 1025);
+			}
+			
 			String remoteAddress = con.getRemoteSocketAddress().toString();
 			switch(c){
 			case PUT: System.out.println("Receiving PUT command from: " + remoteAddress);
@@ -92,11 +99,11 @@ public class Server implements Remote {
 			//Is this node responsible for this key?
 			Boolean in_local;
 			if(this.debug_mode){
-				nodeList.add("pl1.tailab.eu");
-				nodeList.add("ricepl-5.cs.rice.edu");
-				nodeList.add("planet-lab4.uba.ar");
-				nodeList.add("aguila2.lsi.upc.edu");
-				nodeList.add("earth.cs.brown.edu");
+				nodeList.add("planetlab2.cs.ubc.ca");
+				nodeList.add("pl002.ece.upatras.gr");
+				nodeList.add("gschembra3.diit.unict.it");
+				nodeList.add("pl1.cis.uab.edu");
+				nodeList.add("pl2.rcc.uottawa.ca");
 				in_local = true;
 
 			}
@@ -126,7 +133,7 @@ public class Server implements Remote {
 							System.out.println("Handing PUT command locally");
 							is_a_propagation =false;
 							if (this.kvStore.size() < Key.MAX_NUM) {
-								this.kvStore.put(k, v);
+								this.kvStore.add(kk, vv); // Add KVP to the local store
 								reply.setLeadByte(ErrorCode.OK);
 							} 
 							else {
@@ -137,10 +144,10 @@ public class Server implements Remote {
 							System.out.println("Handing GET command locally");
 							in_local_and_get = true;
 							is_a_propagation = false;
-							if (this.kvStore.containsKey(k)) {
-								reply.setValue(this.kvStore.get(k));
+							if (this.kvStore.containsKey(kk)) {
+								reply.setValue(new Value(this.kvStore.get(kk).getRaw()));
 								reply.setLeadByte(ErrorCode.OK);	
-							} 
+							}
 							else {
 								reply.setLeadByte(ErrorCode.KEY_DNE);
 							}
@@ -148,8 +155,8 @@ public class Server implements Remote {
 						case REMOVE:
 							System.out.println("Handing REMOVE command locally");
 							is_a_propagation =false;
-							if (this.kvStore.containsKey(k)) {
-								this.kvStore.remove(k);
+							if (this.kvStore.containsKey(kk)) {
+								this.kvStore.remove(kk);
 								reply.setLeadByte(ErrorCode.OK);
 							} 
 							else {
@@ -159,7 +166,7 @@ public class Server implements Remote {
 						case PROP_PUT:
 							
 							if (this.kvStore.size() < Key.MAX_NUM) {
-								this.kvStore.put(k, v);
+								this.kvStore.add(kk, vv);
 								reply.setLeadByte(ErrorCode.OK);
 							} 
 							else {
@@ -169,8 +176,8 @@ public class Server implements Remote {
 							break;
 						case PROP_GET:
 							in_local_and_get = true;
-							if (this.kvStore.containsKey(k)) {
-								reply.setValue(this.kvStore.get(k));
+							if (this.kvStore.containsKey(kk)) {
+								reply.setValue(new Value(this.kvStore.get(kk).getRaw()));
 								reply.setLeadByte(ErrorCode.OK);
 								
 							} 
@@ -180,8 +187,8 @@ public class Server implements Remote {
 							is_a_propagation = true;
 							break;
 						case PROP_REMOVE:
-							if (this.kvStore.containsKey(k)) {
-								this.kvStore.remove(k);
+							if (this.kvStore.containsKey(kk)) {
+								this.kvStore.remove(kk);
 								reply.setLeadByte(ErrorCode.OK);
 							} 
 							else {
