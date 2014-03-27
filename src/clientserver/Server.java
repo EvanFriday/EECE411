@@ -27,7 +27,8 @@ import clientserver.message.Value;
 public class Server implements Remote {
 	private ServerSocket socket;
 	private int port = 5050;
-	private Map<Key, Value> kvStore;
+	//private Map<Key, Value> kvStore;
+	private ArrayList<Message> kvStore;
 	private String PublicIP;
 	private Boolean shutdown;
 	private Boolean debug_mode = false;
@@ -43,7 +44,8 @@ public class Server implements Remote {
 	public Server(int port) throws Exception {
 		this.port = port;
 		this.socket = new ServerSocket(port);
-		this.kvStore = new ConcurrentHashMap<Key, Value>();
+//		this.kvStore = new ConcurrentHashMap<Key, Value>();
+		this.kvStore = new ArrayList<Message>();
 		this.PublicIP = IpTools.getHostnameFromIp(IpTools.getIp());
 		this.shutdown = false;
 		this.set_one = new ArrayList<String>();
@@ -62,13 +64,12 @@ public class Server implements Remote {
 			System.out.println("waiting for incoming connection");
 			Socket con = this.socket.accept();
 			InputStream in = con.getInputStream();
-			OutputStream out = con.getOutputStream();
 			//Incoming message from client
 			Message original = new Message();
 			original = Message.getFrom(in);
 			
 			//Reply message to send to client
-			Message reply = Message.getFrom(in);
+			Message reply = Message.getFrom(con);
 			System.err.println(original.getLeadByte());
 			
 
@@ -76,7 +77,20 @@ public class Server implements Remote {
 			Key k = new Key(original.getMessageKey());
 			Value v = new Value(original.getMessageValue());
 			Command c = (Command) original.getLeadByte();
-			
+			if(debug_mode){
+			int index = 0;
+			for(Message m : this.kvStore){
+				System.err.println("message: " + index + " out of: " + kvStore.size());
+					for(int i = 0; i< Key.SIZE; i++){
+						System.err.print(m.getMessageKey().getValue(i));
+						}
+						System.err.print("\n");
+						for(int i = 0; i< Value.SIZE; i++){
+							System.err.print(m.getMessageValue().getValue(i));
+						}
+						System.err.print("\n");
+									
+			}
 			String remoteAddress = con.getRemoteSocketAddress().toString();
 			switch(c){
 			case PUT: System.out.println("Receiving PUT command from: "+remoteAddress);
@@ -94,6 +108,7 @@ public class Server implements Remote {
 			default:
 				break;
 			}
+			}
 			
 		
 			//Create list of nodes responsible for this key
@@ -102,15 +117,15 @@ public class Server implements Remote {
 			Boolean in_local;
 			if(this.debug_mode){
 				nodeList.add("planetlab2.cs.ubc.ca");
-				nodeList.add("pl002.ece.upatras.gr");
-				nodeList.add("gschembra3.diit.unict.it");
-				nodeList.add("pl1.cis.uab.edu");
-				nodeList.add("pl2.rcc.uottawa.ca");
+//				nodeList.add("pl002.ece.upatras.gr");
+//				nodeList.add("gschembra3.diit.unict.it");
+//				nodeList.add("pl1.cis.uab.edu");
+//				nodeList.add("pl2.rcc.uottawa.ca");
 				in_local = true;
 
 			}
 			else{
-				nodeList = getIpListForKeySpace(k);
+				//nodeList = getIpListForKeySpace(k);
 				in_local = nodeList.contains(this.PublicIP);
 			}	
 			//If this node is responsible, and it is a get, and we successfully get it?
@@ -132,13 +147,19 @@ public class Server implements Remote {
 					nodeList.remove(this.PublicIP);
 					switch(c){
 						case PUT:
-							System.out.println("Handing PUT command locally");
-							is_a_propagation =false;
+							if(debug_mode) System.out.println("Handing PUT command locally");
 							if (kvStore.size() < Key.MAX_NUM) {
-								System.err.println("KvStore size before put ="+kvStore.size());
-								kvStore.put(k, v);
-								System.err.println("KvStore size after put ="+kvStore.size());
-								System.out.println("key:"+k+"value:"+v);
+								
+								Boolean exists = false;
+								for(Message m : this.kvStore){
+									if(m.compareMessageKeys(k)){
+										m.setMessageValue(v);
+										exists = true;
+									}						
+								}
+								if(!exists){
+									kvStore.add(original);
+								}
 								reply.setLeadByte(ErrorCode.OK);
 							} 
 							else {
@@ -146,24 +167,19 @@ public class Server implements Remote {
 							}
 							break;
 						case GET:
-							System.out.println("Handing GET command locally");
+							if(debug_mode) System.out.println("Handing GET command locally");
 							in_local_and_get = true;
-							is_a_propagation =false;
-							System.err.println("Check key:"+k+"\nGet value:"+v);
-							System.err.println(kvStore.containsKey(k));
-							System.err.println(kvStore.get(k));
-							if (kvStore.containsKey(k)) {
-								reply.setMessageValue(kvStore.get(k));
-								
-								reply.setLeadByte(ErrorCode.OK);
-								
-							} 
-							else {
-								reply.setLeadByte(ErrorCode.KEY_DNE);
+							reply.setLeadByte(ErrorCode.KEY_DNE);
+							for(Message m : this.kvStore){
+								if(m.compareMessageKeys(k)){
+									reply.setMessageValue(m.getMessageValue());
+									reply.setLeadByte(ErrorCode.OK);
+									break;
+								}								
 							}
 							break;
-						case REMOVE:
-							System.out.println("Handing REMOVE command locally");
+/*						case REMOVE:
+							if(debug_mode) System.out.println("Handing REMOVE command locally");
 							is_a_propagation =false;
 							if (kvStore.containsKey(k)) {
 								kvStore.remove(k);
@@ -205,7 +221,7 @@ public class Server implements Remote {
 								reply.setLeadByte(ErrorCode.KEY_DNE);
 							}
 							is_a_propagation = true;
-							break;
+							break; */
 						default:
 							reply.setLeadByte(ErrorCode.BAD_COMMAND);
 							break;
@@ -231,7 +247,7 @@ public class Server implements Remote {
 								}
 							// Propagate to all nodes in nodeList
 							for(String nodeAddress : nodeList){
-									
+								if(debug_mode) {
 									switch(c){
 									case PUT: System.out.println("Propagating PUT command to: " + nodeAddress);
 										break;
@@ -242,6 +258,7 @@ public class Server implements Remote {
 										default:
 											break;
 									}
+								}
 									
 									Propagate p = new Propagate("Propagation Thread for: "+nodeAddress,this,nodeAddress,original);
 									//nodeReplies holds all of the replies
@@ -258,7 +275,7 @@ public class Server implements Remote {
 								switch(c){
 								case PROP_PUT:
 									if(e == ErrorCode.OK){
-									System.out.println("Put operation successful at: " + address);
+										if(debug_mode) System.out.println("Put operation successful at: " + address);
 									}
 									break;
 								case PROP_GET:
@@ -281,8 +298,6 @@ public class Server implements Remote {
 							}
 				}
 			}
-			
-			
 			reply.sendReplyTo(con.getOutputStream());
 			
 		} catch (Exception e) {

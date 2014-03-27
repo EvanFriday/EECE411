@@ -31,7 +31,7 @@ public class Propagate implements Runnable {
 	}
 	
 	public Message propagate() {
-		System.out.println("Propagating Changes to: " + address.toString());
+		if(server.getDebug_mode()) System.out.println("Propagating Changes to: " + address.toString());
 		t.start();
 		
 		return this.nodeReply;

@@ -158,7 +158,16 @@ public class Message {
 					raw[Command.SIZE + i] = value.getValue(i);
 				}
 				break;
-			
+		case Key.SIZE + Value.SIZE:
+				raw[0] = 0x00;
+				for (int i = 0; i < Key.SIZE; i++) {
+				raw[Command.SIZE + i] = key.getValue(i);
+				}
+				for (int i = 0; i < Value.SIZE; i++) {
+					raw[Command.SIZE + Key.SIZE + i] = value.getValue(i);
+				}
+		break;
+				
 		case Command.SIZE + Key.SIZE + Value.SIZE:
 				raw[0] = this.lead.getHex();
 				for (int i = 0; i < Key.SIZE; i++) {
@@ -171,7 +180,7 @@ public class Message {
 			
 		default:
 				throw new NullPointerException("Message is a strange length, size of message ="+size);
-		}
+	}
 		
 		return raw;
 	}
@@ -210,6 +219,16 @@ public class Message {
 			this.key.setValue(raw[i], i);
 		}
 	}
+	
+	public Boolean compareMessageKeys(Key key_in){
+		for(int i = 0; i < Key.SIZE; i++){
+			if(this.key.getValue(i)!=key_in.getValue(i)){
+				return false;
+			}
+		}
+		return true;
+		
+	}
 
 	public Value getMessageValue() {
 		Value temp = new Value();
@@ -231,5 +250,14 @@ public class Message {
 		for(int i = 0; i< Value.SIZE; i++){
 			this.value.setValue(raw[i], i);
 		}
+	}
+	public Boolean compareMessageValues(Value value_in){
+		for(int i = 0; i < Value.SIZE; i++){
+			if(this.value.getValue(i)!=value_in.getValue(i)){
+				return false;
+			}
+		}
+		return true;
+		
 	}
 }

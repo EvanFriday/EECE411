@@ -17,8 +17,8 @@ public class RunDriver {
 
 		//Check for debug mode
 
-			server.setDebug_mode(true);
-			System.out.println("Running in Debug Mode");
+			//server.setDebug_mode(true);
+			//System.out.println("Running in Debug Mode");
 		
 		//Begin accepting client connections
 		while(true){
