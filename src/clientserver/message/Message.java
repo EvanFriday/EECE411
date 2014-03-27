@@ -129,16 +129,20 @@ public class Message {
 		
 		return reply;
 	}
+	public void sendReplyTo(Socket con) throws Exception {
+		sendReplyTo(con.getOutputStream());
+	}
+	
 	public void sendReplyTo(OutputStream os) throws Exception {
 		os.write(this.getRaw());
 		os.flush();
 	}
 	
 	private byte[] getRaw() {
-		int size = 0;
-		size += (this.lead != null ? Command.SIZE : 0);
-		size += (this.key != null ? Key.SIZE : 0);
-		size += (this.value != null ? Value.SIZE : 0);
+		int size = 1057;
+//		size += (this.lead != null ? Command.SIZE : 0);
+//		size += (this.key != null ? Key.SIZE : 0);
+//		size += (this.value != null ? Value.SIZE : 0);
 		byte[] raw = new byte[size];
 		switch (size) {
 		case Command.SIZE:
@@ -148,33 +152,34 @@ public class Message {
 		case Command.SIZE + Key.SIZE:
 				raw[0] = this.lead.getHex();
 				for (int i = 0; i < Key.SIZE; i++) {
-					raw[Command.SIZE + i] = key.getValue(i);
+					raw[Command.SIZE + i] = this.key.getValue(i);
 				}
 				break;
 				
 		case Command.SIZE + Value.SIZE:
 				raw[0] = this.lead.getHex();
 				for (int i = 0; i < Value.SIZE; i++) {
-					raw[Command.SIZE + i] = value.getValue(i);
+					raw[Command.SIZE + i] = this.value.getValue(i);
 				}
 				break;
 		case Key.SIZE + Value.SIZE:
 				raw[0] = 0x00;
-				for (int i = 0; i < Key.SIZE; i++) {
-				raw[Command.SIZE + i] = key.getValue(i);
+				for(int i = 0; i < Key.SIZE; i++){
+				raw[Command.SIZE + i] = this.key.getValue(i);
 				}
 				for (int i = 0; i < Value.SIZE; i++) {
-					raw[Command.SIZE + Key.SIZE + i] = value.getValue(i);
+					raw[Command.SIZE + Key.SIZE + i] = this.value.getValue(i);
 				}
 		break;
 				
 		case Command.SIZE + Key.SIZE + Value.SIZE:
-				raw[0] = this.lead.getHex();
+				if(this.lead != null) raw[0] = this.lead.getHex();
+				else raw[0] = 0x00;
 				for (int i = 0; i < Key.SIZE; i++) {
-					raw[Command.SIZE + i] = key.getValue(i);
+					raw[Command.SIZE + i] = this.key.getValue(i);
 				}
 				for (int i = 0; i < Value.SIZE; i++) {
-					raw[Command.SIZE + Key.SIZE + i] = value.getValue(i);
+					raw[Command.SIZE + Key.SIZE + i] = this.value.getValue(i);
 				}
 				break;
 			

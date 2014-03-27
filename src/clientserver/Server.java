@@ -61,9 +61,9 @@ public class Server implements Remote {
 	public void acceptUpdate() {
 		try {
 			//Accept incoming connections
-			System.out.println("waiting for incoming connection");
 			Socket con = this.socket.accept();
 			InputStream in = con.getInputStream();
+			OutputStream out = con.getOutputStream();
 			//Incoming message from client
 			Message original = new Message();
 			original = Message.getFrom(in);
@@ -90,6 +90,8 @@ public class Server implements Remote {
 						}
 						System.err.print("\n");
 									
+				}
+
 			}
 			String remoteAddress = con.getRemoteSocketAddress().toString();
 			switch(c){
@@ -107,7 +109,6 @@ public class Server implements Remote {
 				break;
 			default:
 				break;
-			}
 			}
 			
 		
@@ -298,7 +299,7 @@ public class Server implements Remote {
 							}
 				}
 			}
-			reply.sendReplyTo(con.getOutputStream());
+			reply.sendReplyTo(out);
 			
 		} catch (Exception e) {
 			e.printStackTrace();
