@@ -7,6 +7,8 @@ package clientserver;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.Remote;
@@ -19,16 +21,37 @@ import java.util.concurrent.ConcurrentHashMap;
 import clientserver.message.Command;
 import clientserver.message.ErrorCode;
 import clientserver.message.Key;
-import clientserver.message.Message;
+import clientserver.message.LeadByte;
+//import clientserver.message.Message;
 import clientserver.message.Value;
 
 public class Server implements Remote {
 	private ServerSocket socket;
 	private int port = 5050;
-	private KeyValuePair kvStore;
+	
+	public static final int MAX_NUM_KEYS = 40000;
+	public static final int PUT = 0x01;
+	public static final int GET = 0x02;
+	public static final int REMOVE = 0x03;
+	public static final int SHUTDOWN = 0x04;
+	public static final int PROP_PUT = 0x21;
+	public static final int PROP_GET = 0x22;
+	public static final int PROP_REMOVE = 0x23;
+	public static final int PROP_SHUTDOWN = 0x24;
+	public static final int OK = 0x00;
+	public static final int DNE = 0x01;
+	public static final int OOS = 0x02;
+	public static final int OL = 0x03;
+	public static final int FAIL = 0x04;
+	public static final int BADC = 0x05;
+
+	private ArrayList<KeyValuePair> kvStore;
+
+	//private Map<Key, Value> kvStore;
+	//private ArrayList<Message> kvStore;
 	private String PublicIP;
 	private Boolean shutdown;
-	private Boolean debug_mode = false;
+	private Boolean debug_mode = true;
 	private List<String> set_one;
 	private List<String> set_two;
 	private List<String> set_three;
@@ -41,7 +64,9 @@ public class Server implements Remote {
 	public Server(int port) throws Exception {
 		this.port = port;
 		this.socket = new ServerSocket(port);
-		this.kvStore = new KeyValuePair();
+
+//		this.kvStore = new ConcurrentHashMap<Key, Value>();
+		this.kvStore = new ArrayList<KeyValuePair>();
 		this.PublicIP = IpTools.getHostnameFromIp(IpTools.getIp());
 		this.shutdown = false;
 		this.set_one = new ArrayList<String>();
@@ -57,25 +82,48 @@ public class Server implements Remote {
 	public void acceptUpdate() {
 		try {
 			//Accept incoming connections
-			System.out.println("waiting for incoming connection");
 			Socket con = this.socket.accept();
+			InputStream in = con.getInputStream();
+			OutputStream out = con.getOutputStream();
 			//Incoming message from client
-			Message original = Message.getFrom(con);
-			//Reply message to send to client
-			Message reply = new Message();
+			byte[] original = new byte[1 + KeyValuePair.KEY_SIZE + KeyValuePair.VALUE_SIZE];
+			byte[] reply = new byte[1];
+			byte[] reply_put = new byte[1 + KeyValuePair.VALUE_SIZE];
 			
+			in.read(original);		
+
 			//Get Command, Key and Value from Message
-			Key k = original.getKey();
-			Value v = original.getValue();
-			Command c = (Command) original.getLeadByte();
+			byte c = original[0];
+			byte[] k = new byte[KeyValuePair.KEY_SIZE];
+			byte[] v = new byte[KeyValuePair.VALUE_SIZE];
 			
-			byte[] b = original.getRaw();
-			Keyy kk = new Keyy(original.getRaw(), 1);
-			Valuee vv = new Valuee();
-			if(original.getRaw().length > 1025) { // Contains a 1024-byte value
-				vv = new Valuee(original.getRaw(), 1025);
+			// Store in k and v
+			if(c != SHUTDOWN && c != PROP_SHUTDOWN) {
+				for( int i=0; i<KeyValuePair.KEY_SIZE; i++) {
+					k[i] = original[i+1];
+				}
+				if(c == PUT) {
+					for(int j=0; j<KeyValuePair.VALUE_SIZE; j++) {
+						v[j] = original[j+1+KeyValuePair.KEY_SIZE];
+					}
+				}
 			}
 			
+			/*
+			if(this.debug_mode){
+			for(int i=0; i<this.kvStore.size(); i++){
+				System.err.println("message: " + i + " out of: " + kvStore.size());
+					for(int j = 0; j< Key.SIZE; j++){
+						System.err.print(m.getMessageKey().getValue(i));
+						}
+						System.err.print("\n");
+						for(int k = 0; k< Value.SIZE; k++){
+							System.err.print(m.getMessageValue().getValue(i));
+						}
+						System.err.print("\n");									
+				}
+			}
+			*/
 			String remoteAddress = con.getRemoteSocketAddress().toString();
 			switch(c){
 			case PUT: System.out.println("Receiving PUT command from: " + remoteAddress);
@@ -94,6 +142,7 @@ public class Server implements Remote {
 				break;
 			}
 			
+		
 			//Create list of nodes responsible for this key
 			List<String> nodeList = new ArrayList<String>();
 			//Is this node responsible for this key?
@@ -105,10 +154,9 @@ public class Server implements Remote {
 				nodeList.add("pl1.cis.uab.edu");
 				nodeList.add("pl2.rcc.uottawa.ca");
 				in_local = true;
-
 			}
 			else{
-				nodeList = getIpListForKeySpace(k);
+				//nodeList = getIpListForKeySpace(k);
 				in_local = nodeList.contains(this.PublicIP);
 			}	
 			//If this node is responsible, and it is a get, and we successfully get it?
@@ -119,9 +167,9 @@ public class Server implements Remote {
 			
 
 			//Are we shutting down?
-			if(c==Command.SHUTDOWN){
+			if(c==SHUTDOWN){
 				this.setShutdownStatus(true);
-				reply.setLeadByte(ErrorCode.OK);
+				reply[0] = OK;
 			}
 			else{
 				
@@ -132,35 +180,66 @@ public class Server implements Remote {
 						case PUT:
 							System.out.println("Handing PUT command locally");
 							is_a_propagation =false;
-							if (this.kvStore.size() < Key.MAX_NUM) {
-								this.kvStore.add(kk, vv); // Add KVP to the local store
-								reply.setLeadByte(ErrorCode.OK);
-							} 
+							if (this.kvStore.size() < MAX_NUM_KEYS) {
+								reply[0] = OK;
+								this.kvStore.add(new KeyValuePair(k, v)); // Add KVP to the local store
+								if(debug_mode) System.out.println("Handing PUT command locally");
+							}
+						
 							else {
-								reply.setLeadByte(ErrorCode.OUT_OF_SPACE);
+								reply[0] = OOS;
 							}
 							break;
 						case GET:
-							System.out.println("Handing GET command locally");
+							boolean match_found;
+							KeyValuePair kvp;
+							if(debug_mode) System.out.println("Handing GET command locally");
 							in_local_and_get = true;
 							is_a_propagation = false;
-							if (this.kvStore.containsKey(kk)) {
-								reply.setValue(new Value(this.kvStore.get(kk).getRaw()));
-								reply.setLeadByte(ErrorCode.OK);	
-							}
-							else {
-								reply.setLeadByte(ErrorCode.KEY_DNE);
+							
+							for(int i=0; i<this.kvStore.size(); i++) {
+								kvp = this.kvStore.get(i);
+								match_found = true;
+								for(int j=0; j<KeyValuePair.KEY_SIZE; j++) {
+									if(kvp.getKey(j) != k[j]) { // Mismatch
+										match_found = false;
+										break;
+									}
+								}
+								if(match_found) {
+									reply[0] = OK;
+									for(int j=0; j<KeyValuePair.VALUE_SIZE; j++) {
+										reply[j+1] = kvp.getValue(j);
+									}
+									break;
+								}
+								else {
+									reply[0] = DNE;
+								}
 							}
 							break;
 						case REMOVE:
-							System.out.println("Handing REMOVE command locally");
+							if(debug_mode) System.out.println("Handing REMOVE command locally");
 							is_a_propagation =false;
-							if (this.kvStore.containsKey(kk)) {
-								this.kvStore.remove(kk);
-								reply.setLeadByte(ErrorCode.OK);
-							} 
+							for(int i=0; i<this.kvStore.size(); i++) {
+								kvp = this.kvStore.get(i);
+								match_found = true;
+								for(int j=0; j<KeyValuePair.KEY_SIZE; j++) {
+									if(kvp.getKey(j) != k[j]) { // Mismatch
+										match_found = false;
+										break;
+									}
+								}
+								if(match_found) {
+									this.kvStore.remove(i);
+									break;
+								}
+							}
+							if(match_found == false) {
+								reply[0] = DNE;
+							}
 							else {
-								reply.setLeadByte(ErrorCode.KEY_DNE);
+								reply[0] = OK;
 							}
 							break;
 						case PROP_PUT:
@@ -178,6 +257,8 @@ public class Server implements Remote {
 							in_local_and_get = true;
 							if (this.kvStore.containsKey(kk)) {
 								reply.setValue(new Value(this.kvStore.get(kk).getRaw()));
+							if (kvStore.containsKey(k)) {
+								reply.setMessageValue(kvStore.get(k));
 								reply.setLeadByte(ErrorCode.OK);
 								
 							} 
@@ -221,7 +302,7 @@ public class Server implements Remote {
 								}
 							// Propagate to all nodes in nodeList
 							for(String nodeAddress : nodeList){
-									
+								if(debug_mode) {
 									switch(c){
 									case PUT: System.out.println("Propagating PUT command to: " + nodeAddress);
 										break;
@@ -232,6 +313,7 @@ public class Server implements Remote {
 										default:
 											break;
 									}
+								}
 									
 									Propagate p = new Propagate("Propagation Thread for: "+nodeAddress,this,nodeAddress,original);
 									//nodeReplies holds all of the replies
@@ -248,12 +330,12 @@ public class Server implements Remote {
 								switch(c){
 								case PROP_PUT:
 									if(e == ErrorCode.OK){
-									System.out.println("Put operation successful at: " + address);
+										if(debug_mode) System.out.println("Put operation successful at: " + address);
 									}
 									break;
 								case PROP_GET:
 									if(e == ErrorCode.OK && in_local_and_get){
-									reply.setValue(message.getValue());
+									reply.setMessageValue(message.getMessageValue());
 									reply.setLeadByte(e);
 									}
 									break;
@@ -271,9 +353,7 @@ public class Server implements Remote {
 							}
 				}
 			}
-			
-			
-			reply.sendReplyTo(con.getOutputStream());
+			reply.sendReplyTo(out);
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -355,7 +435,7 @@ public class Server implements Remote {
 	//Returns the appropriate list of IP's for a given keyspace
 	public List<String> getIpListForKeySpace(Key k) {
 
-		int key_space_division_value = this.getFirstThreeBits(k.getValue()[0]);
+		int key_space_division_value = this.getFirstThreeBits(k.getValue(0));
 		switch(key_space_division_value) {
 		case 1:
 			return this.set_one;
