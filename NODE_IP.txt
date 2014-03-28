@@ -76,3 +76,5 @@ planetlabone.ccs.neu.edu
 planet1.cc.gt.atl.ga.us
 planetlab-04.vt.nodes.planet-lab.org
 planetlab5.csee.usf.edu
+planetlab2.cs.vu.nl
+planetlab-1.cs.uic.edu	
