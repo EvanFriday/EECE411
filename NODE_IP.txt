@@ -25,7 +25,6 @@ planetlab2.cs.otago.ac.nz
 planetlab2.sfc.wide.ad.jp	
 planetlab1.georgetown.edu	
 planetlab2.extern.kuleuven.be			
-planetlab4.csee.usf.edu
 dplanet2.uoc.edu
 planetlab1.cs.uoi.gr	
 planetlab01.alucloud.com		
@@ -64,8 +63,7 @@ planet-lab2.cs.ucr.edu
 planetlab1.dojima.wide.ad.jp		
 planetlab02.cs.washington.edu
 planetlab1.extern.kuleuven.be	
-planetlab4.csee.usf.edu	
-dplanet2.uoc.edu
+planetlab4.csee.usf.edu
 gschembra4.diit.unict.it
 planetlab1.polito.it
 onelab1.info.ucl.ac.be
