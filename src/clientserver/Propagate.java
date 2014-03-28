@@ -5,46 +5,39 @@
 
 package clientserver;
 
-import clientserver.message.Command;
 import clientserver.message.Message;
 
 public class Propagate implements Runnable {
-	private Message message, reply;
 	private String address;
-	private int port;
-	private Thread thread;
+	private Message nodeReply;
+	private Server server;
+	private Message message;
+	private Thread t;
 	
-	public Propagate(Message m, String address, int port) {
+	public Propagate(String threadname, Server server,String address ,Message message) {
 		this.address = address;
-		this.port = port;
-		this.thread = new Thread(this);
-		
-		switch ((Command) m.getLeadByte()) {
-		case PUT:
-			m.setLeadByte(Command.PROP_PUT);
-			break;
-		case GET:
-			m.setLeadByte(Command.PROP_GET);
-			break;
-		case REMOVE:
-			m.setLeadByte(Command.PROP_REMOVE);
-			break;
-		default:
-			break;
-		}
+		this.server = server;
+		this.message = message;
+		this.nodeReply = new Message();
+		this.t = new Thread(this, threadname);
 	}
 
 	public void run() {
 		try {
-			this.reply = this.message.sendTo(address, port);
+
+			nodeReply = server.propagateMessage(this.message, this.address);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
 	public Message propagate() {
-		System.out.println("Propagating Changes to: " + address);
-		this.thread.start();
-		return reply;
+
+		if(server.getDebug_mode()) System.out.println("Propagating Changes to: " + address.toString());
+		t.start();
+		
+		return this.nodeReply;
 	}
+	
 }
+

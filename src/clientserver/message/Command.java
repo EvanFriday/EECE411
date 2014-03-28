@@ -12,7 +12,8 @@ public enum Command implements LeadByte {
 	SHUTDOWN((byte) 0x04),
 	PROP_PUT((byte) 0x21),
 	PROP_GET((byte) 0x22),
-	PROP_REMOVE((byte) 0x23);
+	PROP_REMOVE((byte) 0x23),
+	PROP_SHUTDOWN((byte) 0x24);
 	
 	public static final int SIZE = 1;
 	

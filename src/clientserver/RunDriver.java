@@ -5,16 +5,30 @@
 
 package clientserver;
 
-import java.io.IOException;
 
-import clientserver.server.AbstractServer;
-import clientserver.server.GossipServer;
 
 public class RunDriver {
 	private static final String file_location = "NODE_IP.txt";
-	
-	public static void main(String[] args) throws IOException {
-		AbstractServer server = new GossipServer(9999, file_location);
-		server.run();
+
+	public static void main(String[] args) throws Exception{
+		//Create new Server Object
+		Server server = new Server(9999);		
+		//Read in node list
+		server.fileRead(file_location);
+
+		//Check for debug mode
+
+			//server.setDebug_mode(true);
+			//System.out.println("Running in Debug Mode");
+		
+		//Begin accepting client connections
+		while(true){
+		if(server.getShutdownStatus()){
+			Thread.sleep(5*60*1000);
+			server.setShutdownStatus(false);
+		}
+		else
+			server.acceptUpdate();
+		}
 	}
 }

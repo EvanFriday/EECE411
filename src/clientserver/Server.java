@@ -7,11 +7,20 @@ package clientserver;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.rmi.Remote;
+<<<<<<< HEAD
 import java.util.List;
 import java.util.Map;
+=======
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+>>>>>>> 434ee628b614afb9c2c77e64736d260cca870f77
 import java.util.concurrent.ConcurrentHashMap;
 
 import clientserver.message.Command;
@@ -22,10 +31,12 @@ import clientserver.message.Value;
 
 public class Server implements Remote {
 	private ServerSocket socket;
-	private int port = 9999;
-	private Map<Key, Value> kvStore;
-	
-	// I still think we can do this better
+	private int port = 5050;
+	//private Map<Key, Value> kvStore;
+	private ArrayList<Message> kvStore;
+	private String PublicIP;
+	private Boolean shutdown;
+	private Boolean debug_mode = false;
 	private List<String> set_one;
 	private List<String> set_two;
 	private List<String> set_three;
@@ -38,136 +49,283 @@ public class Server implements Remote {
 	public Server(int port) throws Exception {
 		this.port = port;
 		this.socket = new ServerSocket(port);
-		this.kvStore = new ConcurrentHashMap<Key, Value>();
+
+//		this.kvStore = new ConcurrentHashMap<Key, Value>();
+		this.kvStore = new ArrayList<Message>();
+		this.PublicIP = IpTools.getHostnameFromIp(IpTools.getIp());
+		this.shutdown = false;
+		this.set_one = new ArrayList<String>();
+		this.set_two = new ArrayList<String>();
+		this.set_three = new ArrayList<String>();
+		this.set_four = new ArrayList<String>();
+		this.set_five = new ArrayList<String>();
+		this.set_six = new ArrayList<String>();
+		this.set_seven = new ArrayList<String>();
+		this.set_eight = new ArrayList<String>();
+
 	}
 	
-	public synchronized void acceptUpdate() {
+	public void acceptUpdate() {
 		try {
+			//Accept incoming connections
 			Socket con = this.socket.accept();
-			Message original = Message.getFrom(con);
-			Message reply = new Message();
-			Key k = original.getKey();
-			Value v = original.getValue();
+			InputStream in = con.getInputStream();
+			OutputStream out = con.getOutputStream();
+			//Incoming message from client
+			Message original = new Message();
+			original = Message.getFrom(in);
 			
-			/* Logic to check if stored locally, or on other node sets.
-			 * 
-			 * PUT: check if the value in dirtyPut is within this node's keyspace,
-			 * 		
-			 * 		If it is	-- put in this node, and other 9 nodes in keyspace
-			 * 		If it is not-- propagate the put to the ten nodes that have it
-			 * 
-		 	 * GET: check if the value in dirtyGet is within this node's keyspace.
-			 * 
-			 *  	If it is 	-- return the value
-			 * 		If it is not-- query a node who is within the keyspace for this key
-			 * 
-			 * REMOVE: check if the value in dirtyRemove is within this node's keyspace, if it is remove it from this node and other nodes in keyspace. If not, forward
-			 * 		
-			 * 		If it is	-- remove the value locally, and on other 9 nodes
-			 * 		If it is not-- call remove on 10 nodes in the proper keyspace
-			 */
+			//Reply message to send to client
+			Message reply = Message.getFrom(con);
+			System.err.println(original.getLeadByte());
 			
-//			if (inThisKeySpace) {
-				switch((Command) original.getLeadByte()){
-				case PUT:
-					if (kvStore.size() < Key.MAX_NUM) {
-						kvStore.put(k, v);
-						reply.setLeadByte(ErrorCode.OK);
-					} else {
-						reply.setLeadByte(ErrorCode.OUT_OF_SPACE);
-					}
-					break;
-				case GET:
-					if (kvStore.containsKey(k)) {
-						reply.setValue(kvStore.get(k));
-						reply.setLeadByte(ErrorCode.OK);
-					} else {
-						reply.setLeadByte(ErrorCode.KEY_DNE);
-					}
-					break;
-				case REMOVE:
-					if (kvStore.containsKey(k)) {
-						kvStore.remove(k);
-						reply.setLeadByte(ErrorCode.OK);
-					} else {
-						reply.setLeadByte(ErrorCode.KEY_DNE);
-					}
-					break;
-				default:
-					reply.setLeadByte(ErrorCode.BAD_COMMAND);
-					break;
+
+			//Get Command, Key and Value from Message
+			Key k = new Key(original.getMessageKey());
+			Value v = new Value(original.getMessageValue());
+			Command c = (Command) original.getLeadByte();
+			if(debug_mode){
+			int index = 0;
+			for(Message m : this.kvStore){
+				System.err.println("message: " + index + " out of: " + kvStore.size());
+					for(int i = 0; i< Key.SIZE; i++){
+						System.err.print(m.getMessageKey().getValue(i));
+						}
+						System.err.print("\n");
+						for(int i = 0; i< Value.SIZE; i++){
+							System.err.print(m.getMessageValue().getValue(i));
+						}
+						System.err.print("\n");
+									
 				}
+
+			}
+			String remoteAddress = con.getRemoteSocketAddress().toString();
+			switch(c){
+			case PUT: System.out.println("Receiving PUT command from: "+remoteAddress);
+				break;
+			case GET:	System.out.println("Receiving GET command from: "+remoteAddress);
+				break;
+			case REMOVE: System.out.println("Receiving REMOVE command from: "+remoteAddress);
+				break;
+			case PROP_PUT: System.out.println("Receiving PROP_PUT command from: "+remoteAddress);
+				break;
+			case PROP_GET: System.out.println("Receiving PROP_GET command from: "+remoteAddress);
+				break;
+			case PROP_REMOVE: System.out.println("Receiving PROP_REMOVE command from: "+remoteAddress);
+				break;
+			default:
+				break;
+			}
+			
+		
+			//Create list of nodes responsible for this key
+			List<String> nodeList = new ArrayList<String>();
+			//Is this node responsible for this key?
+			Boolean in_local;
+			if(this.debug_mode){
+				nodeList.add("planetlab2.cs.ubc.ca");
+//				nodeList.add("pl002.ece.upatras.gr");
+//				nodeList.add("gschembra3.diit.unict.it");
+//				nodeList.add("pl1.cis.uab.edu");
+//				nodeList.add("pl2.rcc.uottawa.ca");
+				in_local = true;
+
+			}
+			else{
+				//nodeList = getIpListForKeySpace(k);
+				in_local = nodeList.contains(this.PublicIP);
+			}	
+			//If this node is responsible, and it is a get, and we successfully get it?
+			Boolean in_local_and_get = false;
+			
+			//Is this a propagated message?
+			Boolean is_a_propagation = false;
+			
+
+			//Are we shutting down?
+			if(c==Command.SHUTDOWN){
+				this.setShutdownStatus(true);
+				reply.setLeadByte(ErrorCode.OK);
+			}
+			else{
 				
-				reply.sendTo(con);
-//			} else {
-//				// Send it along
-//			}
+				if (in_local) {
+					//As we are handling this node locally, remove it from propagation list
+					nodeList.remove(this.PublicIP);
+					switch(c){
+						case PUT:
+							if(debug_mode) System.out.println("Handing PUT command locally");
+							if (kvStore.size() < Key.MAX_NUM) {
+								
+								Boolean exists = false;
+								for(Message m : this.kvStore){
+									if(m.compareMessageKeys(k)){
+										m.setMessageValue(v);
+										exists = true;
+									}						
+								}
+								if(!exists){
+									kvStore.add(original);
+								}
+								reply.setLeadByte(ErrorCode.OK);
+							} 
+							else {
+								reply.setLeadByte(ErrorCode.OUT_OF_SPACE);
+							}
+							break;
+						case GET:
+							if(debug_mode) System.out.println("Handing GET command locally");
+							in_local_and_get = true;
+							reply.setLeadByte(ErrorCode.KEY_DNE);
+							for(Message m : this.kvStore){
+								if(m.compareMessageKeys(k)){
+									reply.setMessageValue(m.getMessageValue());
+									reply.setLeadByte(ErrorCode.OK);
+									break;
+								}								
+							}
+							break;
+/*						case REMOVE:
+							if(debug_mode) System.out.println("Handing REMOVE command locally");
+							is_a_propagation =false;
+							if (kvStore.containsKey(k)) {
+								kvStore.remove(k);
+								reply.setLeadByte(ErrorCode.OK);
+							} 
+							else {
+								reply.setLeadByte(ErrorCode.KEY_DNE);
+							}
+							break;
+						case PROP_PUT:
+							
+							if (kvStore.size() < Key.MAX_NUM) {
+								kvStore.put(k, v);
+								reply.setLeadByte(ErrorCode.OK);
+							} 
+							else {
+								reply.setLeadByte(ErrorCode.OUT_OF_SPACE);
+							}
+							is_a_propagation = true;
+							break;
+						case PROP_GET:
+							in_local_and_get = true;
+							if (kvStore.containsKey(k)) {
+								reply.setMessageValue(kvStore.get(k));
+								reply.setLeadByte(ErrorCode.OK);
+								
+							} 
+							else {
+								reply.setLeadByte(ErrorCode.KEY_DNE);
+							}
+							is_a_propagation = true;
+							break;
+						case PROP_REMOVE:
+							if (kvStore.containsKey(k)) {
+								kvStore.remove(k);
+								reply.setLeadByte(ErrorCode.OK);
+							} 
+							else {
+								reply.setLeadByte(ErrorCode.KEY_DNE);
+							}
+							is_a_propagation = true;
+							break; */
+						default:
+							reply.setLeadByte(ErrorCode.BAD_COMMAND);
+							break;
+						}
+					
+				}
+				if(!in_local_and_get){
+					if (!is_a_propagation){
+					
+						//Create list of replies from the 9/10 propagations
+						Map<String,Message> nodeReplies = new ConcurrentHashMap<String,Message>();
+						
+							//Change Command to send to have PROP status.
+							switch(c){
+								case PUT: original.setLeadByte(Command.PROP_PUT);
+									break;
+								case GET: original.setLeadByte(Command.PROP_GET);
+									break;
+								case REMOVE: original.setLeadByte(Command.PROP_REMOVE);
+									break;
+								default:
+									break;
+								}
+							// Propagate to all nodes in nodeList
+							for(String nodeAddress : nodeList){
+								if(debug_mode) {
+									switch(c){
+									case PUT: System.out.println("Propagating PUT command to: " + nodeAddress);
+										break;
+									case GET:  System.out.println("Propagating GET command to: " + nodeAddress);
+										break;
+									case REMOVE: System.out.println("Propagating REMOVE command to: " + nodeAddress);
+										break;
+										default:
+											break;
+									}
+								}
+									
+									Propagate p = new Propagate("Propagation Thread for: "+nodeAddress,this,nodeAddress,original);
+									//nodeReplies holds all of the replies
+									nodeReplies.put(nodeAddress, p.propagate());
+								}
+						
+							//Handle Replies
+							for(Entry<String,Message> nodeReply : nodeReplies.entrySet() ){
+								Message message = nodeReply.getValue();
+								
+								String address = nodeReply.getKey();
+								ErrorCode e = (ErrorCode) message.getLeadByte();	
+								
+								switch(c){
+								case PROP_PUT:
+									if(e == ErrorCode.OK){
+										if(debug_mode) System.out.println("Put operation successful at: " + address);
+									}
+									break;
+								case PROP_GET:
+									if(e == ErrorCode.OK && in_local_and_get){
+									reply.setMessageValue(message.getMessageValue());
+									reply.setLeadByte(e);
+									}
+									break;
+								case PROP_REMOVE:
+									if(reply.getLeadByte()==ErrorCode.KEY_DNE){
+										if(e == ErrorCode.KEY_DNE)
+										reply.setLeadByte(e);
+										}
+									break;
+								default:
+									break;
+								
+									}
+								}
+							}
+				}
+			}
+			reply.sendReplyTo(out);
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 	
-	/* Need to totally re-create to push to nodes in keyspaces.
-	 * 
-	 */
-	
-	// Sends m to the necessary 9 or 10 nodes
-	private void propagateMessage(Message m) throws Exception {
-		int key_space_division_value = getFirstThreeBits(m.getKey().getValue()[0]);
-		
-		// Does nobody else see how we could make this easier for us?
-		switch(key_space_division_value) {
-		case 1:
-			for(int i=0; i<set_one.size(); i++) {
-				m.sendTo(set_one.get(i), this.port);
-			}
-			break;
-		case 2:
-			for(int i=0; i<set_two.size(); i++) {
-				m.sendTo(set_two.get(i), this.port);
-			}
-			break;
-		case 3:
-			for(int i=0; i<set_three.size(); i++) {
-				m.sendTo(set_three.get(i), this.port);
-			}
-			break;
-		case 4:
-			for(int i=0; i<set_four.size(); i++) {
-				m.sendTo(set_four.get(i), this.port);
-			}
-			break;
-		case 5:
-			for(int i=0; i<set_five.size(); i++) {
-				m.sendTo(set_five.get(i), this.port);
-			}
-			break;
-		case 6:
-			for(int i=0; i<set_six.size(); i++) {
-				m.sendTo(set_six.get(i), this.port);
-			}
-			break;
-		case 7:
-			for(int i=0; i<set_seven.size(); i++) {
-				m.sendTo(set_seven.get(i), this.port);
-			}
-			break;
-		case 8:
-			for(int i=0; i<set_eight.size(); i++) {
-				m.sendTo(set_eight.get(i), this.port);
-			}
-			break;
-		default:
-			
+	// Sends m to the given node
+	public Message propagateMessage(Message m,String address) throws Exception {
+		Message nodeReply = new Message(); 
+		nodeReply=(m.sendTo(address, this.port));
+		return nodeReply;
 		}
-		
-	}
-	
+
+	// Reads in a file of IPs
 	public void fileRead(String file_location) throws Exception{
 		FileReader file = new FileReader(file_location);
 		BufferedReader in = new BufferedReader(file);
 		for(int i=1;i<=8;i++)
-
+			
 			for(int j=1;j<=10;j++){
 				switch(i){	
 				case 1:
@@ -202,6 +360,7 @@ public class Server implements Remote {
 		file.close();
 	}
 	
+	// Returns the first three bits of the key, and splits it into a value 1-8 for keyspaces
 	public int getFirstThreeBits(byte byte_in)
 	{
 		int ret=0;
@@ -226,8 +385,10 @@ public class Server implements Remote {
 		return ret + 1;
 	}
 	
-	public List<String> getIPs(Key k) {
-		int key_space_division_value = this.getFirstThreeBits(k.getValue()[0]);
+	//Returns the appropriate list of IP's for a given keyspace
+	public List<String> getIpListForKeySpace(Key k) {
+
+		int key_space_division_value = this.getFirstThreeBits(k.getValue(0));
 		switch(key_space_division_value) {
 		case 1:
 			return this.set_one;
@@ -249,8 +410,23 @@ public class Server implements Remote {
 			return this.set_one;
 		}
 	}
-	
-	public void selectAddresses(){
-		//TODO: Randomly select a number of items from addressList and populate propagateAddressList with them
+
+	public Boolean getShutdow<<<<<<< HEAD
+	import clientserver.message.Command;
+	=======
+	>>>>>>> 434ee628b614afb9c2c77e64736d260cca870f77nStatus() {
+		return shutdown;
+	}
+
+	public void setShutdownStatus(Boolean shutdown) {
+		this.shutdown = shutdown;
+	}
+
+	public Boolean getDebug_mode() {
+		return debug_mode;
+	}
+
+	public void setDebug_mode(Boolean debug_mode) {
+		this.debug_mode = debug_mode;
 	}
 }

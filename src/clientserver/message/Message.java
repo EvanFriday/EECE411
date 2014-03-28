@@ -18,7 +18,9 @@ public class Message {
 	private Value value;
 	
 	public Message() {
-		this(null, null, null);
+		this.setLeadByte(null);
+		this.key = new Key();
+		this.value = new Value();
 	}
 	
 	public Message(LeadByte l) {
@@ -35,31 +37,41 @@ public class Message {
 	
 	public Message(LeadByte l, Key k, Value v) {
 		this.setLeadByte(l);
-		this.setKey(k);
-		this.setValue(v);
+		this.setMessageKey(k);
+		this.setMessageValue(v);
 	}
 	
 	public Message(byte[] message) {
-		switch (message.length) {
+		byte[] temp_key = new byte[Key.SIZE];
+		byte[] temp_value = new byte[Value.SIZE];
+		for(int i = 0; i < Key.SIZE; i++){
+			temp_key[i] = message[i+1];
+		}
+		for(int i = 0; i < Value.SIZE; i++){
+			temp_value[i] = message[i+1+Key.SIZE];
+		}
+		
+		/*switch (message.length) {
 		case Command.SIZE:
 			this.setLeadByte(Command.getCommand(message[0]));
 			break;
 		case Command.SIZE + Key.SIZE:
 			this.setLeadByte(Command.getCommand(message[0]));
-			this.setKey(new Key(message, Command.SIZE));
+			this.setMessageKey(new Key(message, Command.SIZE));
 			break;
 		case Command.SIZE + Value.SIZE:
 			this.setLeadByte(Command.getCommand(message[0]));
-			this.setValue(new Value(message, Command.SIZE));
+			this.setMessageValue(new Value(message, Command.SIZE));
 			break;
-		case Command.SIZE + Key.SIZE + Value.SIZE:
+			
+		case Command.SIZE + Key.SIZE + Value.SIZE:*/
 			this.setLeadByte(Command.getCommand(message[0]));
-			this.setKey(new Key(message, Command.SIZE));
-			this.setValue(new Value(message, Command.SIZE + Key.SIZE));
-			break;
+			this.setMessageKey(temp_key);
+			this.setMessageValue(temp_value);
+			/*	break;
 		default:
 			throw new NullPointerException("Message is a strange length.");
-		}
+		}*/
 	}
 	
 	public static Message getFrom(Socket con) throws IOException {
@@ -86,14 +98,20 @@ public class Message {
 	
 	public Message sendTo(OutputStream os, InputStream replyStream) throws IOException {
 		Message reply = null;
-		
+		ErrorCode error = null;
 		os.write(this.getRaw());
 		os.flush();
 		
-		if (replyStream != null) {
-			reply = Message.getFrom(replyStream);
-			
-			switch((ErrorCode) reply.getLeadByte()) {
+		
+		reply = Message.getFrom(replyStream);
+		try{
+		error = reply.getErrorByte();
+		}
+		catch (NullPointerException e) {
+			System.err.println("Error: replystream has no lead byte. NPE");
+		}
+			if (error != null) {
+			switch(error) {
 			case OK:
 				System.out.println("Operation successful.");
 			case KEY_DNE:
@@ -113,50 +131,63 @@ public class Message {
 		
 		return reply;
 	}
+	public void sendReplyTo(Socket con) throws Exception {
+		sendReplyTo(con.getOutputStream());
+	}
+	
+	public void sendReplyTo(OutputStream os) throws Exception {
+		os.write(this.getRaw());
+		os.flush();
+	}
 	
 	private byte[] getRaw() {
-		int size = 0;
-		size += (this.lead != null ? Command.SIZE : 0);
-		size += (this.key != null ? Key.SIZE : 0);
-		size += (this.value != null ? Value.SIZE : 0);
+		int size = 1057;
+//		size += (this.lead != null ? Command.SIZE : 0);
+//		size += (this.key != null ? Key.SIZE : 0);
+//		size += (this.value != null ? Value.SIZE : 0);
 		byte[] raw = new byte[size];
-		byte[] keyRaw, valueRaw;
-		
 		switch (size) {
 		case Command.SIZE:
-			raw[0] = this.lead.getHex();
-			break;
+				raw[0] = this.lead.getHex();
+				break;
+				
 		case Command.SIZE + Key.SIZE:
-			raw[0] = this.lead.getHex();
-			keyRaw = this.key.getValue();
-			
-			for (int i = 0; i < Key.SIZE; i++) {
-				raw[Command.SIZE + i] = keyRaw[i];
-			}
-			break;
+				raw[0] = this.lead.getHex();
+				for (int i = 0; i < Key.SIZE; i++) {
+					raw[Command.SIZE + i] = this.key.getValue(i);
+				}
+				break;
+				
 		case Command.SIZE + Value.SIZE:
-			raw[0] = this.lead.getHex();
-			valueRaw = this.value.getValue();
-			
-			for (int i = 0; i < Value.SIZE; i++) {
-				raw[Command.SIZE + i] = valueRaw[i];
-			}
-			break;
+				raw[0] = this.lead.getHex();
+				for (int i = 0; i < Value.SIZE; i++) {
+					raw[Command.SIZE + i] = this.value.getValue(i);
+				}
+				break;
+		case Key.SIZE + Value.SIZE:
+				raw[0] = 0x00;
+				for(int i = 0; i < Key.SIZE; i++){
+				raw[Command.SIZE + i] = this.key.getValue(i);
+				}
+				for (int i = 0; i < Value.SIZE; i++) {
+					raw[Command.SIZE + Key.SIZE + i] = this.value.getValue(i);
+				}
+		break;
+				
 		case Command.SIZE + Key.SIZE + Value.SIZE:
-			raw[0] = this.lead.getHex();
-			keyRaw = this.key.getValue();
-			valueRaw = this.value.getValue();
+				if(this.lead != null) raw[0] = this.lead.getHex();
+				else raw[0] = 0x00;
+				for (int i = 0; i < Key.SIZE; i++) {
+					raw[Command.SIZE + i] = this.key.getValue(i);
+				}
+				for (int i = 0; i < Value.SIZE; i++) {
+					raw[Command.SIZE + Key.SIZE + i] = this.value.getValue(i);
+				}
+				break;
 			
-			for (int i = 0; i < Key.SIZE; i++) {
-				raw[Command.SIZE + i] = keyRaw[i];
-			}
-			for (int i = 0; i < Value.SIZE; i++) {
-				raw[Command.SIZE + Key.SIZE + i] = valueRaw[i];
-			}
-			break;
 		default:
-			throw new NullPointerException("Message is a strange length.");
-		}
+				throw new NullPointerException("Message is a strange length, size of message ="+size);
+	}
 		
 		return raw;
 	}
@@ -168,28 +199,72 @@ public class Message {
 	public void setLeadByte(LeadByte lead) {
 		this.lead = lead;
 	}
-
-	public Key getKey() {
-		return this.key;
+	
+	public ErrorCode getErrorByte(){
+		return (ErrorCode) this.lead;
 	}
 
-	public void setKey(Key key) {
-		this.key = key;
+	public Key getMessageKey() {
+		Key temp = new Key();
+		for(int i = 0; i < Key.SIZE; i++){
+			temp.setValue(this.key.getValue(i), i);
+		}
+		return temp;
 	}
 
-	public void setKey(byte[] raw) {
-		this.key = new Key(raw);
+	public void setMessageKey(Key key_in) {
+		this.key = new Key();
+		for(int i = 0; i< Key.SIZE; i++){
+			this.key.setValue(key_in.getValue(i), i);
+		}
+		
 	}
 
-	public Value getValue() {
-		return this.value;
+	public void setMessageKey(byte[] raw) {
+		this.key = new Key();
+		for(int i = 0; i < Key.SIZE; i++){
+			this.key.setValue(raw[i], i);
+		}
+	}
+	
+	public Boolean compareMessageKeys(Key key_in){
+		for(int i = 0; i < Key.SIZE; i++){
+			if(this.key.getValue(i)!=key_in.getValue(i)){
+				return false;
+			}
+		}
+		return true;
+		
 	}
 
-	public void setValue(Value value) {
-		this.value = value;
+	public Value getMessageValue() {
+		Value temp = new Value();
+		for(int i = 0; i < Value.SIZE; i++){
+			temp.setValue(this.value.getValue(i), i);
+		}
+		return temp;
 	}
 
-	public void setValue(byte[] raw) {
-		this.value = new Value(raw);
+	public void setMessageValue(Value value) {
+		this.value = new Value();
+		for(int i = 0; i< Value.SIZE; i++){
+			this.value.setValue(value.getValue(i), i);
+		}
+	}
+
+	public void setMessageValue(byte[] raw) {
+		this.value = new Value();
+		for(int i = 0; i< Value.SIZE; i++){
+			this.value.setValue(raw[i], i);
+		}
+	}
+	public Boolean compareMessageValues(Value value_in){
+		for(int i = 0; i < Value.SIZE; i++){
+			if(this.value.getValue(i)!=value_in.getValue(i)){
+				return false;
+			}
+		}
+		return true;
+		
 	}
 }
