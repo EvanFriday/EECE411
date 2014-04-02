@@ -1,6 +1,6 @@
 /* Authors: Evan Friday, Cameron Johnston, Kevin Petersen
- * Date: 2014-03-02
- * EECE 411 Project Phase 2 Server:
+ * Date: 2014-03-21
+ * EECE 411 Project Phase 3 Server
  */
 
 package clientserver;
@@ -13,7 +13,7 @@ public class Propagate implements Runnable {
 	private Server server;
 	private Message message;
 	private Thread t;
-	
+
 	public Propagate(String threadname, Server server,String address ,Message message) {
 		this.address = address;
 		this.server = server;
@@ -24,17 +24,19 @@ public class Propagate implements Runnable {
 
 	public void run() {
 		try {
+
 			nodeReply = server.propagateMessage(this.message, this.address);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public Message propagate() {
+
 		if(server.getDebug_mode()) System.out.println("Propagating Changes to: " + address.toString());
 		t.start();
-		
+
 		return this.nodeReply;
 	}
-	
+
 }

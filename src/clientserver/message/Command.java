@@ -1,3 +1,8 @@
+/* Authors: Evan Friday, Cameron Johnston, Kevin Petersen
+ * Date: 2014-03-21
+ * EECE 411 Project Phase 3 Server
+ */
+
 package clientserver.message;
 
 public enum Command implements LeadByte {
@@ -9,21 +14,22 @@ public enum Command implements LeadByte {
 	PROP_GET((byte) 0x22),
 	PROP_REMOVE((byte) 0x23),
 	PROP_SHUTDOWN((byte) 0x24);
-	
+
 	public static final int SIZE = 1;
+
 	private byte hexValue;
-	
+
 	private Command(byte hex) {
 		this.hexValue = hex;
 	}
-	
+
 	public static Command getCommand(byte hex) {
 		for (Command c : Command.values()) {
 			if (c.hexValue == hex) {
 				return c;
 			}
 		}
-		
+
 		return null;
 	}
 
