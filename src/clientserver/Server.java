@@ -168,7 +168,7 @@ public class Server implements Remote {
 								}
 								if(!exists){
 									if(debug_mode) System.out.println("Adding original to kvStore");
-									System.out.println(kvStore.add(original));
+									kvStore.add(original);
 								}
 								reply.setLeadByte(ErrorCode.OK);
 							} 
@@ -314,7 +314,8 @@ public class Server implements Remote {
 							}
 				}
 			}
-			System.out.println("Sending reply: " + reply.getLeadByte());
+			
+			System.out.println("Sending reply: " + reply.getErrorByte());
 			reply.sendReplyTo(out);
 
 		} catch (Exception e) {

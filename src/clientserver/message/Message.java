@@ -137,8 +137,30 @@ public class Message {
 	}
 
 	public void sendReplyTo(OutputStream os) throws Exception {
-		os.write(this.getRaw()[0]);
+		byte[] tosend = null;
+		byte[] b = this.getRaw();
+		if(b[0] == 0x01) {
+			tosend = new byte[Command.SIZE + Value.SIZE];
+			tosend[0] = b[0];
+			for(int i=0; i<Value.SIZE; i++) {
+				tosend[i+Command.SIZE] = b[Command.SIZE + Key.SIZE + i];
+			}
+		}
+		else {
+			tosend = new byte[Command.SIZE];
+			tosend[0] = b[0];
+		}
+		os.write(tosend);
 		os.flush();
+	}
+	
+	public void sendReplyTo(OutputStream os, byte[] b) throws Exception {
+		os.write(b);
+		os.flush();
+	}
+	
+	public void sendReplyTo(Socket con, byte[] b) throws Exception {
+		sendReplyTo(con.getOutputStream(), b);
 	}
 
 	private byte[] getRaw() {
