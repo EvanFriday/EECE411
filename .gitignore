@@ -1,6 +1,5 @@
-.classpath
-
-.project
-bin
-bin/
-.jar
+*
+!.gitignore
+!README.md
+!*.java
+!NODE_IP.txt
