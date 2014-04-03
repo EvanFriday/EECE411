@@ -17,20 +17,25 @@ public class Node{
 	 * Constructors:
 	 */
 	public Node(int position,InetAddress address,Boolean alive, List<Node> children, Map<Key,Value> kvpairs){
+		this();
 		this.position = position;
 		this.address = address;
 		this.alive = alive;
-		this.children = new ArrayList<Node>(children);
-		this.kvpairs = new ConcurrentHashMap<Key,Value>(kvpairs);
+		this.children = children;
+		this.kvpairs = kvpairs;
 	}
 	public Node(int position,InetAddress address,Boolean alive){
-		this(position,address,alive,null,null);
+		this();
+		this.position = position;
+		this.address = address;
+		this.alive = alive;
 	}	
 	public Node(Node node){
 		this(node.getPosition(),node.getAddress(),node.getAlive(),node.getChildren(),node.getKvpairs());
 	}
 	public Node(){
-		this((Integer) null,null,null,null,null);
+		this.children = new ArrayList<Node>();
+		this.kvpairs = new ConcurrentHashMap<Key,Value>();
 	}
 	
 	/*
@@ -76,3 +81,4 @@ public class Node{
 		this.kvpairs = kvpairs;
 	}
 }
+
