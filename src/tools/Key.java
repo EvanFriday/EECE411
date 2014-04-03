@@ -18,12 +18,6 @@ public class Key {
 		}
 	}
 
-	public Key(byte[] message, int offset) {
-		this();
-		for (int i = 0; i < SIZE; i++) {
-			this.setValue(message[offset + i],i);
-		}
-	}
 	public Key(Key k){
 		this();
 		for(int i = 0; i< Key.SIZE; i++){

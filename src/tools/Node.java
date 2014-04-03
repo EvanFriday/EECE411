@@ -25,8 +25,7 @@ public class Node{
 	}
 	public Node(int position,InetAddress address,Boolean alive){
 		this(position,address,alive,null,null);
-	}
-	
+	}	
 	public Node(Node node){
 		this(node.getPosition(),node.getAddress(),node.getAlive(),node.getChildren(),node.getKvpairs());
 	}
