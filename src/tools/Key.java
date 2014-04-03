@@ -25,6 +25,13 @@ public class Key {
 		}
 	}
 
+	public Key(byte[] message, int offset) {
+		this();
+		for(int i=0; i<message.length - offset; i++) {
+			this.setValue(message[i+offset], i);
+		}
+	}
+
 	public byte getValue(int index) {
 		return key[index];
 	}
