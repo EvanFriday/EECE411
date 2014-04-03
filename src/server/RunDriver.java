@@ -1,5 +1,7 @@
 package server;
 
+import java.io.IOException;
+
 public class RunDriver {
 
 	public RunDriver() {
@@ -10,7 +12,11 @@ public class RunDriver {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+		try {
+			Server server = new Server();
+		} catch (IOException e) {
+
+		}
 
 	}
 
