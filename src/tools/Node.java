@@ -75,4 +75,28 @@ public class Node{
 	public void setKvpairs(Map<Key,Value> kvpairs) {
 		this.kvpairs = kvpairs;
 	}
+	public byte addToKvpairs(Key k, Value v) {
+		this.kvpairs.put(k, v);
+		return 0x00; // Error code: OK
+	}
+	public byte[] getValueFromKvpairs(Key k) {
+		Value v = this.kvpairs.get(k);
+		byte[] b = null;
+		if(v == null) {// Key does not exist
+			// return 0x01; // Error code: DNE
+			b[0] = 0x01;
+		}
+		else {
+			b[0] = 0x00; // Error code: OK
+			for(int i=0; i<Value.SIZE; i++) 
+				b[i+1] = v.getValue(i);
+		}
+		return b;
+	}
+	public byte removeKeyFromKvpairs(Key k) {
+		if(this.kvpairs.remove(k) == null)
+			return 0x01; // Error code: DNE
+		else
+			return 0x00; // Error code: OK
+	}
 }
