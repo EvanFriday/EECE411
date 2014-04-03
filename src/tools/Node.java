@@ -30,6 +30,9 @@ public class Node{
 	public Node(Node node){
 		this(node.getPosition(),node.getAddress(),node.getAlive(),node.getChildren(),node.getKvpairs());
 	}
+	public Node(){
+		this((Integer) null,null,null,null,null);
+	}
 	
 	/*
 	 * Mutators

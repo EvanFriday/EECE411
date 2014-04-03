@@ -1,9 +1,8 @@
 package server;
 
 public class HandleConnection implements Runnable {
-		private Thread t;
 
-		public HandleConnection(){
+		public HandleConnection(Server server){
 		}
 
 		public void run() {

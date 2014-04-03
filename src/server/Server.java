@@ -13,20 +13,18 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Server {
 	private List<Node> nodeList;
 	private ServerSocket server;
+	private Socket client;
 	private String file_location;
+	private Node node;
 	//CONSTRUCTOR
 	public Server() throws IOException {
 			server = new ServerSocket();
 			nodeList = new ArrayList<Node>();
-		/*TODO: 
-		 * -Create a thread pool
-		 * -Populate Node List
-		 * 
-		 */
+			setNode(new Node());
 	}
 	
 	public void AcceptConnections() throws IOException{
-		Socket client = server.accept();
+		client = server.accept();
 		/*
 		 * TODO: Assign handling of incoming message in a thread from thread pool
 		 * 
@@ -49,6 +47,14 @@ public class Server {
 		}
 
 		file.close();
+	}
+
+	public Node getNode() {
+		return node;
+	}
+
+	public void setNode(Node node) {
+		this.node = node;
 	}
 
 }
