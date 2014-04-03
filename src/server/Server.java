@@ -1,24 +1,19 @@
 package server;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
-
-import node.NodeData;
-import sun.org.mozilla.javascript.internal.Node;
+import tools.NodeObject;
 
 public class Server {
-	Node nodeList;
+	ArrayList<NodeObject> nodeList;
 	ServerSocket server;
-	ArrayList all_nodes = new ArrayList<NodeData>();
-	LinkedList primary_space = new LinkedList<Node>();
-	LinkedList child1_space = new LinkedList<Node>();
-	LinkedList child2_space = new LinkedList<Node>();
 	
 	//CONSTRUCTOR
 	public Server() throws IOException {
-		nodeList = new Node(0);
 			server = new ServerSocket();
 		/*TODO: 
 		 * -Create a thread pool
@@ -37,6 +32,18 @@ public class Server {
 		 */
 	}
 	
+	public void PopulateNodeList(){
+		FileReader file = new FileReader(file_location);
+		BufferedReader in = new BufferedReader(file);
+		nodeList = new ArrayList<NodeObject>();
+		String line;
+		while((line = in.readLine()) != null){
+			nodeList.add(0,line);
+		}
+			
+		
+		file.close();
+	}
 	
 
 }
