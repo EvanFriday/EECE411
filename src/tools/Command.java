@@ -5,35 +5,35 @@
 
 package tools;
 
-public enum Command implements LeadByte {
-	PUT((byte) 0x01),
-	GET((byte) 0x02),
-	REMOVE((byte) 0x03),
-	SHUTDOWN((byte) 0x04),
-	PROP_PUT((byte) 0x21),
-	PROP_GET((byte) 0x22),
-	PROP_REMOVE((byte) 0x23),
-	PROP_SHUTDOWN((byte) 0x24);
+public enum Command{
 
+	
+	//PUT((byte) 0x01),
+	//GET((byte) 0x02),
+	//REMOVE((byte) 0x03),
+	//SHUTDOWN((byte) 0x04),
+	//PROP_PUT((byte) 0x21),
+	//PROP_GET((byte) 0x22),
+	//PROP_REMOVE((byte) 0x23),
+	//PROP_SHUTDOWN((byte) 0x24);
+	
 	public static final int SIZE = 1;
-
-	private byte hexValue;
+	private byte value;
 
 	private Command(byte hex) {
-		this.hexValue = hex;
+		this.value = hex;
 	}
 
 	public static Command getCommand(byte hex) {
 		for (Command c : Command.values()) {
-			if (c.hexValue == hex) {
+			if (c.value == hex) {
 				return c;
 			}
 		}
-
 		return null;
 	}
 
 	public byte getHex() {
-		return this.hexValue;
+		return this.value;
 	}
 }

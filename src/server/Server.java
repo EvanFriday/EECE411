@@ -3,6 +3,8 @@ package server;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +28,8 @@ public class Server {
 	
 	public void AcceptConnections() throws IOException{
 		this.client = server.accept();
+		ObjectOutputStream o_out = new ObjectOutputStream(client.getOutputStream());
+		ObjectInputStream i_in = new ObjectInputStream(client.getInputStream());
 		/*
 		 * TODO: Assign handling of incoming message in a thread from thread pool
 		 * 

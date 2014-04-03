@@ -2,7 +2,11 @@ package server;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+
+import tools.Command;
 
 public class HandleConnection implements Runnable {
 		private Server server;
@@ -22,6 +26,10 @@ public class HandleConnection implements Runnable {
 		public void onAccept() throws IOException{
 			InputStream in = server.getClient().getInputStream();
 			OutputStream out = server.getClient().getOutputStream();
+			ObjectOutputStream o_out = new ObjectOutputStream(server.getClient().getOutputStream());
+			ObjectInputStream i_in = new ObjectInputStream(server.getClient().getInputStream());
+			Command command;
+			in.read();
 			/*
 			 * TODO: Handle incoming request, send reply
 			 * 
