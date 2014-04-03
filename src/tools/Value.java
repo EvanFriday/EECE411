@@ -22,13 +22,6 @@ public class Value {
 		}
 	}
 
-	public Value(byte[] message, int offset) {
-		this();
-		for (int i = 0; i < SIZE; i++) {
-			this.setValue(message[offset + i], i);
-		}
-	}
-
 	public byte getValue(int index) {
 		return this.value[index];
 	}
