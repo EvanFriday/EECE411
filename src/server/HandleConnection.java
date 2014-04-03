@@ -7,7 +7,7 @@ import java.io.OutputStream;
 public class HandleConnection implements Runnable {
 		private Server server;
 		public HandleConnection(Server server){
-		this.server = server;	
+			this.server = server;	
 		}
 
 		public void run() {
@@ -28,8 +28,5 @@ public class HandleConnection implements Runnable {
 			 * - Reply
 			 * 
 			 */
-			
 		}
-		
-
 	}

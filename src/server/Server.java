@@ -1,14 +1,12 @@
 package server;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 import tools.Node;
-import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
 	private List<Node> nodeList;
@@ -16,15 +14,16 @@ public class Server {
 	private Socket client;
 	private String file_location;
 	private Node node;
+	
 	//CONSTRUCTOR
 	public Server() throws IOException {
-			server = new ServerSocket();
-			nodeList = new ArrayList<Node>();
-			setNode(new Node());
+			this.server = new ServerSocket();
+			this.nodeList = new ArrayList<Node>();
+			this.node = new Node();
 	}
 	
 	public void AcceptConnections() throws IOException{
-		client = server.accept();
+		this.client = server.accept();
 		/*
 		 * TODO: Assign handling of incoming message in a thread from thread pool
 		 * 
@@ -45,8 +44,36 @@ public class Server {
 			else
 				nodeList.add(new Node(index,address,false)); // Dead node
 		}
-
 		file.close();
+		
+		for(Node n : nodeList){
+			
+		}
+		
+	}
+
+	public List<Node> getNodeList() {
+		return nodeList;
+	}
+
+	public void setNodeList(List<Node> nodeList) {
+		this.nodeList = nodeList;
+	}
+
+	public ServerSocket getServer() {
+		return server;
+	}
+
+	public void setServer(ServerSocket server) {
+		this.server = server;
+	}
+
+	public Socket getClient() {
+		return client;
+	}
+
+	public void setClient(Socket client) {
+		this.client = client;
 	}
 
 	public Node getNode() {
