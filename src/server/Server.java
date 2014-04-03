@@ -6,15 +6,18 @@ import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
-import tools.NodeObject;
+import java.util.List;
+
+import tools.Node;
 
 public class Server {
-	ArrayList<NodeObject> nodeList;
+	List<Node> nodeList;
 	ServerSocket server;
 	
 	//CONSTRUCTOR
 	public Server() throws IOException {
 			server = new ServerSocket();
+			nodeList = new ArrayList<Node>();
 		/*TODO: 
 		 * -Create a thread pool
 		 * -Populate Node List
@@ -35,10 +38,9 @@ public class Server {
 	public void PopulateNodeList(){
 		FileReader file = new FileReader(file_location);
 		BufferedReader in = new BufferedReader(file);
-		nodeList = new ArrayList<NodeObject>();
 		String line;
 		while((line = in.readLine()) != null){
-			nodeList.add(0,line);
+			nodeList.add(new Node(0,line));
 		}
 			
 		
