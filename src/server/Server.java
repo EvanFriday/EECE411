@@ -1,19 +1,19 @@
 package server;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.*;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-
 import tools.Node;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Server {
-	List<Node> nodeList;
-	ServerSocket server;
-	
+	private List<Node> nodeList;
+	private ServerSocket server;
+	private String file_location;
 	//CONSTRUCTOR
 	public Server() throws IOException {
 			server = new ServerSocket();
@@ -35,17 +35,20 @@ public class Server {
 		 */
 	}
 	
-	public void PopulateNodeList(){
+	public void PopulateNodeList() throws UnknownHostException, IOException{
 		FileReader file = new FileReader(file_location);
 		BufferedReader in = new BufferedReader(file);
 		String line;
+		int index=0;
 		while((line = in.readLine()) != null){
-			nodeList.add(new Node(0,line));
+			InetAddress address = InetAddress.getByName(line);
+			if(address.isReachable(1000)) // Ping with a one second timeout
+				nodeList.add(new Node(index,address,true));
+			else
+				nodeList.add(new Node(index,address,false)); // Dead node
 		}
-			
-		
+
 		file.close();
 	}
-	
 
 }
