@@ -38,28 +38,27 @@ public class Server {
 		FileReader file = new FileReader(file_location);
 		BufferedReader in = new BufferedReader(file);
 		int index=1;
-		String line;;
+		String line;
 		//Read in node addresses, and if they are dead already, set their status to dead
 		while((line = in.readLine())!= null){
 			
 			InetAddress address = InetAddress.getByName(line);
 			Node n;
 			if(address.isReachable(1000)){ // Ping with a one second timeout
-				
 				n = new Node(index,address,true);
 			}
 			else{
 				n = new Node(index,address,false); // Dead node
 			}
-			
 			this.nodeList.add(n);
-				
 			index++;
 		}
 		file.close();
+		
 		//Get the last two nodes in the list (for circular roll around)
 		int last = this.nodeList.size()-1;
 		int second_last = this.nodeList.size()-2;
+		
 		//Give each node two children, who will hold hold replicas
 		for(Node n : nodeList){
 			if(nodeList.indexOf(n) == last){
@@ -73,6 +72,10 @@ public class Server {
 			else{
 				n.addChild(this.nodeList.get(nodeList.indexOf(n)+1));
 				n.addChild(this.nodeList.get(nodeList.indexOf(n)+2));
+			}
+			
+			if(n.getAddress() == IpTools.getInet()){
+				this.node = new Node(n);
 			}
 			//System.out.println("Node number: "+n.getPosition()+" Address: "+n.getAddress().toString()+" Has children: "+n.getChild(0).getAddress().toString()+", "+n.getChild(1).getAddress().toString());
 			
