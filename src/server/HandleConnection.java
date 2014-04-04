@@ -50,11 +50,9 @@ public class HandleConnection implements Runnable {
 			
 			Message local_reply = new Message();
 			
+			// Find which node this key belongs on
+			correct_node_for_key = getCorrectNode(k);
 			
-			// TODO: fix getNodeIndex
-			int corresponding_node_index = getNodeIndex(k);
-			correct_node_for_key = server.getNodeList().get(corresponding_node_index);
-
 			if(correct_node_for_key.getAddress() == server.getNode().getAddress())
 				is_local = true;
 			else
@@ -88,9 +86,10 @@ public class HandleConnection implements Runnable {
 			out.flush();
 		}
 
-		private int getNodeIndex(Key k) { //TODO: Maybe adjust this function hoping for a more even distribution of Keys?
-			// TODO: make getNode Index return node which should hold key
+		private Node getCorrectNode(Key k) { //TODO: Maybe adjust this function hoping for a more even distribution of Keys?
+			// DONE: make getNode Index return node which should hold key
 			int b = Key.SIZE;
-			return b % this.server.getNodeList().size();
+			int position = b % this.server.getNodeList().size();
+			return this.server.getNodeList().get(position);
 		}
 	}
