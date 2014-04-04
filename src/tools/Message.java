@@ -97,24 +97,24 @@ public class Message {
 		error = reply.getErrorByte();
 		}
 		catch (NullPointerException e) {
-			System.err.println("Error: replystream has no lead byte. NPE");
+			System.err.println("SERVER: "+"Error: replystream has no lead byte. NPE");
 		}
 			if (error != null) {
 			switch(error) {
 			case OK:
-				System.out.println("Operation successful.");
+				System.out.println("SERVER: "+"Operation successful.");
 			case KEY_DNE:
-				System.out.println("Error: Inexistent key.");
+				System.out.println("SERVER: "+"Error: Inexistent key.");
 			case OUT_OF_SPACE:
-				System.out.println("Error: Out of space.");
+				System.out.println("SERVER: "+"Error: Out of space.");
 			case OVERLOAD:
-				System.out.println("Error: System overload.");
+				System.out.println("SERVER: "+"Error: System overload.");
 			case KVSTORE_FAIL:
-				System.out.println("Error: Internal KVStore failure.");
+				System.out.println("SERVER: "+"Error: Internal KVStore failure.");
 			case BAD_COMMAND:
-				System.out.println("Error: Unrecognized command.");
+				System.out.println("SERVER: "+"Error: Unrecognized command.");
 			default:
-				System.out.println("Error: Unknown error.");
+				System.out.println("SERVER: "+"Error: Unknown error.");
 			}
 		}
 

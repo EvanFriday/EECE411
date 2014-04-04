@@ -48,8 +48,8 @@ public class Tests {
 		
 		Tests test = new Tests();
 		Socket testsocket = null;
-		System.out.println(k);
-		System.out.println(v);
+		System.out.println("CLIENT: Key to input"+k.toString());
+		System.out.println("CLIENT: Value to input"+v.toString());
 		Thread t = new Thread(new Runnable() {
 	        @Override
 	        public void run() {
@@ -83,7 +83,7 @@ public class Tests {
 		message.setMessageKey(k);
 		message.setMessageValue(v);
 		reply = message.sendTo(os, is);
-		System.out.print("Reply message" + reply.getLeadByte() +" "+ reply.getMessageKey());
+		System.out.print("CLIENT: Reply message" + reply.getLeadByte() +" "+ reply.getMessageKey());
 		
 		
 		

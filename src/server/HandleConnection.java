@@ -57,17 +57,18 @@ public class HandleConnection implements Runnable {
 			// Find which node this key belongs on
 			//correct_node_for_key = getCorrectNode(k);
 			correct_node_for_key = this.server.getNode();
-			System.out.println(this.server.getNode());
+			System.out.println("SERVER: server.getNode="+this.server.getNode());
 			if(correct_node_for_key.getAddress() == this.server.getNode().getAddress())
 				is_local = true;
 			else
 				propagate_to_list.add(correct_node_for_key);
 			propagate_to_list.addAll(correct_node_for_key.getChildren());
-
+			System.out.println("SERVER: Receiving " + c.toString() + "command. Key: "+ k.toString()+ "Value: "+v.toString());
 			if(is_local) { // Check if this key belongs in this node's keyspace
 				switch(c) {
 				case PUT:
 					local_reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
+					
 					break;
 				case GET:
 					local_reply.setEVpair(this.server.getNode().getValueFromKvpairs(k));

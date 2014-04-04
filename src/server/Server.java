@@ -41,16 +41,16 @@ public class Server {
 	}
 	
 	public void AcceptConnections() throws Exception{
-		System.out.println("Now Accepting connections on port: "+this.port);
+		System.out.println("SERVER: Now Accepting connections on port: "+this.port);
 		this.client = server.accept();
-		System.out.println("Handling connection from: "+ client.getInetAddress().getHostName().toString());
+		System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
 		HandleConnection h = new HandleConnection(this,threadpool.get(0));
 		//h.accept();
 		h.onAccept();
 	}
 	public void addThread(){
 		this.threadpool.add(new Thread());
-		System.out.println("Thread "+this.threadpool.size()+" created.");
+		System.out.println("SERVER: Thread "+this.threadpool.size()+" created.");
 	}
 	public void PopulateNodeList() throws UnknownHostException, IOException{
 		FileReader file = new FileReader(file_location);
@@ -97,7 +97,7 @@ public class Server {
 			}
 			//System.out.println("Node number: "+n.getPosition()+" Address: "+n.getAddress().toString()+" Has children: "+n.getChild(0).getAddress().toString()+", "+n.getChild(1).getAddress().toString());
 		}
-		System.out.println("Node List Populated");
+		System.out.println("SERVER: Node List Populated");
 	}
 
 	public List<Node> getNodeList() {
