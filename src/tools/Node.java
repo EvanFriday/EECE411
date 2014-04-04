@@ -94,8 +94,8 @@ public class Node{
 	}
 	public EVpair getValueFromKvpairs(Key k) {
 		EVpair ret;
-		System.out.println(this.kvpairs.get(k).toString());
-		Value value = new Value(this.getKvpairs().get(k));
+		System.out.println(this.kvpairs.get(k));
+		Value value = new Value(this.kvpairs.get(k));
 		if(value==null) 
 			ret = new EVpair(ErrorCode.KEY_DNE,value);
 		else

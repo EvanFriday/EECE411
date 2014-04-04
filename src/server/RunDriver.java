@@ -14,8 +14,12 @@ public class RunDriver {
 	 */
 	public static void main(String[] args) throws Exception {
 		Server server = new Server();
-		while(true){
-		server.AcceptConnections();
+		try{
+			while(true){
+			server.AcceptConnections();
+			}
+		}finally{
+			server.getServer().close();
 		}
 	}
 }

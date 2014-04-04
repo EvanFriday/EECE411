@@ -17,6 +17,7 @@ public class HandleConnection implements Runnable {
 		public Server server;
 		public HandleConnection(Server server, Thread t){
 			this.server = new Server(server);
+			this.server.setNode(server.getNode());
 			this.thread = t;
 		}
 

@@ -22,7 +22,9 @@ public class Server {
 	private int port = 9999;
 	//CONSTRUCTOR
 	public Server() throws IOException {
-			this.server = new ServerSocket(this.port);
+			this.server = new ServerSocket();
+			server.setReuseAddress(true);
+			server.bind(new InetSocketAddress(this.port));
 			this.nodeList = new ArrayList<Node>(1);
 			this.threadpool = new ArrayList<Thread>();
 			this.node = new Node();
