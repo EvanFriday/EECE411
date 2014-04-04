@@ -18,26 +18,27 @@ public class Server {
 	private Socket client;
 	private String file_location = "NODE_IP.txt";
 	private Node node;
-	
+	private ArrayList<Thread> threadpool;
+	private int port = 9999;
 	//CONSTRUCTOR
 	public Server() throws IOException {
-			this.server = new ServerSocket();
+			this.server = new ServerSocket(this.port);
 			this.nodeList = new ArrayList<Node>(1);
+			this.threadpool = new ArrayList<Thread>();
+			addThread();
 			PopulateNodeList();
 	}
 	
 	public void AcceptConnections() throws IOException{
+		System.out.println("Now Accepting connections on port: "+this.port);
 		this.client = server.accept();
-		ObjectOutputStream o_out = new ObjectOutputStream(client.getOutputStream());
-		ObjectInputStream i_in = new ObjectInputStream(client.getInputStream());
-		/*
-		 * TODO: Assign handling of incoming message in a thread from thread pool
-		 * 
-		 * 
-		 * 
-		 */
+		System.out.println("Handling connection from: "+ client.getInetAddress().getHostName().toString());
+		HandleConnection h = new HandleConnection(this,threadpool.get(0));
 	}
-	
+	public void addThread(){
+		this.threadpool.add(new Thread());
+		System.out.println("Thread "+this.threadpool.size()+" created.");
+	}
 	public void PopulateNodeList() throws UnknownHostException, IOException{
 		FileReader file = new FileReader(file_location);
 		BufferedReader in = new BufferedReader(file);
@@ -82,8 +83,8 @@ public class Server {
 				this.node = new Node(n);
 			}
 			//System.out.println("Node number: "+n.getPosition()+" Address: "+n.getAddress().toString()+" Has children: "+n.getChild(0).getAddress().toString()+", "+n.getChild(1).getAddress().toString());
-			
 		}
+		System.out.println("Node List Populated");
 	}
 
 	public List<Node> getNodeList() {

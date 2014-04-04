@@ -80,29 +80,45 @@ public class Node{
 	public void setKvpairs(Map<Key,Value> kvpairs) {
 		this.kvpairs = kvpairs;
 	}
-	public byte addToKvpairs(Key k, Value v) {
-		this.kvpairs.put(k, v);
-		return 0x00; // Error code: OK
-	}
-	public byte[] getValueFromKvpairs(Key k) {
-		Value v = this.kvpairs.get(k);
-		byte[] b = null;
-		if(v == null) {// Key does not exist
-			// return 0x01; // Error code: DNE
-			b[0] = 0x01;
+	public ErrorCode addToKvpairs(Key k, Value v) {
+		if(this.kvpairs.size()<40000){
+			if(this.kvpairs.put(k, v) != null)
+			return ErrorCode.OK;
+			else
+			return ErrorCode.KVSTORE_FAIL;
 		}
-		else {
-			b[0] = 0x00; // Error code: OK
-			for(int i=0; i<Value.SIZE; i++) 
-				b[i+1] = v.getValue(i);
-		}
-		return b;
-	}
-	public byte removeKeyFromKvpairs(Key k) {
-		if(this.kvpairs.remove(k) == null)
-			return 0x01; // Error code: DNE
 		else
-			return 0x00; // Error code: OK
+			return ErrorCode.OUT_OF_SPACE;
+	}
+	public EVpair getValueFromKvpairs(Key k) {
+		EVpair ret;
+		Value value = this.kvpairs.get(k);
+		if(value==null) 
+			ret = new EVpair(ErrorCode.KEY_DNE,value);
+		else
+			ret = new EVpair(ErrorCode.OK,value);
+;//		byte[] b = null;
+//		
+//		if(v == null) {// Key does not exist
+//			// return 0x01; // Error code: DNE
+//			b[0] = ErrorCode.KEY_DNE.getByte();
+//		}
+//		else {
+//			b[0] = ErrorCode.OK.getByte();
+//			for(int i=0; i<Value.SIZE; i++) 
+//				b[i+1] = v.getValue(i);
+//		}
+		return ret;
+	}
+	public LeadByte removeKeyFromKvpairs(Key k) {
+		ErrorCode error;
+		if(this.kvpairs.remove(k)==null)
+			error = ErrorCode.KEY_DNE;
+		else if(!this.kvpairs.containsKey(k))
+			error = ErrorCode.OK;
+		else
+			error = ErrorCode.KVSTORE_FAIL;
+		return error;
 	}
 }
 

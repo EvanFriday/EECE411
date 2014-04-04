@@ -6,5 +6,5 @@
 package tools;
 
 public interface LeadByte {
-	public byte getHex();
+	public byte getByte();
 }
