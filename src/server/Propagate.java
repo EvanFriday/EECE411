@@ -18,12 +18,12 @@ public class Propagate implements Runnable {
 	private Thread t;
 	private Socket propagation_socket;
 
-	public Propagate(String threadname, Server server,String address ,Message message) {
+	public Propagate(Server server,Thread thread,String address ,Message message) {
 		this.address = address;
 		this.server = server;
 		this.message = message;
 		this.reply = new Message();
-		this.t = new Thread(this, threadname);
+		this.t = thread;
 	}
 
 	public void run() {

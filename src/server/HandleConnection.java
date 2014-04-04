@@ -7,6 +7,8 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import tools.*;
 
@@ -35,13 +37,13 @@ public class HandleConnection implements Runnable {
 		public void onAccept() throws Exception{
 			Message message = new Message();
 			Message reply = new Message();
+			Message local_reply = new Message();
 			
-			List<Message> replies = new ArrayList<Message>();
 			InputStream in = server.getClient().getInputStream();
 			OutputStream out = server.getClient().getOutputStream();
-			//ObjectOutputStream o_out = new ObjectOutputStream(server.getClient().getOutputStream());
-			//ObjectInputStream i_in = new ObjectInputStream(server.getClient().getInputStream());
+		
 			List<Node> propagate_to_list = new ArrayList<Node>();
+			Map<String,Message> replies = new ConcurrentHashMap<String,Message>();
 			
 			Boolean is_local = true; //TODO:once getNodeIndex() returns an actual value set this to false
 			Node correct_node_for_key;
@@ -51,18 +53,17 @@ public class HandleConnection implements Runnable {
 			Key k = new Key(message.getMessageKey());
 			Value v = new Value(message.getMessageValue());
 			
-			
-			Message local_reply = new Message();
-			
-			// Find which node this key belongs on
-			//correct_node_for_key = getCorrectNode(k);
-			correct_node_for_key = this.server.getNode();
-			//System.out.println("SERVER: server.getNode="+this.server.getNode());
-			if(correct_node_for_key.getAddress() == this.server.getNode().getAddress())
+			//correct_node_for_key = getCorrectNode(k); //USE THIS FOR NOMAL USE
+			correct_node_for_key = this.server.getNode(); //USE THIS FOR SINGLE NODE DEBUG
+			if(correct_node_for_key.getAddress() == this.server.getNode().getAddress()){
 				is_local = true;
-			else
+				propagate_to_list.addAll(this.server.getNode().getChildren());
+			}
+			else{
 				propagate_to_list.add(correct_node_for_key);
-			propagate_to_list.addAll(correct_node_for_key.getChildren());
+				propagate_to_list.addAll(correct_node_for_key.getChildren());
+			}
+			
 			System.out.println("SERVER: Receiving " + c.toString() + "command. Key: "+ k.toString()+ "Value: "+v.toString());
 			if(is_local) { // Check if this key belongs in this node's keyspace
 				switch(c) {
@@ -83,8 +84,23 @@ public class HandleConnection implements Runnable {
 			//replies.add(local_reply);			
 			/*
 			 * TODO: propagate to the nodes contained in propagate_to_list
-			 * new Propagate(); //TODO: Complete propagate class
+			 * new Propagate();
 			 */
+			if(is_local){
+				Propagate p1 = new Propagate(this.server,this.server.getThreadpool().get(1),propagate_to_list.get(0).getAddress().toString(),message);
+				Propagate p2 = new Propagate(this.server,this.server.getThreadpool().get(2),propagate_to_list.get(1).getAddress().toString(),message);
+				replies.put(propagate_to_list.get(0).getAddress().getHostName().toString(), p1.propagate());
+				replies.put(propagate_to_list.get(1).getAddress().getHostName().toString(), p2.propagate());
+			}
+			else{
+				Propagate p0 = new Propagate(this.server,this.server.getThreadpool().get(1),propagate_to_list.get(0).getAddress().toString(),message);
+				Propagate p1 = new Propagate(this.server,this.server.getThreadpool().get(2),propagate_to_list.get(1).getAddress().toString(),message);
+				Propagate p2 = new Propagate(this.server,this.server.getThreadpool().get(3),propagate_to_list.get(2).getAddress().toString(),message);
+				replies.put(propagate_to_list.get(0).getAddress().getHostName().toString(), p0.propagate());
+				replies.put(propagate_to_list.get(1).getAddress().getHostName().toString(), p1.propagate());
+				replies.put(propagate_to_list.get(2).getAddress().getHostName().toString(), p2.propagate());
+			}
+			
 			reply = local_reply;
 			reply.sendReplyTo(out);
 			// Send reply to output stream

@@ -30,6 +30,9 @@ public class Server {
 			this.node = new Node();
 			this.client = new Socket();
 			addThread();
+			addThread();
+			addThread();
+			addThread();
 			PopulateNodeList();
 	}
 	public Server(Server server){
