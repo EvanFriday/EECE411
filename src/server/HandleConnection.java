@@ -57,7 +57,7 @@ public class HandleConnection implements Runnable {
 			// Find which node this key belongs on
 			//correct_node_for_key = getCorrectNode(k);
 			correct_node_for_key = this.server.getNode();
-			System.out.println("SERVER: server.getNode="+this.server.getNode());
+			//System.out.println("SERVER: server.getNode="+this.server.getNode());
 			if(correct_node_for_key.getAddress() == this.server.getNode().getAddress())
 				is_local = true;
 			else
@@ -68,7 +68,6 @@ public class HandleConnection implements Runnable {
 				switch(c) {
 				case PUT:
 					local_reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
-					
 					break;
 				case GET:
 					local_reply.setEVpair(this.server.getNode().getValueFromKvpairs(k));
