@@ -93,8 +93,12 @@ public class HandleConnection implements Runnable {
 
 		private Node getCorrectNode(Key k) { //TODO: Maybe adjust this function hoping for a more even distribution of Keys?
 			// DONE: make getNode Index return node which should hold key
-			int b = k.getValue(0);
-			int position = b % this.server.getNodeList().size();
+			byte[] b = new byte[Key.SIZE];
+			for(int i=0; i<Key.SIZE; i++) {
+				b[i] = k.getValue(i);
+			}
+			int a = b.hashCode();
+			int position = a % this.server.getNodeList().size();
 			return this.server.getNodeList().get(position);
 		}
 	}
