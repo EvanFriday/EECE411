@@ -16,7 +16,7 @@ public class Server {
 	private List<Node> nodeList;
 	private ServerSocket server;
 	private Socket client;
-	private String file_location = "NODE_IP.txt";
+	private String file_location = "Test.txt";
 	private Node node;
 	private ArrayList<Thread> threadpool;
 	private int port = 9999;
@@ -25,15 +25,26 @@ public class Server {
 			this.server = new ServerSocket(this.port);
 			this.nodeList = new ArrayList<Node>(1);
 			this.threadpool = new ArrayList<Thread>();
+			this.node = new Node();
+			this.client = new Socket();
 			addThread();
 			PopulateNodeList();
 	}
+	public Server(Server server){
+		this.server = server.getServer();
+		this.nodeList=server.getNodeList();
+		this.threadpool = server.getThreadpool();
+		this.node = server.getNode();
+		this.client=server.getClient();
+	}
 	
-	public void AcceptConnections() throws IOException{
+	public void AcceptConnections() throws Exception{
 		System.out.println("Now Accepting connections on port: "+this.port);
 		this.client = server.accept();
 		System.out.println("Handling connection from: "+ client.getInetAddress().getHostName().toString());
 		HandleConnection h = new HandleConnection(this,threadpool.get(0));
+		//h.accept();
+		h.onAccept();
 	}
 	public void addThread(){
 		this.threadpool.add(new Thread());
@@ -116,6 +127,12 @@ public class Server {
 
 	public void setNode(Node node) {
 		this.node = node;
+	}
+	public ArrayList<Thread> getThreadpool() {
+		return threadpool;
+	}
+	public void setThreadpool(ArrayList<Thread> threadpool) {
+		this.threadpool = threadpool;
 	}
 
 }

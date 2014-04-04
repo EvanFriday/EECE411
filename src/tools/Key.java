@@ -27,7 +27,7 @@ public class Key {
 
 	public Key(byte[] message, int offset) {
 		this();
-		for(int i=0; i<message.length - offset; i++) {
+		for(int i=0; i<Key.SIZE; i++) {
 			this.setValue(message[i+offset], i);
 		}
 	}

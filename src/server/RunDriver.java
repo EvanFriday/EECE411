@@ -10,11 +10,12 @@ public class RunDriver {
 
 	/**
 	 * @param args
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		Server server = new Server();
+		while(true){
 		server.AcceptConnections();
+		}
 	}
-
 }

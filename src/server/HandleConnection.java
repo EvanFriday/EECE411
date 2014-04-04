@@ -13,30 +13,33 @@ import tools.*;
 import tools.Command;
 
 public class HandleConnection implements Runnable {
-	
-		private Server server;
+		public Thread thread;
+		public Server server;
 		public HandleConnection(Server server, Thread t){
-			this.server = server;
-			t.start();
+			this.server = new Server(server);
+			this.thread = t;
 		}
 
 		public void run() {
 			try {
 				onAccept();
-			} catch (IOException e) {
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		public void onAccept() throws IOException{
+		public void accept(){
+			this.thread.start();
+		}
+		public void onAccept() throws Exception{
 			Message message = new Message();
 			Message reply = new Message();
 			
 			List<Message> replies = new ArrayList<Message>();
 			InputStream in = server.getClient().getInputStream();
 			OutputStream out = server.getClient().getOutputStream();
-			ObjectOutputStream o_out = new ObjectOutputStream(server.getClient().getOutputStream());
-			ObjectInputStream i_in = new ObjectInputStream(server.getClient().getInputStream());
+			//ObjectOutputStream o_out = new ObjectOutputStream(server.getClient().getOutputStream());
+			//ObjectInputStream i_in = new ObjectInputStream(server.getClient().getInputStream());
 			List<Node> propagate_to_list = new ArrayList<Node>();
 			
 			Boolean is_local = true; //TODO:once getNodeIndex() returns an actual value set this to false
@@ -51,9 +54,10 @@ public class HandleConnection implements Runnable {
 			Message local_reply = new Message();
 			
 			// Find which node this key belongs on
-			correct_node_for_key = getCorrectNode(k);
-			
-			if(correct_node_for_key.getAddress() == server.getNode().getAddress())
+			//correct_node_for_key = getCorrectNode(k);
+			correct_node_for_key = this.server.getNode();
+			System.out.println(this.server.getNode());
+			if(correct_node_for_key.getAddress() == this.server.getNode().getAddress())
 				is_local = true;
 			else
 				propagate_to_list.add(correct_node_for_key);
@@ -75,14 +79,15 @@ public class HandleConnection implements Runnable {
 					break;
 				}
 			}
-			replies.add(local_reply);			
+			//replies.add(local_reply);			
 			/*
 			 * TODO: propagate to the nodes contained in propagate_to_list
 			 * new Propagate(); //TODO: Complete propagate class
 			 */
 			reply = local_reply;
+			reply.sendReplyTo(out);
 			// Send reply to output stream
-			o_out.writeObject(reply.getRaw());
+			//o_out.writeObject(local_reply.getRaw());
 			out.flush();
 		}
 

@@ -134,9 +134,6 @@ public class Message {
 		size += (this.lead != null ? Command.SIZE : 0);
 		size += (this.key != null ? Key.SIZE : 0);
 		size += (this.value != null ? Value.SIZE : 0);
-		if(size != 1||size != 1025 || size != 1057 ){
-			size = 1057;
-		}
 		byte[] raw = new byte[size];
 		switch (size) {
 		case Command.SIZE:
@@ -164,7 +161,7 @@ public class Message {
 				for (int i = 0; i < Value.SIZE; i++) {
 					raw[Command.SIZE + Key.SIZE + i] = this.value.getValue(i);
 				}
-		break;
+				break;
 
 		case Command.SIZE + Key.SIZE + Value.SIZE:
 				if(this.lead != null) raw[0] = this.lead.getByte();
