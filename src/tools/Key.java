@@ -5,10 +5,11 @@ public class Key {
 	public static final int MAX_NUM = 40000;
 
 	private byte[] key;
-
+	private int hashCode;
 
 	public Key() {
-	this.key = new byte[SIZE];
+		this.key = new byte[SIZE];
+		this.hashCode = this.getHash();
 	}
 
 	public Key(byte[] key) {
@@ -16,6 +17,7 @@ public class Key {
 		for(int i = 0; i< Key.SIZE; i++){
 			this.setValue(key[i],i);
 		}
+		this.hashCode = this.getHash();
 	}
 
 	public Key(Key k){
@@ -23,6 +25,7 @@ public class Key {
 		for(int i = 0; i< Key.SIZE; i++){
 			this.setValue(k.getValue(i),i);
 		}
+		this.hashCode = this.getHash();
 	}
 
 	public Key(byte[] message, int offset) {
@@ -30,6 +33,7 @@ public class Key {
 		for(int i=0; i<Key.SIZE; i++) {
 			this.setValue(message[i+offset], i);
 		}
+		this.hashCode = this.getHash();
 	}
 
 	public byte getValue(int index) {
@@ -40,4 +44,7 @@ public class Key {
 		this.key[index] = value;
 	}
 
+	public int getHash() {
+		return this.hashCode;
+	}
 }
