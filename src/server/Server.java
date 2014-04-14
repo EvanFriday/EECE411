@@ -8,9 +8,12 @@ import java.io.ObjectOutputStream;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import tools.IpTools;
+import tools.Key;
 import tools.Node;
+import tools.Value;
 
 public class Server {
 	private List<Node> nodeList;
@@ -20,6 +23,7 @@ public class Server {
 	private Node node;
 	private ArrayList<Thread> threadpool;
 	private int port = 9999;
+	public Map<Key, Value> testMap;
 	//CONSTRUCTOR
 	public Server() throws IOException {
 			this.server = new ServerSocket();
@@ -42,6 +46,22 @@ public class Server {
 		this.node = server.getNode();
 		this.client=server.getClient();
 	}
+	public Server(boolean inTestMode) throws IOException {
+		this.server = new ServerSocket();
+		server.setReuseAddress(true);
+		server.bind(new InetSocketAddress(this.port));
+		this.nodeList = new ArrayList<Node>(1);
+		this.threadpool = new ArrayList<Thread>();
+		this.node = new Node();
+		this.client = new Socket();
+		if(!inTestMode) {
+			addThread();
+			addThread();
+			addThread();
+			addThread();
+			PopulateNodeList();
+		}
+}
 	
 	public void AcceptConnections() throws Exception{
 		System.out.println("SERVER: Now Accepting connections on port: "+this.port);
