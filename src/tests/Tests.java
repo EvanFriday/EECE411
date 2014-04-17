@@ -14,29 +14,22 @@ import tools.Value;
 
 public class Tests {
 	static Server server;
-	static Key k;
-	static Value v;
+	static TestClient client1;
+	static TestClient client2;
+	static TestClient client3;
+	static TestClient client4;
 	
 	public Tests() {
 		try {
 			server = new Server();
+			client1 = new TestClient("Client 1");
+			client1 = new TestClient("Client 2");
+			client1 = new TestClient("Client 3");
+			client1 = new TestClient("Client 4");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		k = new Key();
-		v = new Value();
-		byte rand = 0x01;
-		byte rand2 = 0x01;
-		for(int i = 0; i< Key.SIZE; i++){
-			rand += rand;
-			k.setValue(rand, i);
-		}
-		for(int i = 0; i< Value.SIZE; i++){
-			rand2 += rand2;
-			v.setValue(rand2, i);
-		}
-		
+		}		
 	}
 
 	/**
@@ -46,7 +39,6 @@ public class Tests {
 	public static void main(String[] args) throws IOException {
 		
 		Tests test = new Tests();
-		Socket testsocket = null;
 		System.out.println("CLIENT: Key to input"+k.toString());
 		System.out.println("CLIENT: Value to input"+v.toString());
 		Thread t = new Thread(new Runnable() {
@@ -65,28 +57,6 @@ public class Tests {
 	    });
 	    t.start();
 		
-	    try {
-			testsocket = new Socket("127.0.0.1",9999);
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		InputStream is = testsocket.getInputStream();
-		OutputStream os = testsocket.getOutputStream();
-		Message message = new Message();
-		Message reply = new Message();
-		message.setLeadByte(Command.PUT);
-		message.setMessageKey(k);
-		message.setMessageValue(v);
-		reply = message.sendTo(os, is);
-		System.out.print("CLIENT: Reply message" + reply.getLeadByte() +" "+ reply.getMessageKey());
-		
-		
-		
-		testsocket.close();
 		
 
 	}
