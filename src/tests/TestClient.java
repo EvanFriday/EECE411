@@ -6,6 +6,8 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
+import server.Propagate;
+import server.Server;
 import tools.*;
 
 public class TestClient {
@@ -29,7 +31,9 @@ public class TestClient {
 		this.reply = new Message();
 	}
 	
-	
+	public Message getMessage(){
+		return this.message;
+	}
 	public void editMessage(){
 		Key k = new Key();
 		Value v = new Value();
@@ -47,24 +51,23 @@ public class TestClient {
 		this.message.setMessageKey(k);
 		this.message.setMessageValue(v);
 	}
+	public void editMessage(Command command, Key key){
+		this.message.setLeadByte(command);
+		this.message.setMessageKey(key);
+	}
 	public void editMessage(Command command, Key key, Value value){
-		message.setLeadByte(command);
-		message.setMessageKey(key);
-		message.setMessageValue(value);	
+		this.message.setLeadByte(command);
+		this.message.setMessageKey(key);
+		this.message.setMessageValue(value);	
 	}
 	public void sendMessage(){
 		try {
 			System.out.println("CLIENT "+name+":message values = "+this.message.getLeadByte().toString()+","+this.message.getMessageKey().hashCode()+this.message.getMessageValue().hashCode());
-			reply = message.sendTo(os, is);
+			this.reply = this.message.sendTo(os, is);
 			System.out.println("CLIENT "+name+":reply values = "+this.reply.getLeadByte().toString()+","+this.reply.getMessageKey().hashCode()+this.reply.getMessageValue().hashCode());
 		} catch (IOException e) {
 			System.err.println("Message sending Failed on:" + this.name);
-		}
-	}
-	
-	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-
+		}	
 	}
 
 }

@@ -39,8 +39,6 @@ public class Tests {
 	public static void main(String[] args) throws IOException {
 		
 		Tests test = new Tests();
-		System.out.println("CLIENT: Key to input"+k.toString());
-		System.out.println("CLIENT: Value to input"+v.toString());
 		Thread t = new Thread(new Runnable() {
 	        @Override
 	        public void run() {
@@ -56,6 +54,14 @@ public class Tests {
 	        }
 	    });
 	    t.start();
+	    test.client1.editMessage();
+	    test.client1.sendMessage();
+	    test.client2.editMessage();
+	    test.client2.sendMessage();
+	    test.client3.editMessage(Command.GET,test.client2.getMessage().getMessageKey());
+	    test.client3.sendMessage();
+	    test.client4.editMessage(Command.REMOVE,test.client2.getMessage().getMessageKey());
+	    test.client4.sendMessage();
 		
 		
 
