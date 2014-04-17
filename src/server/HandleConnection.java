@@ -27,6 +27,7 @@ public class HandleConnection implements Runnable {
 		public void run() {
 			try {
 				onAccept();
+				accept();
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -65,7 +66,8 @@ public class HandleConnection implements Runnable {
 				propagate_to_list.addAll(correct_node_for_key.getChildren());
 			}
 			
-			System.out.println("SERVER: Receiving " + c.toString() + "command. Key: "+ k.toString()+ "Value: "+v.toString());
+			System.out.println("SERVER: Receiving message values = " + c + ", "+ k.hashCode()+ ", "+v.hashCode());
+			System.out.flush();
 			if(is_local) { // Check if this key belongs in this node's keyspace
 				switch(c) {
 				case PUT:

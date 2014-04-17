@@ -23,9 +23,9 @@ public class Tests {
 		try {
 			server = new Server();
 			client1 = new TestClient("Client 1");
-			client1 = new TestClient("Client 2");
-			client1 = new TestClient("Client 3");
-			client1 = new TestClient("Client 4");
+			client2 = new TestClient("Client 2");
+			client3 = new TestClient("Client 3");
+			client4 = new TestClient("Client 4");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

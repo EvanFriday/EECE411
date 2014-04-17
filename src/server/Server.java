@@ -22,7 +22,7 @@ public class Server {
 	private String file_location = "Test.txt";
 	private Node node;
 	private ArrayList<Thread> threadpool;
-	private int port = 9999;
+	private int port = 9998;
 	public Map<Key, Value> testMap;
 	//CONSTRUCTOR
 	public Server() throws IOException {
@@ -48,6 +48,7 @@ public class Server {
 	}
 	public Server(boolean inTestMode) throws IOException {
 		this.server = new ServerSocket();
+		server.setSoTimeout(10000);
 		server.setReuseAddress(true);
 		server.bind(new InetSocketAddress(this.port));
 		this.nodeList = new ArrayList<Node>(1);
@@ -69,7 +70,7 @@ public class Server {
 		System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
 		HandleConnection h = new HandleConnection(this,threadpool.get(0));
 		//h.accept();
-		h.onAccept();
+		h.run();
 	}
 	public void addThread(){
 		this.threadpool.add(new Thread());

@@ -20,7 +20,7 @@ public class TestClient {
 	public TestClient(String name){
 		this.name = name;
 		try {
-			this.socket = new Socket("127.0.0.1",9999);
+			this.socket = new Socket("127.0.0.1",9998);
 			this.is = socket.getInputStream();
 			this.os = socket.getOutputStream();
 		} catch (IOException e) {
@@ -54,6 +54,13 @@ public class TestClient {
 	public void editMessage(Command command, Key key){
 		this.message.setLeadByte(command);
 		this.message.setMessageKey(key);
+		Value v = new Value();
+		byte rand = 0x01;
+		for(int i = 0; i< Value.SIZE; i++){
+			rand += rand;
+			v.setValue(rand, i);
+		}
+		this.message.setMessageValue(v);
 	}
 	public void editMessage(Command command, Key key, Value value){
 		this.message.setLeadByte(command);
@@ -62,9 +69,12 @@ public class TestClient {
 	}
 	public void sendMessage(){
 		try {
-			System.out.println("CLIENT "+name+":message values = "+this.message.getLeadByte().toString()+","+this.message.getMessageKey().hashCode()+this.message.getMessageValue().hashCode());
+			System.out.println("CLIENT "+this.name+" message values = "+this.message.getLeadByte().toString()+", "+this.message.getMessageKey().hashCode()+", "+this.message.getMessageValue().hashCode());
 			this.reply = this.message.sendTo(os, is);
-			System.out.println("CLIENT "+name+":reply values = "+this.reply.getLeadByte().toString()+","+this.reply.getMessageKey().hashCode()+this.reply.getMessageValue().hashCode());
+			if(this.message.getLeadByte() == Command.PUT || this.message.getLeadByte() == Command.REMOVE)
+			System.out.println("CLIENT "+this.name+":reply values = "+this.reply.getLeadByte());
+			else
+			System.out.println("CLIENT "+this.name+":reply values = "+this.reply.getLeadByte().toString()+", "+this.reply.getMessageKey().hashCode()+", "+this.reply.getMessageValue().hashCode());
 		} catch (IOException e) {
 			System.err.println("Message sending Failed on:" + this.name);
 		}	
