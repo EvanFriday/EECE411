@@ -88,10 +88,12 @@ public class HandleConnection implements Runnable {
 			 * new Propagate();
 			 */
 			if(is_local){
+				/*
 				Propagate p1 = new Propagate(this.server,this.server.getThreadpool().get(1),propagate_to_list.get(0).getAddress().toString(),message);
 				Propagate p2 = new Propagate(this.server,this.server.getThreadpool().get(2),propagate_to_list.get(1).getAddress().toString(),message);
 				replies.put(propagate_to_list.get(0).getAddress().getHostName().toString(), p1.propagate());
 				replies.put(propagate_to_list.get(1).getAddress().getHostName().toString(), p2.propagate());
+				*/
 			}
 			else{
 				Propagate p0 = new Propagate(this.server,this.server.getThreadpool().get(1),propagate_to_list.get(0).getAddress().toString(),message);
@@ -119,7 +121,7 @@ public class HandleConnection implements Runnable {
 			out.flush();
 		}
 
-		private Node getCorrectNode(Key k) { //TODO: Maybe adjust this function hoping for a more even distribution of Keys?
+		private Node getCorrectNode(Key k) {
 			// DONE: make getNode Index return node which should hold key
 			byte[] b = new byte[Key.SIZE];
 			for(int i=0; i<Key.SIZE; i++) {
