@@ -21,8 +21,8 @@ public class TestClient {
 		this.name = name;
 		try {
 			this.socket = new Socket("127.0.0.1",9998);
-			this.is = socket.getInputStream();
-			this.os = socket.getOutputStream();
+			this.is = this.socket.getInputStream();
+			this.os = this.socket.getOutputStream();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -50,6 +50,7 @@ public class TestClient {
 		this.message.setLeadByte(Command.PUT);
 		this.message.setMessageKey(k);
 		this.message.setMessageValue(v);
+		System.out.println("CLIENT: Key values set= "+k.hashCode()+", "+this.message.getMessageKey().hashCode());
 	}
 	public void editMessage(Command command, Key key){
 		this.message.setLeadByte(command);
@@ -69,14 +70,14 @@ public class TestClient {
 	}
 	public void sendMessage(){
 		try {
-			System.out.println("CLIENT "+this.name+" message values = "+this.message.getLeadByte().toString()+", "+this.message.getMessageKey().hashCode()+", "+this.message.getMessageValue().hashCode());
-			this.reply = this.message.sendTo(os, is);
+			System.out.println("CLIENT: "+this.name+" message values = "+this.message.getLeadByte().toString()+", "+this.message.getMessageKey().hashCode()+", "+this.message.getMessageValue().hashCode());
+			this.reply = this.message.sendTo(this.os, this.is);
 			if(this.message.getLeadByte() == Command.PUT || this.message.getLeadByte() == Command.REMOVE)
-			System.out.println("CLIENT "+this.name+":reply values = "+this.reply.getLeadByte());
+			System.out.println("CLIENT: "+this.name+":reply values = "+this.reply.getLeadByte());
 			else
-			System.out.println("CLIENT "+this.name+":reply values = "+this.reply.getLeadByte().toString()+", "+this.reply.getMessageKey().hashCode()+", "+this.reply.getMessageValue().hashCode());
+			System.out.println("CLIENT: "+this.name+":reply values = "+this.reply.getLeadByte().toString()+", "+this.reply.getMessageKey().hashCode()+", "+this.reply.getMessageValue().hashCode());
 		} catch (IOException e) {
-			System.err.println("Message sending Failed on:" + this.name);
+			System.err.println("CLIENT: Message sending Failed on: " + this.name);
 		}	
 	}
 
