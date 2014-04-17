@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import tools.*;
@@ -100,6 +101,16 @@ public class HandleConnection implements Runnable {
 				replies.put(propagate_to_list.get(1).getAddress().getHostName().toString(), p1.propagate());
 				replies.put(propagate_to_list.get(2).getAddress().getHostName().toString(), p2.propagate());
 			}
+			for(Entry<String, Message> replymsg : replies.entrySet() ){
+				int retrycount = 0;
+				while(replymsg.getValue().getErrorByte() != ErrorCode.OK || retrycount > 3){
+					Propagate predo = new Propagate(this.server,this.server.getThreadpool().get(0),propagate_to_list.get(0).getAddress().toString(),message);
+					replymsg.setValue(predo.propagate());
+					retrycount++;
+				}
+				
+			}
+			
 			
 			reply = local_reply;
 			reply.sendReplyTo(out);
