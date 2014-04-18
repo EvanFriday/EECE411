@@ -58,9 +58,9 @@ public class Tests {
 	    test.client1.sendMessage();
 	    test.client2.editMessage();
 	    test.client2.sendMessage();
-	    test.client3.editMessage(Command.GET,test.client2.getMessage().getMessageKey());
+	    test.client3.editMessage(Command.GET,test.client2.getMessage().getFullMessageKey());
 	    test.client3.sendMessage();
-	    test.client4.editMessage(Command.REMOVE,test.client2.getMessage().getMessageKey());
+	    test.client4.editMessage(Command.REMOVE,test.client2.getMessage().getFullMessageKey());
 	    test.client4.sendMessage();
 		
 		

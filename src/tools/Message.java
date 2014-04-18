@@ -32,8 +32,8 @@ public class Message {
 
 	public Message(LeadByte l, Key k, Value v) {
 		this.setLeadByte(l);
-		this.setMessageKey(k);
-		this.setMessageValue(v);
+		this.setFullMessageKey(k);
+		this.setFullMessageValue(v);
 	}
 	public Message(EVpair evpair){
 		this(evpair.getError(),evpair.getValue());	
@@ -46,17 +46,17 @@ public class Message {
 			break;
 		case Command.SIZE + Key.SIZE:
 			this.setLeadByte(Command.getCommand(message[0]));
-			this.setMessageKey(new Key(message, Command.SIZE));
+			this.setFullMessageKey(new Key(message, Command.SIZE));
 			break;
 		case Command.SIZE + Value.SIZE:
 			this.setLeadByte(Command.getCommand(message[0]));
-			this.setMessageValue(new Value(message, Command.SIZE));
+			this.setFullMessageValue(new Value(message, Command.SIZE));
 			break;
 			
 		case Command.SIZE + Key.SIZE + Value.SIZE:
 			this.setLeadByte(Command.getCommand(message[0]));
-			this.setMessageKey(new Key(message,Command.SIZE));
-			this.setMessageValue(new Value(message,Command.SIZE+Key.SIZE));
+			this.setFullMessageKey(new Key(message,Command.SIZE));
+			this.setFullMessageValue(new Value(message,Command.SIZE+Key.SIZE));
 				break;
 		default:
 			throw new NullPointerException("Message is a strange length.");
@@ -117,7 +117,7 @@ public class Message {
 				System.out.println("SERVER: "+"Error: Unknown error.");
 			}
 		}
-
+		System.out.println("SERVER: Sending reply: " + reply.getLeadByte() + ", " + reply.getFullMessageValue().hashCode());
 		return reply;
 	}
 	public void sendReplyTo(Socket con) throws Exception {
@@ -196,6 +196,11 @@ public class Message {
 	public void setEVpair(EVpair reply){
 		this.lead=reply.getError();
 		this.value=reply.getValue();
+	}
+	
+	public void setEVpair(Value v){
+		this.lead=ErrorCode.OK;
+		this.value=v;
 	}
 
 	public Key getMessageKey() {

@@ -87,9 +87,11 @@ public class Server {
 			InetAddress address = InetAddress.getByName(line);
 			Node n;
 			if(address.isReachable(1000)){ // Ping with a one second timeout
+				System.out.println("SERVER: Adding alive node to nodeList: " + address.toString());
 				n = new Node(index,address,true);
 			}
 			else{
+				System.out.println("SERVER: Adding dead node to nodeList: " + address.toString());
 				n = new Node(index,address,false); // Dead node
 			}
 			this.nodeList.add(n);

@@ -18,9 +18,9 @@ import tools.Command;
 public class HandleConnection implements Runnable {
 		public Thread thread;
 		public Server server;
-		public HandleConnection(Server server, Thread t){
-			this.server = new Server(server);
-			this.server.setNode(server.getNode());
+		public HandleConnection(Server s, Thread t){
+			this.server = s;
+			this.server.setNode(s.getNode());
 			this.thread = t;
 		}
 
@@ -52,8 +52,8 @@ public class HandleConnection implements Runnable {
 			//get the message
 			message = Message.getFrom(in);
 			Command c = (Command) message.getLeadByte();
-			Key k = new Key(message.getMessageKey());
-			Value v = new Value(message.getMessageValue());
+			Key k = new Key(message.getFullMessageKey());
+			Value v = new Value(message.getFullMessageValue());
 			
 			//correct_node_for_key = getCorrectNode(k); //USE THIS FOR NOMAL USE
 			correct_node_for_key = this.server.getNode(); //USE THIS FOR SINGLE NODE DEBUG
@@ -71,12 +71,15 @@ public class HandleConnection implements Runnable {
 			if(is_local) { // Check if this key belongs in this node's keyspace
 				switch(c) {
 				case PUT:
+					System.out.println("SERVER: PUTPUT");
 					local_reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
 					break;
 				case GET:
+					System.out.println("SERVER: GETGET");
 					local_reply.setEVpair(this.server.getNode().getValueFromKvpairs(k));
 					break;
 				case REMOVE:
+					System.out.println("SERVER: REMREM");
 					local_reply.setLeadByte(this.server.getNode().removeKeyFromKvpairs(k));
 					break;
 				default:
