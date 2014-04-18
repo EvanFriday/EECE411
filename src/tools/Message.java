@@ -205,6 +205,10 @@ public class Message {
 		}
 		return temp;
 	}
+	
+	public Key getFullMessageKey() {
+		return this.key;
+	}
 
 	public void setMessageKey(Key key_in) {
 		this.key = new Key();
@@ -212,6 +216,10 @@ public class Message {
 			this.key.setValue(key_in.getValue(i), i);
 		}
 
+	}
+	
+	public void setFullMessageKey(Key key_in) {
+		this.key = key_in;
 	}
 
 	public void setMessageKey(byte[] raw) {
@@ -238,12 +246,20 @@ public class Message {
 		}
 		return temp;
 	}
+	
+	public Value getFullMessageValue() {
+		return this.value;
+	}
 
 	public void setMessageValue(Value value) {
 		this.value = new Value();
 		for(int i = 0; i< Value.SIZE; i++){
 			this.value.setValue(value.getValue(i), i);
 		}
+	}
+	
+	public void setFullMessageValue(Value v) {
+		this.value = v;
 	}
 
 	public void setMessageValue(byte[] raw) {
