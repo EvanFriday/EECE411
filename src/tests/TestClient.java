@@ -11,8 +11,8 @@ import server.Server;
 import tools.*;
 
 public class TestClient {
-	private InputStream is;
-	private OutputStream os;
+	public InputStream is;
+	public OutputStream os;
 	private Message message;
 	private Message reply;
 	private Socket socket;
@@ -20,7 +20,7 @@ public class TestClient {
 	public TestClient(String name){
 		this.name = name;
 		try {
-			this.socket = new Socket("127.0.0.1",9998);
+			this.socket = new Socket("127.0.0.1",9995);
 			this.is = this.socket.getInputStream();
 			this.os = this.socket.getOutputStream();
 		} catch (IOException e) {

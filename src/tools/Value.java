@@ -3,7 +3,7 @@ package tools;
 public class Value {
 	public static final int SIZE = 1024;
 
-	private byte[] value;
+	public byte[] value;
 
 	public Value() {
 		this.value = new byte[SIZE];

@@ -37,10 +37,12 @@ public class HandleConnection implements Runnable {
 			this.thread.start();
 		}
 		public void onAccept() throws Exception{
-			Message message = new Message();
-			Message reply = new Message();
+			//Message message = new Message();
+			//Message reply = new Message();
+			byte[] message = new byte[1+32+1024];
+			byte[] reply = new byte[1+32+1024];
 			Message local_reply = new Message();
-			
+			Tools.print("Connection accepted");
 			InputStream in = server.getClient().getInputStream();
 			OutputStream out = server.getClient().getOutputStream();
 		
@@ -50,10 +52,22 @@ public class HandleConnection implements Runnable {
 			Boolean is_local = true; //TODO:once getNodeIndex() returns an actual value set this to false
 			Node correct_node_for_key;
 			//get the message
-			message = Message.getFrom(in);
-			Command c = (Command) message.getLeadByte();
-			Key k = new Key(message.getMessageKey());
-			Value v = new Value(message.getMessageValue());
+			in.read(message);
+			Command c = null; 
+			Key k = new Key();
+			Value v = new Value();
+			for(int i=0;i<message.length;i++){
+				if(i==0)
+					c = Command.getCommand(message[i]);
+				else if(1<=i && i<33)
+					k.setValue(message[i], i-1);
+				else
+					v.setValue(message[i], i-1-32);
+			}
+			//message = Message.getFrom(in);
+//			Command c = (Command) message.getLeadByte();
+//			Key k = new Key(message.getMessageKey());
+//			Value v = new Value(message.getMessageValue());
 			
 			//correct_node_for_key = getCorrectNode(k); //USE THIS FOR NOMAL USE
 			correct_node_for_key = this.server.getNode(); //USE THIS FOR SINGLE NODE DEBUG
@@ -66,7 +80,9 @@ public class HandleConnection implements Runnable {
 				propagate_to_list.addAll(correct_node_for_key.getChildren());
 			}
 			
-			System.out.println("SERVER: Receiving message values = " + c + ", "+ k.hashCode()+ ", "+v.hashCode());
+//			System.out.println("SERVER: Receiving message values = " + c + ", "+ k.hashCode()+ ", "+v.hashCode());
+			Tools.print("SERVER: Receiving: ");
+			Tools.printByte(message);
 			System.out.flush();
 			if(is_local) { // Check if this key belongs in this node's keyspace
 				switch(c) {
@@ -98,26 +114,26 @@ public class HandleConnection implements Runnable {
 				*/
 			}
 			else{
-				Propagate p0 = new Propagate(this.server,this.server.getThreadpool().get(1),propagate_to_list.get(0).getAddress().toString(),message);
-				Propagate p1 = new Propagate(this.server,this.server.getThreadpool().get(2),propagate_to_list.get(1).getAddress().toString(),message);
-				Propagate p2 = new Propagate(this.server,this.server.getThreadpool().get(3),propagate_to_list.get(2).getAddress().toString(),message);
-				replies.put(propagate_to_list.get(0).getAddress().getHostName().toString(), p0.propagate());
-				replies.put(propagate_to_list.get(1).getAddress().getHostName().toString(), p1.propagate());
-				replies.put(propagate_to_list.get(2).getAddress().getHostName().toString(), p2.propagate());
+//				Propagate p0 = new Propagate(this.server,this.server.getThreadpool().get(1),propagate_to_list.get(0).getAddress().toString(),message);
+//				Propagate p1 = new Propagate(this.server,this.server.getThreadpool().get(2),propagate_to_list.get(1).getAddress().toString(),message);
+//				Propagate p2 = new Propagate(this.server,this.server.getThreadpool().get(3),propagate_to_list.get(2).getAddress().toString(),message);
+//				replies.put(propagate_to_list.get(0).getAddress().getHostName().toString(), p0.propagate());
+//				replies.put(propagate_to_list.get(1).getAddress().getHostName().toString(), p1.propagate());
+//				replies.put(propagate_to_list.get(2).getAddress().getHostName().toString(), p2.propagate());
 			}
 			for(Entry<String, Message> replymsg : replies.entrySet() ){
 				int retrycount = 0;
 				while(replymsg.getValue().getErrorByte() != ErrorCode.OK || retrycount > 3){
-					Propagate predo = new Propagate(this.server,this.server.getThreadpool().get(0),propagate_to_list.get(0).getAddress().toString(),message);
-					replymsg.setValue(predo.propagate());
-					retrycount++;
+//					Propagate predo = new Propagate(this.server,this.server.getThreadpool().get(0),propagate_to_list.get(0).getAddress().toString(),message);
+//					replymsg.setValue(predo.propagate());
+//					retrycount++;
 				}
 				
 			}
 			
 			
-			reply = local_reply;
-			reply.sendReplyTo(out);
+//			reply = local_reply;
+//			reply.sendReplyTo(out);
 			// Send reply to output stream
 			//o_out.writeObject(local_reply.getRaw());
 			out.flush();

@@ -22,7 +22,7 @@ public class Server {
 	private String file_location = "Test.txt";
 	private Node node;
 	private ArrayList<Thread> threadpool;
-	private int port = 9998;
+	private int port = 9995;
 	public Map<Key, Value> testMap;
 	//CONSTRUCTOR
 	public Server() throws IOException {
