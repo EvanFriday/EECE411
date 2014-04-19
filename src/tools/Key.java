@@ -9,6 +9,9 @@ public class Key {
 
 	public Key() {
 		this.key = new byte[SIZE];
+		for(int i=0; i<SIZE; i++) {
+			this.key[i] = 0;
+		}
 		//this.hashCode = this.getHash();
 	}
 
@@ -39,11 +42,18 @@ public class Key {
 	public byte getValue(int index) {
 		return key[index];
 	}
+	
+	public byte[] getFullValue() {
+		return key;
+	}
 
 	public void setValue(byte value, int index){
 		this.key[index] = value;
 	}
-
+	
+	public void setFullValue(byte[] v) {
+		this.key = v;
+	}
 //	public int getHash() {
 //		return this.hashCode;
 //	}

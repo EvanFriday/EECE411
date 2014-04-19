@@ -66,20 +66,20 @@ public class HandleConnection implements Runnable {
 				propagate_to_list.addAll(correct_node_for_key.getChildren());
 			}
 			
-			System.out.println("SERVER: Receiving message values = " + c + ", "+ k.hashCode()+ ", "+v.hashCode());
+			System.out.println("SERVER: Handleconnection receiving message values = " + c + ", "+ k.hashCode()+ ", "+v.hashCode());
 			System.out.flush();
 			if(is_local) { // Check if this key belongs in this node's keyspace
 				switch(c) {
 				case PUT:
-					System.out.println("SERVER: PUTPUT");
+					System.out.println("SERVER: Receiving PUT command");
 					local_reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
 					break;
 				case GET:
-					System.out.println("SERVER: GETGET");
+					System.out.println("SERVER: Receiving GET command");
 					local_reply.setEVpair(this.server.getNode().getValueFromKvpairs(k));
 					break;
 				case REMOVE:
-					System.out.println("SERVER: REMREM");
+					System.out.println("SERVER: Receiving REMOVE command");
 					local_reply.setLeadByte(this.server.getNode().removeKeyFromKvpairs(k));
 					break;
 				default:
@@ -120,7 +120,7 @@ public class HandleConnection implements Runnable {
 			
 			
 			reply = local_reply;
-			reply.sendReplyTo(out);
+			local_reply.sendReplyTo(out);
 			// Send reply to output stream
 			//o_out.writeObject(local_reply.getRaw());
 			out.flush();

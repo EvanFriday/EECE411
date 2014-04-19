@@ -32,7 +32,14 @@ public class Value {
 	public byte getValue(int index) {
 		return this.value[index];
 	}
+	public byte[] getFullValue() {
+		return this.value;
+	}
+	
 	public void setValue(byte value, int index){
 		this.value[index] = value;
+	}
+	public void setFullValue(byte[] v) {
+		this.value = v;
 	}
 }

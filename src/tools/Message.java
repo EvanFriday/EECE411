@@ -117,7 +117,7 @@ public class Message {
 				System.out.println("SERVER: "+"Error: Unknown error.");
 			}
 		}
-		System.out.println("SERVER: Sending reply: " + reply.getLeadByte() + ", " + reply.getFullMessageValue().hashCode());
+		System.out.println("SERVER: Sending reply: " + reply.getLeadByte() + ", " + reply.getFullMessageKey().hashCode() + ", " + reply.getFullMessageValue().hashCode());
 		return reply;
 	}
 	public void sendReplyTo(Socket con) throws Exception {
@@ -125,7 +125,11 @@ public class Message {
 	}
 
 	public void sendReplyTo(OutputStream os) throws Exception {
-		os.write(this.getRaw());
+		byte[] b = this.getRaw();
+		for(int i=0; i<b.length; i++) {
+			System.out.println("SERVER: Byte " + i + ": " + b[i]);
+		}
+		os.write(b);
 		os.flush();
 	}
 
@@ -135,42 +139,60 @@ public class Message {
 		size += (this.key != null ? Key.SIZE : 0);
 		size += (this.value != null ? Value.SIZE : 0);
 		byte[] raw = new byte[size];
+		byte[] temp;
 		switch (size) {
 		case Command.SIZE:
+				System.out.println("SERVER: getRaw(): Command only");
 				raw[0] = this.lead.getByte();
 				break;
 
 		case Command.SIZE + Key.SIZE:
+			System.out.println("SERVER: getRaw(): Command and Key");
 				raw[0] = this.lead.getByte();
+				temp = new byte[Key.SIZE];
+				temp = this.getFullMessageKey().getFullValue();
 				for (int i = 0; i < Key.SIZE; i++) {
-					raw[Command.SIZE + i] = this.key.getValue(i);
+					raw[Command.SIZE + i] = temp[i];
 				}
 				break;
 
 		case Command.SIZE + Value.SIZE:
+			System.out.println("SERVER: getRaw(): Command and Value");
 				raw[0] = this.lead.getByte();
+				temp = new byte[Value.SIZE];
+				temp = this.getFullMessageValue().getFullValue();
 				for (int i = 0; i < Value.SIZE; i++) {
-					raw[Command.SIZE + i] = this.value.getValue(i);
+					raw[Command.SIZE + i] = temp[i];
 				}
 				break;
 		case Key.SIZE + Value.SIZE:
+			System.out.println("SERVER: getRaw(): Key and Value");
 				raw[0] = 0x00;
-				for(int i = 0; i < Key.SIZE; i++){
-				raw[Command.SIZE + i] = this.key.getValue(i);
+				temp = new byte[Key.SIZE];
+				temp = this.getFullMessageKey().getFullValue();
+				for (int i = 0; i < Key.SIZE; i++) {
+					raw[Command.SIZE + i] = temp[i];
 				}
+				temp = new byte[Value.SIZE];
+				temp = this.getFullMessageValue().getFullValue();
 				for (int i = 0; i < Value.SIZE; i++) {
-					raw[Command.SIZE + Key.SIZE + i] = this.value.getValue(i);
+					raw[Command.SIZE + i] = temp[i];
 				}
 				break;
 
 		case Command.SIZE + Key.SIZE + Value.SIZE:
+			System.out.println("SERVER: getRaw(): Command, Key, and Value");
 				if(this.lead != null) raw[0] = this.lead.getByte();
 				else raw[0] = 0x00;
+				temp = new byte[Key.SIZE];
+				temp = this.getFullMessageKey().getFullValue();
 				for (int i = 0; i < Key.SIZE; i++) {
-					raw[Command.SIZE + i] = this.key.getValue(i);
+					raw[Command.SIZE + i] = temp[i];
 				}
+				temp = new byte[Value.SIZE];
+				temp = this.getFullMessageValue().getFullValue();
 				for (int i = 0; i < Value.SIZE; i++) {
-					raw[Command.SIZE + Key.SIZE + i] = this.value.getValue(i);
+					raw[Command.SIZE + i] = temp[i];
 				}
 				break;
 
@@ -186,6 +208,10 @@ public class Message {
 	}
 
 	public void setLeadByte(LeadByte lead) {
+		this.lead = lead;
+	}
+	
+	public void setLeadByte(ErrorCode lead) {
 		this.lead = lead;
 	}
 

@@ -84,13 +84,19 @@ public class Node{
 		if(this.kvpairs.size()<40000){
 			this.kvpairs.put(k, v);
 			System.out.println("SERVER: "+this.kvpairs.entrySet());
-			if(this.kvpairs.get(k)==v)
+			if(this.kvpairs.get(k)==v) {
+				System.out.println("SERVER: addToKvPairs returning OK");
 				return ErrorCode.OK;
-			else
+			}
+			else {
+				System.out.println("SERVER: addToKvPairs returning FAIL");
 				return ErrorCode.KVSTORE_FAIL;
+			}
 		}
-		else
+		else {
+			System.out.println("SERVER: addToKvPairs returning OOS");
 			return ErrorCode.OUT_OF_SPACE;
+		}
 	}
 	public EVpair getValueFromKvpairs(Key k) {
 		EVpair ret;
