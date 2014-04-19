@@ -52,8 +52,8 @@ public class HandleConnection implements Runnable {
 			//get the message
 			message = Message.getFrom(in);
 			Command c = (Command) message.getLeadByte();
-			Key k = new Key(message.getFullMessageKey());
-			Value v = new Value(message.getFullMessageValue());
+			Key k = message.getFullMessageKey();
+			Value v = message.getFullMessageValue();
 			
 			//correct_node_for_key = getCorrectNode(k); //USE THIS FOR NOMAL USE
 			correct_node_for_key = this.server.getNode(); //USE THIS FOR SINGLE NODE DEBUG

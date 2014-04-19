@@ -50,7 +50,7 @@ public class TestClient {
 		this.message.setLeadByte(Command.PUT);
 		this.message.setFullMessageKey(k);
 		this.message.setFullMessageValue(v);
-		System.out.println("CLIENT: Key values set= "+k.hashCode()+", "+this.message.getFullMessageKey().hashCode());
+		// System.out.println("CLIENT: Key values set= "+k.hashCode()+", "+this.message.getFullMessageKey().hashCode());
 	}
 	public void editMessage(Command command, Key key){
 		this.message.setLeadByte(command);
