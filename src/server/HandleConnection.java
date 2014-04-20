@@ -14,10 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import tools.*;
 
+import tools.Command;
+
 public class HandleConnection implements Runnable {
 		public Thread thread;
 		public Server server;
-
 		public Socket client;
 		public HandleConnection(Server server, Thread t, Socket client){
 			this.server = new Server(server);
@@ -27,10 +28,9 @@ public class HandleConnection implements Runnable {
 
 		public void run() {
 			try {
-				while(true) {
 				onAccept();
-				}
-			}catch (Exception e) {
+				
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -61,6 +61,7 @@ public class HandleConnection implements Runnable {
 			Boolean is_local = true; //TODO:once getNodeIndex() returns an actual value set this to false
 			Node correct_node_for_key;
 			
+			
 			try {
 				in.read(message);
 			} catch (IOException e) {
@@ -69,7 +70,6 @@ public class HandleConnection implements Runnable {
 			Command c = null; 
 			Key k = new Key();
 			Value v = new Value();
-			Value replyvalue = new Value();
 			byte[] replyv = new byte[1024];
 			EVpair pair = new EVpair(null,null);
 			for(int i=0;i<message.length;i++){
@@ -91,8 +91,7 @@ public class HandleConnection implements Runnable {
 				propagate_to_list.add(correct_node_for_key);
 				propagate_to_list.addAll(correct_node_for_key.getChildren());
 			}
-			Tools.print(server.getNode().getKvpairs().keySet());
-			Tools.print(server.getNode().getKvpairs().values());
+
 			Tools.print("SERVER: Receiving = ");
 			if(is_local) { // Check if this key belongs in this node's keyspace
 				switch(c) {
@@ -109,18 +108,10 @@ public class HandleConnection implements Runnable {
 					break;
 				case REMOVE:
 					Tools.print("RM");
-					Value tempval = this.server.getNode().getKvpairs().remove(k);
-					if(tempval == null)
-						replyerr = ErrorCode.KEY_DNE;
-					else if(this.server.getNode().getKvpairs().containsKey(k))
-						replyerr = ErrorCode.KVSTORE_FAIL;
-					else
-						replyerr = ErrorCode.OK;
-					pair = new EVpair(replyerr, null);
+					replyerr = this.server.getNode().removeKeyFromKvpairs(k);
 					break;
 				default:
-					replyerr = ErrorCode.BAD_COMMAND;
-					pair = new EVpair(replyerr, null);
+					local_reply.setLeadByte(ErrorCode.BAD_COMMAND);
 					break;
 				}
 			}
@@ -134,8 +125,6 @@ public class HandleConnection implements Runnable {
 				else if(replyv!=null)
 					reply[i] = replyv[i-32-1];
 			}
-			Tools.print(server.getNode().getKvpairs().keySet());
-			Tools.print(server.getNode().getKvpairs().values());
 			
 			
 			try {
@@ -143,6 +132,8 @@ public class HandleConnection implements Runnable {
 			} catch (IOException e) {
 				Tools.print("failed to write reply");
 			}
+			
+			
 			//replies.add(local_reply);			
 			/*
 			 * TODO: propagate to the nodes contained in propagate_to_list
@@ -180,7 +171,6 @@ public class HandleConnection implements Runnable {
 			// Send reply to output stream
 			//o_out.writeObject(local_reply.getRaw());
 			//out.flush();
-		
 		}
 
 		private Node getCorrectNode(Key k) {

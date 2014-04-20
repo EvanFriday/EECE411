@@ -79,11 +79,16 @@ public class Tests {
 				message[i] = v.getValue(i-32-1);
 		}
 				
-	    client1.os.write(message);
+	    
 	    Tools.print("CLIENT: Sending = ");
-	    Tools.print(Command.getCommand(c[0]).toString());
+	    Tools.print("CLIENT: Command = "+Command.getCommand(c[0]).toString());
+	    Tools.print("CLIENT: Message Key = ");
 	    Tools.printByte(k.key);
+	    Tools.print("CLIENT: Message Value = ");
 	    Tools.printByte(v.value);
+	    
+	    client1.os.write(message);
+	    
 	    client1.is.read(reply);
 		for(int i=0;i<reply.length;i++){
 			if(i==0)
@@ -93,10 +98,14 @@ public class Tests {
 			else
 				v.setValue(message[i], i-1-32);
 		}
-	    Tools.print("CLIENT: Receiving =");
-	    Tools.print(ErrorCode.getErrorCode(replyerr).toString());
+	    Tools.print("CLIENT: Receiving = ");
+	    Tools.print("CLIENT Reply ErrorCode = "+ErrorCode.getErrorCode(replyerr).toString());
+	    Tools.print("CLIENT: Reply Key = ");
 	    Tools.printByte(k.key);
+	    Tools.print("CLIENT: Reply Value = ");
 	    Tools.printByte(v.value);
+	    
+	    
 	    /*
 	     * CLIENT 2 : Get
 	     */
@@ -108,11 +117,15 @@ public class Tests {
 	    	if(i<32)
 	    		message2[1+i] = k.getValue(i);
 		}
-	    client2.os.write(message2);
+	    
 	    Tools.print("CLIENT: Sending = ");
-	    Tools.print(Command.getCommand(message2[0]).toString());
+	    Tools.print("CLIENT: Command = "+Command.getCommand(message2[0]).toString());
+	    Tools.print("CLIENT: Message Key = ");
 	    Tools.printByte(k.key);
+	    Tools.print("CLIENT: Message Value = ");
 	    Tools.printByte(v.value);
+	    
+	    client2.os.write(message2);
 	    
 	    client2.is.read(reply2);
 		for(int i=0;i<reply2.length;i++){
@@ -123,9 +136,10 @@ public class Tests {
 			else
 				v.setValue(message[i], i-1-32);
 		}
-	    Tools.print("CLIENT: Receiving =");
-	    Tools.print(ErrorCode.getErrorCode(replyerr).toString());
+	    Tools.print("CLIENT: Reply ErrorCode = "+ErrorCode.getErrorCode(replyerr).toString());
+	    Tools.print("CLIENT: Reply Key = ");
 	    Tools.printByte(k.key);
+	    Tools.print("CLIENT: Reply Value = ");
 	    Tools.printByte(v.value);
 
 //	    Thread.sleep(500);

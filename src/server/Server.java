@@ -13,6 +13,7 @@ import java.util.Map;
 import tools.IpTools;
 import tools.Key;
 import tools.Node;
+import tools.Tools;
 import tools.Value;
 
 public class Server {
@@ -73,8 +74,7 @@ public class Server {
 			//h.accept();
 			h.run();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Tools.print("SERVER: Failed to accept connection from: "+client.getInetAddress().getHostName().toString());
 		}
 		
 	}
