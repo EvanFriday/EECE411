@@ -9,6 +9,12 @@ public class Tools {
 		String hex =  bytesToHex(b);
 		System.out.println(hex);
 	}
+	public static void printEVpair(EVpair ev) {
+		ErrorCode e = ev.getError();
+		Value v = ev.getValue();
+		print(e);
+		print(v);
+	}
 	public static String bytesToHex(byte[] bytes) {
 	    char[] hexChars = new char[bytes.length * 2];
 	    for ( int j = 0; j < bytes.length; j++ ) {

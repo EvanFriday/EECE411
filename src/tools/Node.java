@@ -94,9 +94,11 @@ public class Node{
 		else
 			return ErrorCode.OUT_OF_SPACE;
 	}
-	public Value getValueFromKvpairs(Key k) {
+	public EVpair getValueFromKvpairs(Key k) {
+		EVpair pair;
 		Boolean matchfound;
 		Value retval = new Value();
+		ErrorCode err = null;
 		for(Key ks : this.kvpairs.keySet()){
 			matchfound = true;
 			
@@ -109,10 +111,14 @@ public class Node{
 			if(matchfound){
 				for(int index = 0; index < Value.SIZE; index++){
 					retval.value[index] = this.kvpairs.get(ks).value[index];
-				}		
-			}		
+				}
+				err = ErrorCode.OK;
+			}
+			else
+				err = ErrorCode.KEY_DNE;
 		}
-		return retval;
+		pair = new EVpair(err,retval);
+		return pair;
 	}
 	public ErrorCode removeKeyFromKvpairs(Key k) {
 		ErrorCode error;
@@ -125,4 +131,3 @@ public class Node{
 		return error;
 	}
 }
-
