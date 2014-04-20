@@ -11,7 +11,7 @@ public class Node{
 	private int position;
 	private Boolean alive;
 	private List<Node> children;
-	private Map<Key,Value> kvpairs;
+	public Map<Key,Value> kvpairs;
 	
 	/*
 	 * Constructors:

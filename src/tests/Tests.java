@@ -112,8 +112,9 @@ public class Tests {
 	    Tools.print("CLIENT: Sending = ");
 	    Tools.print(Command.getCommand(message2[0]).toString());
 	    Tools.printByte(k.key);
+	    Tools.printByte(v.value);
 	    
-	    client1.is.read(reply2);
+	    client2.is.read(reply2);
 		for(int i=0;i<reply2.length;i++){
 			if(i==0)
 				replyerr = reply2[i];

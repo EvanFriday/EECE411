@@ -68,7 +68,8 @@ public class Server {
 		System.out.println("SERVER: Now Accepting connections on port: "+this.port);
 		this.client = server.accept();
 		System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
-		HandleConnection h = new HandleConnection(this,threadpool.get(0));
+		// HandleConnection h = new HandleConnection(this,threadpool.get(0));
+		HandleConnection h = new HandleConnection(this, new Thread());
 		//h.accept();
 		h.run();
 	}
