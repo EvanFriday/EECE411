@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -18,16 +19,17 @@ import tools.Command;
 public class HandleConnection implements Runnable {
 		public Thread thread;
 		public Server server;
-		public HandleConnection(Server server, Thread t){
+		public Socket client;
+		public HandleConnection(Server server, Thread t, Socket client){
 			this.server = new Server(server);
-			this.server.setNode(server.getNode());
+			this.client = client;
 			this.thread = t;
 		}
 
 		public void run() {
 			try {
 				onAccept();
-				accept();
+				
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -36,15 +38,22 @@ public class HandleConnection implements Runnable {
 		public void accept(){
 			this.thread.start();
 		}
-		public void onAccept() throws Exception{
+		public void onAccept(){
 			//Message message = new Message();
 			//Message reply = new Message();
 			byte[] message = new byte[1+32+1024];
 			byte[] reply = new byte[1+32+1024];
 			ErrorCode replyerr = null;
 			Message local_reply = new Message();
-			InputStream in = server.getClient().getInputStream();
-			OutputStream out = server.getClient().getOutputStream();
+			InputStream in = null;
+			OutputStream out = null;
+			try {
+				in = client.getInputStream();
+				out = client.getOutputStream();
+			} catch (IOException e) {
+				Tools.print("Failed to open input or output stream");
+			}
+			
 		
 			List<Node> propagate_to_list = new ArrayList<Node>();
 			Map<String,Message> replies = new ConcurrentHashMap<String,Message>();
@@ -53,7 +62,11 @@ public class HandleConnection implements Runnable {
 			Node correct_node_for_key;
 			
 			
-			in.read(message);
+			try {
+				in.read(message);
+			} catch (IOException e) {
+				Tools.print("failed to read message");
+			}
 			Command c = null; 
 			Key k = new Key();
 			Value v = new Value();
@@ -78,21 +91,21 @@ public class HandleConnection implements Runnable {
 				propagate_to_list.add(correct_node_for_key);
 				propagate_to_list.addAll(correct_node_for_key.getChildren());
 			}
-			
+			Tools.print(server.getNode().getKvpairs().keySet());
+			Tools.print(server.getNode().getKvpairs().values());
 			Tools.print("SERVER: Receiving = ");
 			if(is_local) { // Check if this key belongs in this node's keyspace
 				switch(c) {
 				case PUT:
 					Tools.print("PUT");
 					replyerr = this.server.getNode().addToKvpairs(k, v);
-					//Tools.print("Pair Added:");
-					//Tools.printByte(server.getNode().getValueFromKvpairs(k).getValue().value);
 					break;
 				case GET:
 					Tools.print("GET");
-					pair = this.server.getNode().getValueFromKvpairs(k);
-					replyerr = server.getNode().getValueFromKvpairs(k).getError();
-					replyv = server.getNode().getValueFromKvpairs(k).getValue().value;
+					pair = server.getNode().getValueFromKvpairs(k);
+					replyerr = pair.getError();
+					if(pair.getValue()!=null)
+						replyv = pair.getValue().value;
 					break;
 				case REMOVE:
 					Tools.print("RM");
@@ -110,11 +123,20 @@ public class HandleConnection implements Runnable {
 					reply[i] = replyerr.getByte();
 				else if(1<=i && i<33)
 					reply[i] = k.getValue(i-1);
-				else
+				else if(replyv!=null)
 					reply[i] = replyv[i-32-1];
 			}
+			Tools.print(server.getNode().getKvpairs().keySet());
+			Tools.print(server.getNode().getKvpairs().values());
 			
-			out.write(reply);
+			
+			try {
+				out.write(reply);
+			} catch (IOException e) {
+				Tools.print("failed to write reply");
+			}
+			
+			
 			//replies.add(local_reply);			
 			/*
 			 * TODO: propagate to the nodes contained in propagate_to_list

@@ -43,9 +43,9 @@ public class Tests {
 	        @Override
 	        public void run() {
 	            try {
-	                server.AcceptConnections();
-	            } catch (IOException e) {
-	                e.printStackTrace();
+	            	while(true){
+	            		server.AcceptConnections();
+	            	}
 	            } catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

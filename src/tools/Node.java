@@ -36,6 +36,8 @@ public class Node{
 	public Node(){
 		this.children = new ArrayList<Node>();
 		this.kvpairs = new ConcurrentHashMap<Key,Value>();
+		this.address = IpTools.getInet();
+		this.alive = true;
 	}
 	
 	/*
@@ -92,26 +94,25 @@ public class Node{
 		else
 			return ErrorCode.OUT_OF_SPACE;
 	}
-	public EVpair getValueFromKvpairs(Key k) {
-		EVpair ret;
-	
-		Value value = new Value(this.kvpairs.get(k));
-		if(value==null) 
-			ret = new EVpair(ErrorCode.KEY_DNE,value);
-		else
-			ret = new EVpair(ErrorCode.OK,value);
-;//		byte[] b = null;
-//		
-//		if(v == null) {// Key does not exist
-//			// return 0x01; // Error code: DNE
-//			b[0] = ErrorCode.KEY_DNE.getByte();
-//		}
-//		else {
-//			b[0] = ErrorCode.OK.getByte();
-//			for(int i=0; i<Value.SIZE; i++) 
-//				b[i+1] = v.getValue(i);
-//		}
-		return ret;
+	public Value getValueFromKvpairs(Key k) {
+		Boolean matchfound;
+		Value retval = new Value();
+		for(Key ks : this.kvpairs.keySet()){
+			matchfound = true;
+			
+			for(int index = 0; index < 32; index++){
+				if (ks.key[index] != k.key[index]){
+					matchfound = false;
+					break;
+				}		
+			}
+			if(matchfound){
+				for(int index = 0; index < Value.SIZE; index++){
+					retval.value[index] = this.kvpairs.get(ks).value[index];
+				}		
+			}		
+		}
+		return retval;
 	}
 	public ErrorCode removeKeyFromKvpairs(Key k) {
 		ErrorCode error;

@@ -18,7 +18,7 @@ import tools.Value;
 public class Server {
 	private List<Node> nodeList;
 	private ServerSocket server;
-	private Socket client;
+	public Socket client;
 	private String file_location = "Test.txt";
 	private Node node;
 	private ArrayList<Thread> threadpool;
@@ -64,13 +64,19 @@ public class Server {
 		}
 }
 	
-	public void AcceptConnections() throws Exception{
+	public void AcceptConnections(){
 		System.out.println("SERVER: Now Accepting connections on port: "+this.port);
-		this.client = server.accept();
-		System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
-		HandleConnection h = new HandleConnection(this,threadpool.get(0));
-		//h.accept();
-		h.run();
+		try {
+			this.client = server.accept();
+			System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
+			HandleConnection h = new HandleConnection(this,threadpool.get(1), this.client);
+			//h.accept();
+			h.run();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 	public void addThread(){
 		this.threadpool.add(new Thread());
@@ -148,7 +154,7 @@ public class Server {
 	}
 
 	public Node getNode() {
-		return node;
+		return this.node;
 	}
 
 	public void setNode(Node node) {
