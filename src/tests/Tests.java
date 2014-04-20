@@ -8,12 +8,8 @@ import java.net.UnknownHostException;
 import java.util.Random;
 
 import server.Server;
-import tools.Command;
-import tools.Key;
-import tools.LeadByte;
-import tools.Message;
-import tools.Tools;
-import tools.Value;
+import tools.*;
+
 
 public class Tests {
 	static Server server;
@@ -57,36 +53,83 @@ public class Tests {
 	        }
 	    });
 	    t.start();
+	    byte[] c = new byte[2];
+	    c[0] = 0x01;
+	    c[1] = 0x02;
 	    Key k = new Key();
 		Value v = new Value();
-		//byte rand = 0x01;
-		byte rand2 = 0x01;
 		Random rn = new Random();
 		rn.nextBytes(k.key);
 		rn.nextBytes(v.value);
 		byte[] message = new byte[1+32+1024];
 		byte[] reply = new byte[1+32+1024];
-		message[0] = 0x01;
-		for(int i = 0; i < 32+1024; i++){
-			if(i<32)
-			message[1+i] = k.getValue(i);
+		byte replyerr = 0;
+		
+
+	    /*
+	     * CLIENT 1 : Put
+	     */	
+
+		for(int i = 0; i < 1+32+1024; i++){
+			if(i == 0)
+				message[i]= c[0];
+			else if(i<32+1 && i>0)
+				message[i] = k.getValue(i-1);
 			else
-			message[1+i] = v.getValue(i-32);
+				message[i] = v.getValue(i-32-1);
 		}
-		
-		
-		
+				
 	    client1.os.write(message);
-	    Tools.print("sending");
-	    Tools.printByte(message);
+	    Tools.print("CLIENT: Sending = ");
+	    Tools.print(Command.getCommand(c[0]).toString());
+	    Tools.printByte(k.key);
+	    Tools.printByte(v.value);
 	    client1.is.read(reply);
-	    Tools.print("receiving");
-	    Tools.printByte(reply);
+		for(int i=0;i<reply.length;i++){
+			if(i==0)
+				replyerr = reply[i];
+			else if(1<=i && i<33)
+				k.setValue(message[i], i-1);
+			else
+				v.setValue(message[i], i-1-32);
+		}
+	    Tools.print("CLIENT: Receiving =");
+	    Tools.print(ErrorCode.getErrorCode(replyerr).toString());
+	    Tools.printByte(k.key);
+	    Tools.printByte(v.value);
+	    /*
+	     * CLIENT 2 : Get
+	     */
+	    byte[] message2 = new byte[1+32];
+	    byte[] reply2 = new byte[1+32+1024];
+	    for(int i = 0; i < 32; i++){
+			if(i == 0)
+				message2[i] = c[1];
+	    	if(i<32)
+	    		message2[1+i] = k.getValue(i);
+		}
+	    client2.os.write(message2);
+	    Tools.print("CLIENT: Sending = ");
+	    Tools.print(Command.getCommand(message2[0]).toString());
+	    Tools.printByte(k.key);
 	    
-//	    test.client1.sendMessage();
+	    client1.is.read(reply2);
+		for(int i=0;i<reply2.length;i++){
+			if(i==0)
+				replyerr = reply2[i];
+			else if(1<=i && i<33)
+				k.setValue(message[i], i-1);
+			else
+				v.setValue(message[i], i-1-32);
+		}
+	    Tools.print("CLIENT: Receiving =");
+	    Tools.print(ErrorCode.getErrorCode(replyerr).toString());
+	    Tools.printByte(k.key);
+	    Tools.printByte(v.value);
+
 //	    Thread.sleep(500);
-//	    test.client2.editMessage();
-//	    test.client2.sendMessage();
+//	    client2.editMessage();
+//	    client2.sendMessage();
 //	    Thread.sleep(500);
 //	    test.client3.editMessage(Command.GET,test.client2.getMessage().getMessageKey());
 //	    test.client3.sendMessage();
@@ -95,7 +138,6 @@ public class Tests {
 //	    test.client4.sendMessage();
 		
 		server.getServer().close();
-
 	}
 
 }

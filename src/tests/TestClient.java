@@ -15,12 +15,12 @@ public class TestClient {
 	public OutputStream os;
 	private Message message;
 	private Message reply;
-	private Socket socket;
+	public Socket socket;
 	private String name;
 	public TestClient(String name){
 		this.name = name;
 		try {
-			this.socket = new Socket("127.0.0.1",9995);
+			this.socket = new Socket("127.0.0.1",9999);
 			this.is = this.socket.getInputStream();
 			this.os = this.socket.getOutputStream();
 		} catch (IOException e) {

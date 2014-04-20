@@ -29,4 +29,7 @@ public enum ErrorCode implements LeadByte {
 	public byte getByte() {
 		return this.value;
 	}
+	public void setByte(byte value){
+		this.value = value;
+	}
 }

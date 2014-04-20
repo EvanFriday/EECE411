@@ -83,7 +83,7 @@ public class Node{
 	public ErrorCode addToKvpairs(Key k, Value v) {
 		if(this.kvpairs.size()<40000){
 			this.kvpairs.put(k, v);
-			System.out.println("SERVER: "+this.kvpairs.entrySet());
+			
 			if(this.kvpairs.get(k)==v)
 				return ErrorCode.OK;
 			else
@@ -94,7 +94,7 @@ public class Node{
 	}
 	public EVpair getValueFromKvpairs(Key k) {
 		EVpair ret;
-		System.out.println("SERVER: "+this.kvpairs.get(k));
+	
 		Value value = new Value(this.kvpairs.get(k));
 		if(value==null) 
 			ret = new EVpair(ErrorCode.KEY_DNE,value);
@@ -113,7 +113,7 @@ public class Node{
 //		}
 		return ret;
 	}
-	public LeadByte removeKeyFromKvpairs(Key k) {
+	public ErrorCode removeKeyFromKvpairs(Key k) {
 		ErrorCode error;
 		if(this.kvpairs.remove(k)==null)
 			error = ErrorCode.KEY_DNE;
