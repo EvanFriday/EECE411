@@ -67,21 +67,25 @@ public class Message {
 	}
 
 	public void getFrom(InputStream is) throws IOException {
-		
+		boolean debug = true;
+		if(debug) System.out.println("[debug] Entering getFrom");
 		byte[] command = new byte[1];
 		byte[] key = new byte[32];
 		byte[] value = new byte[1024];
 		is.read(command, 0, 1);
 		this.setLeadByte(Command.getCommand(command[0]));
-		is.read(key,0,32);
-		this.setMessageKey(key);
+		if(debug) System.out.println("[debug] getFrom: Done reading Command");
+		if(Command.getCommand(command[0])==Command.PUT || Command.getCommand(command[0])==Command.GET || Command.getCommand(command[0])==Command.REMOVE) {
+			is.read(key,0,32);
+			this.setFullMessageKey(new Key(key));
+			if(debug) System.out.println("[debug] getFrom: Done reading Key");
+		}
 		if(Command.getCommand(command[0])==Command.PUT){
 			is.read(value,0,1024);
-			this.setMessageValue(value);
+			this.setFullMessageValue(new Value(value));
+			if(debug) System.out.println("[debug] getFrom: Done reading Value");
 		}
-	
-			
-		
+		if(debug) System.out.println("[debug] Leaving getFrom");
 	}
 
 	public Message sendTo(String address, int port) throws IOException {
@@ -97,12 +101,14 @@ public class Message {
 	}
 
 	public Message sendTo(OutputStream os, InputStream replyStream) throws IOException {
-		Message reply = null;
+		Message reply = new Message();
 		ErrorCode error = null;
+		boolean debug = true;
+		if(debug) System.out.println("[debug] sendTo: About to write to OS");
 		os.write(this.getRaw());
 		os.flush();
-
-
+		if(debug) System.out.println("[debug] sendTo: Done writing to OS, about to getFrom IS");
+		
 		reply.getFrom(replyStream);
 		try{
 		error = reply.getErrorByte();

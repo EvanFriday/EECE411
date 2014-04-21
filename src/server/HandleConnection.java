@@ -14,12 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import tools.*;
 
-import tools.Command;
-
 public class HandleConnection implements Runnable {
 		public Thread thread;
 		public Server server;
 		public Socket client;
+		public boolean debug = true;
 		public HandleConnection(Server server, Thread t, Socket client){
 			this.server = new Server(server);
 			this.client = client;
@@ -57,6 +56,7 @@ public class HandleConnection implements Runnable {
 			}
 			try {
 //				in.read(message);
+				if(debug) System.out.println("[debug] SERVER: onAccept - Calling getFrom");
 				message.getFrom(in);
 			} catch (IOException e) {
 				Tools.print("failed to read message");

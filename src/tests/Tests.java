@@ -37,7 +37,7 @@ public class Tests {
 	 * @throws InterruptedException 
 	 */
 	public static void main(String[] args) throws IOException, InterruptedException {
-		
+		boolean debug = true;
 		Tests test = new Tests();
 		Thread t = new Thread(new Runnable() {
 	        @Override
@@ -84,10 +84,11 @@ public class Tests {
 	    Tools.printByte(m1.getFullMessageKey().key);
 	    Tools.printByte(m1.getFullMessageValue().value);
 	    
+	    if(debug) System.out.println("[debug] CLIENT: Tests - about to send reply1");
 	    reply1 = m1.sendTo(client1.os, client1.is);
 
 		Tools.print("CLIENT: Receiving Reply: ");
-	    Tools.print("CLIENT: ErrorCode = "+reply1.getLeadByte().toString());
+	    //Tools.print("CLIENT: ErrorCode = "+reply1.getLeadByte().toString());
 	    
 	    
 	    /*
