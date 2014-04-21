@@ -62,8 +62,8 @@ public class Tests {
 		byte[] reply = new byte[1+32+1024];
 		byte replyerr = 0;
 		
-		Message m1 = new Message(Command.PUT, k, v);
-		
+		Message m1 = new Message(Command.PUT,k,v);
+		Message r1 = new Message();
 
 	    /*
 	     * CLIENT 1 : Put
@@ -86,9 +86,11 @@ public class Tests {
 	    Tools.printByte(m1.getFullMessageKey().key);
 	    Tools.printByte(m1.getFullMessageValue().value);
 	    
-	    m1.sendTo(client1.os, client1.is);
-	    
-	    client1.is.read(reply);
+	    r1 =  new Message(m1.sendTo(client1.os, client1.is).getRaw());
+		Tools.print("CLIENT: Receiving Reply: ");
+	    Tools.print(r1.getLeadByte().toString());
+	   // client1.is.read(reply);
+	    reply = r1.getRaw();
 		for(int i=0;i<reply.length;i++){
 			if(i==0)
 				replyerr = reply[i];
@@ -97,7 +99,7 @@ public class Tests {
 			else
 				v.setValue(message[i], i-1-32);
 		}
-		Tools.print("CLIENT: Receiving Reply: ");
+
 	    Tools.print("CLIENT Reply ErrorCode = "+ErrorCode.getErrorCode(replyerr).toString());
 	    
 	    
@@ -121,7 +123,7 @@ public class Tests {
 	    Tools.print(m2.getLeadByte().toString());
 	    Tools.print(m2.getFullMessageKey());
 	    
-	    m2.sendTo(client2.os, client2.is)
+	    m2.sendTo(client2.os, client2.is);
 	    
 	    client2.is.read(reply2);
 		for(int i=0;i<reply2.length;i++){
