@@ -6,8 +6,10 @@ public class Tools {
 		System.out.println(o);
 	}
 	public static void printByte(byte[] b){
-		String hex =  bytesToHex(b);
-		System.out.println(hex);
+		if(b != null){
+			String hex = bytesToHex(b);
+			System.out.println(hex);
+		}
 	}
 	public static void printEVpair(EVpair ev) {
 		ErrorCode e = ev.getError();

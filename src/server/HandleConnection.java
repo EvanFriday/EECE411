@@ -39,48 +39,46 @@ public class HandleConnection implements Runnable {
 			this.thread.start();
 		}
 		public void onAccept(){
-			//Message message = new Message();
-			//Message reply = new Message();
-			byte[] message = new byte[1+32+1024];
-			byte[] reply = new byte[1+32+1024];
+			Message message = new Message();
+//			byte[] message = new byte[1+32+1024];
+//			byte[] reply = new byte[1+1024];
 			ErrorCode replyerr = null;
 			Message local_reply = new Message();
 			InputStream in = null;
 			OutputStream out = null;
+			Boolean is_local = true; //TODO:once getNodeIndex() returns an actual value set this to false
+			Node correct_node_for_key;
+			
 			try {
 				in = client.getInputStream();
 				out = client.getOutputStream();
 			} catch (IOException e) {
 				Tools.print("Failed to open input or output stream");
 			}
-			
-		
-			List<Node> propagate_to_list = new ArrayList<Node>();
-			Map<String,Message> replies = new ConcurrentHashMap<String,Message>();
-			
-			Boolean is_local = true; //TODO:once getNodeIndex() returns an actual value set this to false
-			Node correct_node_for_key;
-			
-			
 			try {
-				in.read(message);
+//				in.read(message);
+				message.getFrom(in);
 			} catch (IOException e) {
 				Tools.print("failed to read message");
 			}
+//			message = new Message(message);
 			Command c = null; 
-			Key k = new Key();
-			Value v = new Value();
-			byte[] replyv = new byte[1024];
+			Key k = new Key(message.getMessageKey());
+			Value v = new Value(message.getMessageValue());
+//			byte[] replyv = new byte[1024];
 			EVpair pair = new EVpair(null,null);
-			for(int i=0;i<message.length;i++){
-				if(i==0)
-					c = Command.getCommand(message[i]);
-				else if(1<=i && i<33)
-					k.setValue(message[i], i-1);
-				else
-					v.setValue(message[i], i-1-32);
-			}
-
+//			for(int i=0;i<message.length;i++){
+//				if(i==0)
+//					c = Command.getCommand(message[i]);
+//				else if(1<=i && i<33)
+//					k.setValue(message[i], i-1);
+//				else
+//					v.setValue(message[i], i-1-32);
+//			}
+			
+			c = (Command) message.getLeadByte();
+			List<Node> propagate_to_list = new ArrayList<Node>();
+			Map<String,Message> replies = new ConcurrentHashMap<String,Message>();
 			//correct_node_for_key = getCorrectNode(k); //USE THIS FOR NOMAL USE
 			correct_node_for_key = this.server.getNode(); //USE THIS FOR SINGLE NODE DEBUG
 			if(correct_node_for_key.getAddress() == this.server.getNode().getAddress()){
@@ -93,18 +91,22 @@ public class HandleConnection implements Runnable {
 			}
 
 			Tools.print("SERVER: Receiving = ");
-			if(is_local) { // Check if this key belongs in this node's keyspace
+			if(is_local) {
 				switch(c) {
 				case PUT:
 					Tools.print("PUT");
-					replyerr = this.server.getNode().addToKvpairs(k, v);
+//					replyerr = this.server.getNode().addToKvpairs(k, v);
+					local_reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
 					break;
 				case GET:
 					Tools.print("GET");
 					pair = server.getNode().getValueFromKvpairs(k);
-					replyerr = pair.getError();
-					if(pair.getValue()!=null)
-						replyv = pair.getValue().value;
+//					replyerr = pair.getError();
+					local_reply.setLeadByte(pair.getError());
+//					if(pair.getValue()!= null){
+//						replyv = pair.getValue().value;
+						local_reply.setMessageValue(pair.getValue());
+//					}
 					break;
 				case REMOVE:
 					Tools.print("RM");
@@ -116,20 +118,20 @@ public class HandleConnection implements Runnable {
 				}
 			}
 			Tools.printByte(k.key);
-			Tools.printByte(v.value);
-			for(int i=0;i<reply.length;i++){
-				if(i==0)
-					reply[i] = replyerr.getByte();
-				else if(1<=i && i<33)
-					reply[i] = k.getValue(i-1);
-				else if(replyv!=null)
-					reply[i] = replyv[i-32-1];
-			}
-			
-			
+			if(v != null)
+				Tools.printByte(v.value);
+//			for(int i=0;i<reply.length;i++){
+//				if(i==0)
+//					reply[i] = replyerr.getByte();
+//				else if(replyv!=null)
+//					reply[i] = replyv[i-1];
+//			}
+//			Tools.print("message value = ");
+			//Tools.printByte(local_reply.getMessageValue().value);
 			try {
-				out.write(reply);
-			} catch (IOException e) {
+				//out.write(reply);
+				local_reply.sendReplyTo(out);
+			} catch (Exception e) {
 				Tools.print("failed to write reply");
 			}
 			

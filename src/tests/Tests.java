@@ -81,10 +81,8 @@ public class Tests {
 				
 	    
 	    Tools.print("CLIENT: Sending = ");
-	    Tools.print("CLIENT: Command = "+Command.getCommand(c[0]).toString());
-	    Tools.print("CLIENT: Message Key = ");
+	    Tools.print(Command.getCommand(c[0]).toString());
 	    Tools.printByte(k.key);
-	    Tools.print("CLIENT: Message Value = ");
 	    Tools.printByte(v.value);
 	    
 	    client1.os.write(message);
@@ -98,19 +96,15 @@ public class Tests {
 			else
 				v.setValue(message[i], i-1-32);
 		}
-	    Tools.print("CLIENT: Receiving = ");
+		Tools.print("CLIENT: Receiving Reply: ");
 	    Tools.print("CLIENT Reply ErrorCode = "+ErrorCode.getErrorCode(replyerr).toString());
-	    Tools.print("CLIENT: Reply Key = ");
-	    Tools.printByte(k.key);
-	    Tools.print("CLIENT: Reply Value = ");
-	    Tools.printByte(v.value);
 	    
 	    
 	    /*
 	     * CLIENT 2 : Get
 	     */
 	    byte[] message2 = new byte[1+32];
-	    byte[] reply2 = new byte[1+32+1024];
+	    byte[] reply2 = new byte[1+1024];
 	    for(int i = 0; i < 32; i++){
 			if(i == 0)
 				message2[i] = c[1];
@@ -119,11 +113,8 @@ public class Tests {
 		}
 	    
 	    Tools.print("CLIENT: Sending = ");
-	    Tools.print("CLIENT: Command = "+Command.getCommand(message2[0]).toString());
-	    Tools.print("CLIENT: Message Key = ");
+	    Tools.print(Command.getCommand(message2[0]).toString());
 	    Tools.printByte(k.key);
-	    Tools.print("CLIENT: Message Value = ");
-	    Tools.printByte(v.value);
 	    
 	    client2.os.write(message2);
 	    
@@ -131,15 +122,11 @@ public class Tests {
 		for(int i=0;i<reply2.length;i++){
 			if(i==0)
 				replyerr = reply2[i];
-			else if(1<=i && i<33)
-				k.setValue(message[i], i-1);
 			else
-				v.setValue(message[i], i-1-32);
+				v.setValue(reply2[i], i-1);
 		}
-	    Tools.print("CLIENT: Reply ErrorCode = "+ErrorCode.getErrorCode(replyerr).toString());
-	    Tools.print("CLIENT: Reply Key = ");
-	    Tools.printByte(k.key);
-	    Tools.print("CLIENT: Reply Value = ");
+		Tools.print("CLIENT: Receiving Reply: ");
+	    Tools.print(ErrorCode.getErrorCode(replyerr).toString());
 	    Tools.printByte(v.value);
 
 //	    Thread.sleep(500);

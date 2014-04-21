@@ -4,7 +4,7 @@ public class Key {
 	public static final int SIZE = 32; //as we loop from 0-31 this gives us 32 bytes.
 	public static final int MAX_NUM = 40000;
 
-	public byte[] key;
+	public byte[] key = null;
 	//private int hashCode;
 
 	public Key() {

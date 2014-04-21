@@ -14,8 +14,8 @@ public class Message {
 
 	public Message() {
 		this.setLeadByte(null);
-		this.key = new Key();
-		this.value = new Value();
+		this.key = null;
+		this.value = null;
 	}
 
 	public Message(LeadByte l) {
@@ -51,8 +51,7 @@ public class Message {
 		case Command.SIZE + Value.SIZE:
 			this.setLeadByte(Command.getCommand(message[0]));
 			this.setMessageValue(new Value(message, Command.SIZE));
-			break;
-			
+			break;		
 		case Command.SIZE + Key.SIZE + Value.SIZE:
 			this.setLeadByte(Command.getCommand(message[0]));
 			this.setMessageKey(new Key(message,Command.SIZE));
@@ -63,14 +62,26 @@ public class Message {
 		}
 	}
 
-	public Message getFrom(Socket con) throws IOException {
-		return getFrom(con.getInputStream());
+	public void getFrom(Socket con) throws IOException {
+		this.getFrom(con.getInputStream());
 	}
 
-	public static Message getFrom(InputStream is) throws IOException {
-		byte[] raw = new byte[MAX_SIZE];
-		is.read(raw, 0, MAX_SIZE);
-		return new Message(raw);
+	public void getFrom(InputStream is) throws IOException {
+		
+		byte[] command = new byte[1];
+		byte[] key = new byte[32];
+		byte[] value = new byte[1024];
+		is.read(command, 0, 1);
+		this.setLeadByte(Command.getCommand(command[0]));
+		is.read(key,0,32);
+		this.setMessageKey(key);
+		if(Command.getCommand(command[0])==Command.PUT){
+			is.read(value,0,1024);
+			this.setMessageValue(value);
+		}
+	
+			
+		
 	}
 
 	public Message sendTo(String address, int port) throws IOException {
@@ -92,7 +103,7 @@ public class Message {
 		os.flush();
 
 
-		reply = Message.getFrom(replyStream);
+		reply.getFrom(replyStream);
 		try{
 		error = reply.getErrorByte();
 		}
@@ -126,7 +137,6 @@ public class Message {
 
 	public void sendReplyTo(OutputStream os) throws Exception {
 		os.write(this.getRaw());
-		os.flush();
 	}
 
 	public byte[] getRaw() {
@@ -143,23 +153,23 @@ public class Message {
 		case Command.SIZE + Key.SIZE:
 				raw[0] = this.lead.getByte();
 				for (int i = 0; i < Key.SIZE; i++) {
-					raw[Command.SIZE + i] = this.key.getValue(i);
+					raw[Command.SIZE + i] = this.key.key[i];
 				}
 				break;
 
 		case Command.SIZE + Value.SIZE:
 				raw[0] = this.lead.getByte();
 				for (int i = 0; i < Value.SIZE; i++) {
-					raw[Command.SIZE + i] = this.value.getValue(i);
+					raw[Command.SIZE + i] = this.value.value[i];
 				}
 				break;
 		case Key.SIZE + Value.SIZE:
 				raw[0] = 0x00;
 				for(int i = 0; i < Key.SIZE; i++){
-				raw[Command.SIZE + i] = this.key.getValue(i);
+				raw[Command.SIZE + i] = this.key.key[i];
 				}
 				for (int i = 0; i < Value.SIZE; i++) {
-					raw[Command.SIZE + Key.SIZE + i] = this.value.getValue(i);
+					raw[Command.SIZE + Key.SIZE + i] = this.value.value[i];
 				}
 				break;
 
@@ -167,10 +177,10 @@ public class Message {
 				if(this.lead != null) raw[0] = this.lead.getByte();
 				else raw[0] = 0x00;
 				for (int i = 0; i < Key.SIZE; i++) {
-					raw[Command.SIZE + i] = this.key.getValue(i);
+					raw[Command.SIZE + i] = this.key.key[i];
 				}
 				for (int i = 0; i < Value.SIZE; i++) {
-					raw[Command.SIZE + Key.SIZE + i] = this.value.getValue(i);
+					raw[Command.SIZE + Key.SIZE + i] = this.value.value[i];
 				}
 				break;
 
@@ -240,11 +250,16 @@ public class Message {
 	}
 
 	public Value getMessageValue() {
-		Value temp = new Value();
-		for(int i = 0; i < Value.SIZE; i++){
-			temp.setValue(this.value.getValue(i), i);
+		if(this.value != null){
+			Value temp = new Value();
+			for(int i = 0; i < Value.SIZE; i++){
+				temp.setValue(this.value.getValue(i), i);
+			}
+			return temp;
 		}
-		return temp;
+		else
+			return null;
+		
 	}
 	
 	public Value getFullMessageValue() {
@@ -263,10 +278,10 @@ public class Message {
 	}
 
 	public void setMessageValue(byte[] raw) {
-		this.value = new Value();
-		for(int i = 0; i< Value.SIZE; i++){
-			this.value.setValue(raw[i], i);
-		}
+		this.value = new Value(raw);
+//		for(int i = 0; i< Value.SIZE; i++){
+//			this.value.setValue(raw[i], i);
+//		}
 	}
 	public Boolean compareMessageValues(Value value_in){
 		for(int i = 0; i < Value.SIZE; i++){
