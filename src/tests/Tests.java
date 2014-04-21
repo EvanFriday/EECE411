@@ -53,9 +53,6 @@ public class Tests {
 	        }
 	    });
 	    t.start();
-	    byte[] c = new byte[2];
-	    c[0] = 0x01;
-	    c[1] = 0x02;
 	    Key k = new Key();
 		Value v = new Value();
 		Random rn = new Random();
@@ -65,11 +62,14 @@ public class Tests {
 		byte[] reply = new byte[1+32+1024];
 		byte replyerr = 0;
 		
+		Message m1 = new Message(Command.PUT, k, v);
+		
 
 	    /*
 	     * CLIENT 1 : Put
 	     */	
 
+		/*
 		for(int i = 0; i < 1+32+1024; i++){
 			if(i == 0)
 				message[i]= c[0];
@@ -78,14 +78,15 @@ public class Tests {
 			else
 				message[i] = v.getValue(i-32-1);
 		}
+		*/
 				
 	    
 	    Tools.print("CLIENT: Sending = ");
-	    Tools.print(Command.getCommand(c[0]).toString());
-	    Tools.printByte(k.key);
-	    Tools.printByte(v.value);
+	    Tools.print(m1.getLeadByte().toString());
+	    Tools.printByte(m1.getFullMessageKey().key);
+	    Tools.printByte(m1.getFullMessageValue().value);
 	    
-	    client1.os.write(message);
+	    m1.sendTo(client1.os, client1.is);
 	    
 	    client1.is.read(reply);
 		for(int i=0;i<reply.length;i++){
@@ -105,18 +106,22 @@ public class Tests {
 	     */
 	    byte[] message2 = new byte[1+32];
 	    byte[] reply2 = new byte[1+1024];
+	    /*
 	    for(int i = 0; i < 32; i++){
 			if(i == 0)
 				message2[i] = c[1];
 	    	if(i<32)
 	    		message2[1+i] = k.getValue(i);
 		}
+		*/
+	    
+	    Message m2 = new Message(Command.GET, k);
 	    
 	    Tools.print("CLIENT: Sending = ");
-	    Tools.print(Command.getCommand(message2[0]).toString());
-	    Tools.printByte(k.key);
+	    Tools.print(m2.getLeadByte().toString());
+	    Tools.print(m2.getFullMessageKey());
 	    
-	    client2.os.write(message2);
+	    m2.sendTo(client2.os, client2.is)
 	    
 	    client2.is.read(reply2);
 		for(int i=0;i<reply2.length;i++){
