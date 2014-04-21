@@ -97,7 +97,7 @@ public class Message {
 	}
 
 	public Message sendTo(OutputStream os, InputStream replyStream) throws IOException {
-		Message reply = null;
+		Message reply = new Message();
 		ErrorCode error = null;
 		os.write(this.getRaw());
 		os.flush();
