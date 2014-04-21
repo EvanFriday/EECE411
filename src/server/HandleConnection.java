@@ -110,7 +110,7 @@ public class HandleConnection implements Runnable {
 			}
 			
 			
-			//replies.add(local_reply);			
+			replies.put(this.server.getNode().getAddress().getHostName(),local_reply);			
 			/*
 			 * TODO: propagate to the nodes contained in propagate_to_list
 			 * new Propagate();
