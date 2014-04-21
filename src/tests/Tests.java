@@ -60,8 +60,8 @@ public class Tests {
 		rn.nextBytes(v.value);
 		byte replyerr = 0;
 		
-		Message m1 = new Message(Command.PUT, k, v);
-		Message reply1;
+		Message m1 = new Message(Command.PUT,k,v);
+		Message r1 = new Message();
 
 	    /*
 	     * CLIENT 1 : Put
@@ -84,11 +84,12 @@ public class Tests {
 	    Tools.printByte(m1.getFullMessageKey().key);
 	    Tools.printByte(m1.getFullMessageValue().value);
 	    
-	    if(debug) System.out.println("[debug] CLIENT: Tests - about to send reply1");
-	    reply1 = m1.sendTo(client1.os, client1.is);
-
+	    r1 = m1.sendTo(client1.os, client1.is);
 		Tools.print("CLIENT: Receiving Reply: ");
-	    //Tools.print("CLIENT: ErrorCode = "+reply1.getLeadByte().toString());
+	    Tools.print(r1.getLeadByte().toString());
+	    client1.is.read(r1.getRaw());
+
+	    Tools.print("CLIENT Reply ErrorCode = "+ErrorCode.getErrorCode(replyerr).toString());
 	    
 	    
 	    /*
@@ -104,17 +105,19 @@ public class Tests {
 		*/
 	    
 	    Message m2 = new Message(Command.GET, k);
-	    Message reply2;
+	    Message r2 = new Message();
 	    
 	    Tools.print("CLIENT: Sending = ");
 	    Tools.print(m2.getLeadByte().toString());
 	    Tools.print(m2.getFullMessageKey());
 	    
-	    reply2 = m2.sendTo(client2.os, client2.is);
+	    m2.sendTo(client2.os, client2.is);
+	    
+	    client2.is.read(r2.getRaw());
 
 		Tools.print("CLIENT: Receiving Reply: ");
-		Tools.print("CLIENT: ErrorCode = "+reply2.getLeadByte().toString());
-	    Tools.printByte(reply2.getFullMessageValue().value);
+		Tools.print("CLIENT: ErrorCode = "+r2.getLeadByte().toString());
+	    Tools.printByte(r2.getFullMessageValue().value);
 
 //	    Thread.sleep(500);
 //	    client2.editMessage();

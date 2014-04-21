@@ -130,6 +130,9 @@ public class HandleConnection implements Runnable {
 			//Tools.printByte(local_reply.getMessageValue().value);
 			try {
 				//out.write(reply);
+				if(debug) System.out.println("[debug] SERVER: onAccept - Sending reply: "+local_reply.getLeadByte());
+				if(debug) System.out.println("[debug] SERVER: onAccept - Sending reply: "+local_reply.getFullMessageKey().key);
+				if(debug) System.out.println("[debug] SERVER: onAccept - Sending reply: "+local_reply.getFullMessageValue().value);
 				local_reply.sendReplyTo(out);
 			} catch (Exception e) {
 				Tools.print("failed to write reply");
