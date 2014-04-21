@@ -7,51 +7,49 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 import tools.Message;
+import tools.Tools;
 
 public class Propagate implements Runnable {
 	private String address;
 	private Server server;
 	private Message message;
 	private Message reply;
+	public Message getReply() {
+		return reply;
+	}
+
 	private InputStream is;
 	private OutputStream os;
 	private Thread t;
 	private Socket propagation_socket;
 
-	public Propagate(Server server,Thread thread,String address ,Message message) {
+	public Propagate(Thread thread,String address ,Message message) {
 		this.address = address;
-		this.server = server;
 		this.message = message;
 		this.reply = new Message();
 		this.t = thread;
 	}
 
 	public void run() {
-		try {
-			
-			reply = this.message.sendTo(this.os, this.is);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		propagate();
 	}
 
-	public Message propagate() throws IOException {
+	public void propagate(){
 		try {
 			propagation_socket = new Socket(this.address,9999);
+			is = propagation_socket.getInputStream();
+			os = propagation_socket.getOutputStream();
 		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Tools.print("Unknown Host Ex");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Tools.print("IO Ex");
 		}
-		is = propagation_socket.getInputStream();
-		os = propagation_socket.getOutputStream();
-
 		System.out.println("SERVER: Propagating Changes to: " + address.toString());
-		t.start();
-
-		return this.reply;
+		try {
+			this.reply = this.message.sendTo(this.os, this.is);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}	
 	}
 
 }

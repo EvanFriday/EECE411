@@ -71,7 +71,6 @@ public class Server {
 			this.client = server.accept();
 			System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
 			HandleConnection h = new HandleConnection(this,threadpool.get(1), this.client);
-			//h.accept();
 			h.run();
 		} catch (IOException e) {
 			Tools.print("SERVER: Failed to accept connection from: "+client.getInetAddress().getHostName().toString());
