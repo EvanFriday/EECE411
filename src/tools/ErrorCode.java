@@ -1,7 +1,7 @@
 package tools;
 
 public enum ErrorCode implements LeadByte {
-	OK((byte) 0x00),
+	OK((byte) 0x10),
 	KEY_DNE((byte) 0x01),
 	OUT_OF_SPACE((byte) 0x02),
 	OVERLOAD((byte) 0x03),

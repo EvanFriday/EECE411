@@ -76,12 +76,12 @@ public class Message {
 		is.read(command, 0, 1);
 		this.setLeadByte(Command.getCommand(command[0]));
 		if(debug) System.out.println("[debug] getFrom: Done reading Command");
-		if(Command.getCommand(command[0])==Command.PUT || Command.getCommand(command[0])==Command.GET || Command.getCommand(command[0])==Command.REMOVE) {
+		if(this.lead==Command.PUT || this.lead==Command.GET || this.lead==Command.REMOVE) {
 			is.read(key,0,32);
 			this.setFullMessageKey(new Key(key));
 			if(debug) System.out.println("[debug] getFrom: Done reading Key");
 		}
-		if(Command.getCommand(command[0])==Command.PUT){
+		if(this.lead==Command.PUT){
 			is.read(value,0,1024);
 			this.setFullMessageValue(new Value(value));
 			if(debug) System.out.println("[debug] getFrom: Done reading Value");
@@ -102,13 +102,14 @@ public class Message {
 	}
 
 	public Message sendTo(OutputStream os, InputStream replyStream) throws IOException {
-		Message reply = new Message();
+		//Message reply = new Message();
 		ErrorCode error = null;
+		byte[] b = new byte[1];
 		boolean debug = true;
-		if(debug) System.out.println("[debug] sendTo: About to write to OS");
+		if(debug) Tools.print("[debug] sendTo: About to write to OS");
 		os.write(this.getRaw());
-		os.flush();
-		if(debug) System.out.println("[debug] sendTo: Done writing to OS, about to getFrom IS");
+		//os.flush();
+		if(debug) Tools.print("[debug] sendTo: Done writing to OS, about to getFrom IS");
 		
 		try {
 			//this.sendReplyTo(os);
@@ -116,7 +117,10 @@ public class Message {
 			Tools.print("failed to send message");
 		}
 
-		reply.getFrom(replyStream);
+		replyStream.read(b);
+		Tools.printByte(b);
+		Message reply = new Message(b);
+		//reply.getFrom(replyStream);
 		try{
 		error = reply.getErrorByte();
 		}
@@ -124,6 +128,7 @@ public class Message {
 			System.err.println("SERVER: "+"Error: replystream has no lead byte. NPE");
 		}
 			if (error != null) {
+				if(debug) Tools.print("[debug] sendTo: ErrorCode != Null");
 			switch(error) {
 			case OK:
 				System.out.println("SERVER: "+"Operation successful.");
@@ -141,6 +146,12 @@ public class Message {
 				System.out.println("SERVER: "+"Error: Unknown error.");
 			}
 		}
+			if(debug) {
+			Tools.print("[debug] sendTo: Returning Reply:");
+			Tools.print(reply.lead);
+			Tools.printByte(reply.getFullMessageKey().key);
+			Tools.printByte(reply.getFullMessageValue().value);
+			}
 
 		return reply;
 	}
