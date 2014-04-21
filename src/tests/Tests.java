@@ -58,12 +58,10 @@ public class Tests {
 		Random rn = new Random();
 		rn.nextBytes(k.key);
 		rn.nextBytes(v.value);
-		byte[] message = new byte[1+32+1024];
-		byte[] reply = new byte[1+32+1024];
 		byte replyerr = 0;
 		
 		Message m1 = new Message(Command.PUT, k, v);
-		
+		Message reply1;
 
 	    /*
 	     * CLIENT 1 : Put
@@ -86,26 +84,15 @@ public class Tests {
 	    Tools.printByte(m1.getFullMessageKey().key);
 	    Tools.printByte(m1.getFullMessageValue().value);
 	    
-	    m1.sendTo(client1.os, client1.is);
-	    
-	    client1.is.read(reply);
-		for(int i=0;i<reply.length;i++){
-			if(i==0)
-				replyerr = reply[i];
-			else if(1<=i && i<33)
-				k.setValue(message[i], i-1);
-			else
-				v.setValue(message[i], i-1-32);
-		}
+	    reply1 = m1.sendTo(client1.os, client1.is);
+
 		Tools.print("CLIENT: Receiving Reply: ");
-	    Tools.print("CLIENT Reply ErrorCode = "+ErrorCode.getErrorCode(replyerr).toString());
+	    Tools.print("CLIENT: ErrorCode = "+reply1.getLeadByte().toString());
 	    
 	    
 	    /*
 	     * CLIENT 2 : Get
 	     */
-	    byte[] message2 = new byte[1+32];
-	    byte[] reply2 = new byte[1+1024];
 	    /*
 	    for(int i = 0; i < 32; i++){
 			if(i == 0)
@@ -116,23 +103,17 @@ public class Tests {
 		*/
 	    
 	    Message m2 = new Message(Command.GET, k);
+	    Message reply2;
 	    
 	    Tools.print("CLIENT: Sending = ");
 	    Tools.print(m2.getLeadByte().toString());
 	    Tools.print(m2.getFullMessageKey());
 	    
-	    m2.sendTo(client2.os, client2.is)
-	    
-	    client2.is.read(reply2);
-		for(int i=0;i<reply2.length;i++){
-			if(i==0)
-				replyerr = reply2[i];
-			else
-				v.setValue(reply2[i], i-1);
-		}
+	    reply2 = m2.sendTo(client2.os, client2.is);
+
 		Tools.print("CLIENT: Receiving Reply: ");
-	    Tools.print(ErrorCode.getErrorCode(replyerr).toString());
-	    Tools.printByte(v.value);
+		Tools.print("CLIENT: ErrorCode = "+reply2.getLeadByte().toString());
+	    Tools.printByte(reply2.getFullMessageValue().value);
 
 //	    Thread.sleep(500);
 //	    client2.editMessage();
