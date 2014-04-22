@@ -122,7 +122,8 @@ public class Node{
 	}
 	public ErrorCode removeKeyFromKvpairs(Key k) {
 		ErrorCode error;
-		if(this.kvpairs.remove(k)==null)
+		Value returned_value = this.kvpairs.remove(k);
+		if(returned_value==null)
 			error = ErrorCode.KEY_DNE;
 		else if(!this.kvpairs.containsKey(k))
 			error = ErrorCode.OK;

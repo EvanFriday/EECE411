@@ -64,9 +64,10 @@ public class Server {
 	}
 	
 	public void AcceptConnections(){
-		System.out.println("SERVER: Now Accepting connections on port: "+this.port);
+		//System.out.println("SERVER: Now Accepting connections on port: "+this.port);
 		try {
 			this.client = server.accept();
+
 			HandleConnection hc = new HandleConnection(this,this.executor,this.client);
 			FutureTask<Integer> ft = new FutureTask<Integer>(hc,null);
 			System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
@@ -74,6 +75,7 @@ public class Server {
 		} catch (IOException e) {
 			Tools.print("SERVER: Failed to accept connection from: "+client.getInetAddress().getHostName().toString());
 		}
+
 	}
 
 	public void PopulateNodeList() throws UnknownHostException, IOException{

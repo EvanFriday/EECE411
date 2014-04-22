@@ -18,12 +18,11 @@ import java.util.concurrent.FutureTask;
 
 import tools.*;
 
-import tools.Command;
-
 public class HandleConnection implements Runnable {
 		private ExecutorService executor;
 		public Server server;
 		public Socket client;
+		public boolean debug = true;
 		
 		public HandleConnection(Server server, ExecutorService executor, Socket client){
 			this.server = new Server(server);
@@ -63,6 +62,9 @@ public class HandleConnection implements Runnable {
 				Tools.print("Failed to open input or output stream");
 			}
 			try {
+//				in.read(message);
+				if(debug) System.out.println("[debug] SERVER: onAccept - Calling getFrom");
+
 				message.getFrom(in);
 			} catch (IOException e) {
 				Tools.print("failed to read message");
@@ -188,11 +190,13 @@ public class HandleConnection implements Runnable {
 //					}
 //				}
 			}
+
 			try {
 				Tools.print("Writing Reply");
 				reply.sendReplyTo(out);
 				Tools.print("Closing Socket");
 				this.client.close();
+
 			} catch (Exception e) {
 				Tools.print("failed to write reply");
 			}
