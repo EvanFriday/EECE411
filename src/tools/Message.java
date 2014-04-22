@@ -263,7 +263,7 @@ public class Message {
 	public Key getMessageKey() {
 		Key temp = new Key();
 		for(int i = 0; i < Key.SIZE; i++){
-			temp.setValue(this.key.getValue(i), i);
+			temp.setValue(this.key.key[i], i);
 		}
 		return temp;
 	}
@@ -275,7 +275,7 @@ public class Message {
 	public void setMessageKey(Key key_in) {
 		this.key = new Key();
 		for(int i = 0; i< Key.SIZE; i++){
-			this.key.setValue(key_in.getValue(i), i);
+			this.key.setValue(key_in.key[i], i);
 		}
 
 	}
