@@ -40,6 +40,9 @@ public class HandlePropagate implements Callable<Message>{
 			e.printStackTrace();
 		}
 		propagation_socket.close();
+		Tools.print("Reply from Propagation");
+		Tools.printByte(this.reply.getMessageKey().key);
+		Tools.printByte(this.reply.getMessageValue().value);
 		return this.reply;
 	}
 
