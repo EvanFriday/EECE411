@@ -155,7 +155,7 @@ public class HandleConnection implements Runnable {
 					break;
 				}
 				Tools.printByte(message.getMessageKey().key);
-				if(message.getMessageValue().value != null)
+				if(c == Command.PUT || c == Command.PROP_PUT)
 				Tools.printByte(message.getMessageValue().value);
 //				Tools.printByte(k.key);
 //				if(v != null)
