@@ -81,25 +81,42 @@ public class Message {
 	}
 
 	public void getFrom(InputStream is) throws IOException {
-		boolean debug = true;
-		if(debug) System.out.println("[debug] Entering getFrom");
 		byte[] command = new byte[1];
 		byte[] key = new byte[32];
 		byte[] value = new byte[1024];
+		boolean debug = true;
+		
+		if(debug) Tools.print("[debug] getFrom: Entering getFrom");
 		is.read(command, 0, 1);
+		if(debug) Tools.print("[debug] getFrom: Finished reading Command");
 		this.setLeadByte(Command.getCommand(command[0]));
-		if(debug) System.out.println("[debug] getFrom: Done reading Command");
-		if(this.lead==Command.PUT || this.lead==Command.GET || this.lead==Command.REMOVE) {
-			is.read(key,0,32);
-			this.setFullMessageKey(new Key(key));
-			if(debug) System.out.println("[debug] getFrom: Done reading Key");
-		}
-		if(this.lead==Command.PUT){
+		
+		is.read(key,0,32);
+		if(debug) Tools.print("[debug] getFrom: Finished reading Key");
+		this.setFullMessageKey(new Key(key));
+		
+		if(this.lead==Command.PUT || this.lead == Command.PROP_PUT){
 			is.read(value,0,1024);
+			if(debug) Tools.print("[debug] getFrom: Finished reading Value");
 			this.setFullMessageValue(new Value(value));
-			if(debug) System.out.println("[debug] getFrom: Done reading Value");
 		}
-		if(debug) System.out.println("[debug] Leaving getFrom");
+	}
+	public void getReplyFrom(InputStream is,Command  c) throws IOException {
+		byte[] error = new byte[1];
+		byte[] value = new byte[1024];
+		boolean debug = true;
+		if(c == Command.PUT || c == Command.PROP_PUT || c == Command.REMOVE || c == Command.PROP_REMOVE){
+			is.read(error,0,1);
+			if(debug) Tools.print("[debug] getReplyFrom: Put or Remove command - read from IS");
+			this.setLeadByte(ErrorCode.getErrorCode(error[0]));
+		}
+		else if(c == Command.GET || c == Command.PROP_GET){
+			is.read(error,0,1);
+			this.setLeadByte(ErrorCode.getErrorCode(error[0]));
+			if(is.read(value,0,1024)!=0)		
+				this.setMessageValue(value);
+			if(debug) Tools.print("[debug] getReplyFrom: Get command - read from IS");
+		}	
 	}
 
 	public Message sendTo(String address, int port) throws IOException {
@@ -115,37 +132,15 @@ public class Message {
 	}
 
 	public Message sendTo(OutputStream os, InputStream replyStream) throws IOException {
-
+		Message reply = new Message();
 		ErrorCode error = null;
-		byte[] b = new byte[1+32+1024];
 		boolean debug = true;
-		if(debug) Tools.print("[debug] sendTo: About to write to OS");
-		os.write(this.getRaw());
-		//os.flush();
-		if(debug) Tools.print("[debug] sendTo: Done writing to OS, about to getFrom IS");
-		
-		try {
-			//this.sendReplyTo(os);
-		} catch (Exception e1) {
-			Tools.print("failed to send message");
-		}
 
-		
-		int IS_read_length = replyStream.read(b);
-		if(debug) Tools.print("[debug] sendTo: "+IS_read_length+" bytes read");
-		byte[] bb = new byte[IS_read_length];
-		// Copy b into new byte array of proper length
-		for(int i=0; i<IS_read_length; i++) {
-			bb[i] = b[i];
-		}
-		if(debug) { 
-			Tools.print("[debug] sendTo: Bytestream read from IS:");
-			Tools.printByte(bb); 
-		}
-		Message reply = new Message(bb);
-		
-		//Message reply = new Message();
-		//reply.getFrom(replyStream);
+		os.write(this.getRaw());
+		if(debug) Tools.print("[debug] sendTo: Done writing to OS.");
+		reply.getReplyFrom(replyStream,(Command) this.getLeadByte());
+		if(debug) Tools.print("[debug] sendTo: Done getting reply from OS.");
+
 		try{
 		error = reply.getErrorByte();
 		}
@@ -153,7 +148,7 @@ public class Message {
 			System.err.println("SERVER: "+"Error: replystream has no lead byte. NPE");
 		}
 			if (error != null) {
-				if(debug) Tools.print("[debug] sendTo: ErrorCode != Null");
+				
 			switch(error) {
 			case OK:
 				System.out.println("SERVER: "+"Operation successful."); break;
@@ -171,12 +166,6 @@ public class Message {
 				System.out.println("SERVER: "+"Error: Unknown error."); break;
 			}
 		}
-			if(debug) {
-			Tools.print("[debug] sendTo: Returning Reply:");
-			Tools.print(reply.lead);
-			if(this.lead == Command.GET) Tools.printByte(reply.getFullMessageValue().value);
-			}
-
 		return reply;
 	}
 	public void sendReplyTo(Socket con) throws Exception {
@@ -267,7 +256,7 @@ public class Message {
 	public Key getMessageKey() {
 		Key temp = new Key();
 		for(int i = 0; i < Key.SIZE; i++){
-			temp.setValue(this.key.getValue(i), i);
+			temp.setValue(this.key.key[i], i);
 		}
 		return temp;
 	}
@@ -279,7 +268,7 @@ public class Message {
 	public void setMessageKey(Key key_in) {
 		this.key = new Key();
 		for(int i = 0; i< Key.SIZE; i++){
-			this.key.setValue(key_in.getValue(i), i);
+			this.key.setValue(key_in.key[i], i);
 		}
 
 	}

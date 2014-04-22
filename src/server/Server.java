@@ -67,17 +67,12 @@ public class Server {
 		System.out.println("SERVER: Now Accepting connections on port: "+this.port);
 		try {
 			this.client = server.accept();
-			Tools.print("SERVER: Opened socket");
+			//System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
 			HandleConnection hc = new HandleConnection(this,this.executor,this.client);
 			FutureTask<Integer> ft = new FutureTask<Integer>(hc,null);
-			executor.submit(hc);
-			if(ft.get()== null){
-				System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
-			}
+			executor.submit(ft);
 		} catch (IOException e) {
 			Tools.print("SERVER: Failed to accept connection from: "+client.getInetAddress().getHostName().toString());
-		}catch(InterruptedException | ExecutionException e){
-			e.printStackTrace();
 		}
 
 	}

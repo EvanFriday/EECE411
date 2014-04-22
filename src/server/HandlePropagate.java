@@ -19,11 +19,12 @@ public class HandlePropagate implements Callable<Message>{
 	private Socket propagation_socket;
 	public HandlePropagate(Message message,String address) {
 		this.message = message;
+		this.reply = new Message();
 		this.address = address;
 	}
 
 	@Override
-	public Message call() throws Exception {
+	public Message call() throws Exception{
 		try {
 			propagation_socket = new Socket(this.address,9999);
 			is = propagation_socket.getInputStream();
@@ -36,9 +37,21 @@ public class HandlePropagate implements Callable<Message>{
 		System.out.println("SERVER: Propagating Changes to: " + address.toString());
 		try {
 			this.reply = this.message.sendTo(this.os, this.is);
+			Tools.print("Reply from Propagation");
+			Tools.printByte(this.reply.getMessageKey().key);
+			Tools.printByte(this.reply.getMessageValue().value);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Tools.print("Failed to receive reply from Propagation");
 		}
+		
+		try {
+			propagation_socket.close();
+		} catch (IOException e) {
+			Tools.print("Failed to close socket");
+		}
+	
+		
+		
 		return this.reply;
 	}
 

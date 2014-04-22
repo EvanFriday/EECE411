@@ -7,6 +7,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -62,9 +63,6 @@ public class HandleConnection implements Runnable {
 				Tools.print("Failed to open input or output stream");
 			}
 			try {
-//				in.read(message);
-				if(debug) System.out.println("[debug] SERVER: onAccept - Calling getFrom");
-
 				message.getFrom(in);
 			} catch (IOException e) {
 				Tools.print("failed to read message");
@@ -74,8 +72,9 @@ public class HandleConnection implements Runnable {
 			k = new Key(message.getMessageKey());
 			v = new Value(message.getMessageValue());
 			
-			//correct_node_for_key = getCorrectNode(k); //USE THIS FOR NORMAL USE
+			//correct_node_for_key = getCorrectNode(k);//USE THIS FOR NORMAL USE
 			correct_node_for_key = this.server.getNode(); //USE THIS FOR SINGLE NODE DEBUG
+			Tools.print("Correct Node for this key is:"+correct_node_for_key.getAddress().getHostName());
 			if(correct_node_for_key.getAddress() == this.server.getNode().getAddress()){
 				is_local = true;
 				//propagate_to_list.addAll(this.server.getNode().getChildren());
@@ -157,7 +156,7 @@ public class HandleConnection implements Runnable {
 					break;
 				}
 				Tools.printByte(message.getMessageKey().key);
-				if(message.getMessageValue().value != null)
+				if(c == Command.PUT || c == Command.PROP_PUT)
 				Tools.printByte(message.getMessageValue().value);
 //				Tools.printByte(k.key);
 //				if(v != null)
@@ -188,13 +187,15 @@ public class HandleConnection implements Runnable {
 //						retrycount++;
 //					}
 //				}
+				
 			}
+
+
 			try {
-				//out.write(reply);
-				if(debug) Tools.print("[debug] SERVER: onAccept - Sending reply: "+reply.getLeadByte());
-				//if(debug) Tools.print("[debug] SERVER: onAccept - Sending reply: "+local_reply.getFullMessageKey().key);
-				//if(debug) Tools.print("[debug] SERVER: onAccept - Sending reply: "+local_reply.getFullMessageValue().value);
+				Tools.print("Writing Reply");
 				reply.sendReplyTo(out);
+				Tools.print("Closing Socket");
+				this.client.close();
 			} catch (Exception e) {
 				Tools.print("failed to write reply");
 			}
@@ -202,7 +203,11 @@ public class HandleConnection implements Runnable {
 
 		private Node getCorrectNode(Key k) {
 			// DONE: make getNode Index return node which should hold key
-			int a = k.key.hashCode();
+			int a = Arrays.hashCode(k.key);
+			a = (a & 0x7FFFFFFF);
+			//a = Math.abs(a);
+			Tools.print(a);
+			Tools.print(this.server.getNodeList().size());
 			int position = a % this.server.getNodeList().size();
 			return this.server.getNodeList().get(position);
 		}
