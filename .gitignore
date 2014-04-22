@@ -5,3 +5,4 @@
 !*.java
 !NODE_IP.txt
 !Test.txt
+/bin
