@@ -18,15 +18,15 @@ public class TestClient {
 	public Socket socket;
 	private String name;
 	public TestClient(String name){
-		this.name = name;
 		try {
 			this.socket = new Socket("127.0.0.1",9999);
 			this.is = this.socket.getInputStream();
 			this.os = this.socket.getOutputStream();
 		} catch (IOException e) {
-			e.printStackTrace();
+			Tools.print("Failed to Open test Socket");
 		}
 		
+		this.name = name;
 		this.message = new Message();
 		this.reply = new Message();
 	}
@@ -76,6 +76,7 @@ public class TestClient {
 			System.out.println("CLIENT: "+this.name+":reply values = "+this.reply.getLeadByte());
 			else
 			System.out.println("CLIENT: "+this.name+":reply values = "+this.reply.getLeadByte().toString()+", "+this.reply.getFullMessageKey().hashCode()+", "+this.reply.getFullMessageValue().hashCode());
+			this.socket.close();
 		} catch (IOException e) {
 			System.err.println("CLIENT: Message sending Failed on: " + this.name);
 		}	

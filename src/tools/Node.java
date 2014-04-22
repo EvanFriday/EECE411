@@ -2,6 +2,7 @@ package tools;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -122,8 +123,16 @@ public class Node{
 	}
 	public ErrorCode removeKeyFromKvpairs(Key k) {
 		ErrorCode error;
-		Value returned_value = this.kvpairs.remove(k);
-		if(returned_value==null)
+		Boolean matchfound = false;
+		for(Key ks : this.kvpairs.keySet()){
+			if(Arrays.equals(k.key, ks.key)){
+				this.kvpairs.remove(ks);
+				matchfound = true;
+				break;
+			}
+		}
+		
+		if(!matchfound)
 			error = ErrorCode.KEY_DNE;
 		else if(!this.kvpairs.containsKey(k))
 			error = ErrorCode.OK;

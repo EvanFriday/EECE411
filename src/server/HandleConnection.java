@@ -65,15 +65,15 @@ public class HandleConnection implements Runnable {
 			try {
 				message.getFrom(in);
 			} catch (IOException e) {
-				Tools.print("failed to read message");
+				Tools.print("Failed to read message");
 			}
 			
 			c = (Command) message.getLeadByte(); 
 			k = new Key(message.getMessageKey());
 			v = new Value(message.getMessageValue());
 			
-			correct_node_for_key = getCorrectNode(k);//USE THIS FOR NORMAL USE
-			//correct_node_for_key = this.server.getNode(); //USE THIS FOR SINGLE NODE DEBUG
+			//correct_node_for_key = getCorrectNode(k);//USE THIS FOR NORMAL USE
+			correct_node_for_key = this.server.getNode(); //USE THIS FOR SINGLE NODE DEBUG
 			Tools.print("Correct Node for this key is:"+correct_node_for_key.getAddress().getHostName());
 			if(correct_node_for_key.getAddress() == this.server.getNode().getAddress()){
 				is_local = true;

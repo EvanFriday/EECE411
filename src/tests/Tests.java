@@ -21,10 +21,6 @@ public class Tests {
 	public Tests() {
 		try {
 			server = new Server();
-			client1 = new TestClient("Client 1");
-			client2 = new TestClient("Client 2");
-			client3 = new TestClient("Client 3");
-			client4 = new TestClient("Client 4");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -53,6 +49,11 @@ public class Tests {
 	        }
 	    });
 	    t.start();
+	    client1 = new TestClient("Client 1");
+		client2 = new TestClient("Client 2");
+		client3 = new TestClient("Client 3");
+		client4 = new TestClient("Client 4");
+	    
 	    Key k = new Key();
 		Value v = new Value();
 		Random rn = new Random();
@@ -127,7 +128,6 @@ public class Tests {
 //	    test.client4.editMessage(Command.REMOVE,test.client2.getMessage().getMessageKey());
 //	    test.client4.sendMessage();
 		
-		server.getServer().close();
 	}
 
 }
