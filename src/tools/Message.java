@@ -31,6 +31,7 @@ public class Message {
 	}
 
 	public Message(LeadByte l, Key k, Value v) {
+		this();
 		this.setLeadByte(l);
 		this.setMessageKey(k);
 		this.setMessageValue(v);
@@ -99,8 +100,11 @@ public class Message {
 	public Message sendTo(OutputStream os, InputStream replyStream) throws IOException {
 		Message reply = new Message();
 		ErrorCode error = null;
-		os.write(this.getRaw());
-		os.flush();
+		try {
+			this.sendReplyTo(os);
+		} catch (Exception e1) {
+			Tools.print("failed to send message");
+		}
 
 
 		reply.getFrom(replyStream);
