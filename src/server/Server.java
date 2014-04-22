@@ -64,10 +64,10 @@ public class Server {
 	}
 	
 	public void AcceptConnections(){
-		//System.out.println("SERVER: Now Accepting connections on port: "+this.port);
+		System.out.println("SERVER: Now Accepting connections on port: "+this.port);
 		try {
 			this.client = server.accept();
-
+			Tools.print("SERVER: Opened socket");
 			HandleConnection hc = new HandleConnection(this,this.executor,this.client);
 			FutureTask<Integer> ft = new FutureTask<Integer>(hc,null);
 			executor.submit(hc);

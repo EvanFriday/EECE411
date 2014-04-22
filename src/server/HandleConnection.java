@@ -54,7 +54,7 @@ public class HandleConnection implements Runnable {
 			EVpair pair = new EVpair(null,null);
 			List<Node> propagate_to_list = new ArrayList<Node>();
 			Map<String,Message> replies = new ConcurrentHashMap<String,Message>();
-			Boolean is_local = false; //USE THIS FOR NORMAL USE
+			Boolean is_local = true; //USE THIS FOR NORMAL USE
 			try {
 				in = client.getInputStream();
 				out = client.getOutputStream();
@@ -85,39 +85,6 @@ public class HandleConnection implements Runnable {
 				//propagate_to_list.addAll(correct_node_for_key.getChildren());
 			}
 
-			/*
-<<<<<<< HEAD
-			if(is_local) {
-				switch(c) {
-				case PUT:
-					Tools.print("SERVER: Receiving = PUT");
-//					replyerr = this.server.getNode().addToKvpairs(k, v);
-					local_reply = new Message(this.server.getNode().addToKvpairs(k, v));
-					break;
-				case GET:
-					Tools.print("SERVER: Receiving = GET");
-					pair = server.getNode().getValueFromKvpairs(k);
-//					replyerr = pair.getError();
-					local_reply = new Message(pair.getError(), pair.getValue());
-					//local_reply.setLeadByte(pair.getError());
-//					if(pair.getValue()!= null){
-//						replyv = pair.getValue().value;
-						//local_reply.setMessageValue(pair.getValue());
-//					}
-					break;
-				case REMOVE:
-					Tools.print("SERVER: Receiving = RM");
-					ErrorCode ec = this.server.getNode().removeKeyFromKvpairs(k);
-					byte[] tempBA = new byte[1];
-					tempBA[0] = ec.getByte();
-					local_reply = new Message(this.server.getNode().removeKeyFromKvpairs(k));
-					//replyerr = this.server.getNode().removeKeyFromKvpairs(k);
-					break;
-				default:
-					//local_reply.setLeadByte(ErrorCode.BAD_COMMAND);
-					local_reply = new Message(ErrorCode.BAD_COMMAND);
-=======
-*/
 				Tools.print("SERVER: Receiving = ");
 				switch(c) {
 				case PUT:
@@ -137,7 +104,7 @@ public class HandleConnection implements Runnable {
 				case GET:
 					Tools.print("GET");
 					if(is_local){
-						pair = server.getNode().getValueFromKvpairs(k);
+						pair = this.server.getNode().getValueFromKvpairs(k);
 						reply.setLeadByte(pair.getError());
 						reply.setMessageValue(pair.getValue());
 						propagate = false;
@@ -224,7 +191,7 @@ public class HandleConnection implements Runnable {
 			}
 			try {
 				//out.write(reply);
-				if(debug) Tools.print("[debug] SERVER: onAccept - Sending reply: "+local_reply.getLeadByte());
+				if(debug) Tools.print("[debug] SERVER: onAccept - Sending reply: "+reply.getLeadByte());
 				//if(debug) Tools.print("[debug] SERVER: onAccept - Sending reply: "+local_reply.getFullMessageKey().key);
 				//if(debug) Tools.print("[debug] SERVER: onAccept - Sending reply: "+local_reply.getFullMessageValue().value);
 				reply.sendReplyTo(out);

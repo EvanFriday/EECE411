@@ -41,7 +41,7 @@ public class Message {
 	}
 	
 	public Message(byte[] message) {
-		boolean debug = false;
+		boolean debug = true;
 		switch (message.length) {
 		case Command.SIZE:
 			if(Command.getCommand(message[0]) != null)
@@ -118,7 +118,7 @@ public class Message {
 
 		ErrorCode error = null;
 		byte[] b = new byte[1+32+1024];
-		boolean debug = false;
+		boolean debug = true;
 		if(debug) Tools.print("[debug] sendTo: About to write to OS");
 		os.write(this.getRaw());
 		//os.flush();
@@ -130,7 +130,9 @@ public class Message {
 			Tools.print("failed to send message");
 		}
 
+		
 		int IS_read_length = replyStream.read(b);
+		if(debug) Tools.print("[debug] sendTo: "+IS_read_length+" bytes read");
 		byte[] bb = new byte[IS_read_length];
 		// Copy b into new byte array of proper length
 		for(int i=0; i<IS_read_length; i++) {
@@ -141,6 +143,8 @@ public class Message {
 			Tools.printByte(bb); 
 		}
 		Message reply = new Message(bb);
+		
+		//Message reply = new Message();
 		//reply.getFrom(replyStream);
 		try{
 		error = reply.getErrorByte();

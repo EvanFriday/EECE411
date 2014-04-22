@@ -37,7 +37,7 @@ public class Tests {
 	 * @throws InterruptedException 
 	 */
 	public static void main(String[] args) throws IOException, InterruptedException {
-		boolean debug = false;
+		boolean debug = true;
 		Tests test = new Tests();
 		Thread t = new Thread(new Runnable() {
 	        @Override
