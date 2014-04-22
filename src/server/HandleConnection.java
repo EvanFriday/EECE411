@@ -7,6 +7,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -202,7 +203,9 @@ public class HandleConnection implements Runnable {
 
 		private Node getCorrectNode(Key k) {
 			// DONE: make getNode Index return node which should hold key
-			int a = k.key.hashCode();
+			int a = Arrays.hashCode(k.key);
+			Tools.print(a);
+			Tools.print(this.server.getNodeList().size());
 			int position = a % this.server.getNodeList().size();
 			return this.server.getNodeList().get(position);
 		}
