@@ -278,10 +278,10 @@ public class Message {
 	}
 
 	public void setMessageValue(byte[] raw) {
-		this.value = new Value(raw);
-//		for(int i = 0; i< Value.SIZE; i++){
-//			this.value.setValue(raw[i], i);
-//		}
+		this.value = new Value();
+		for(int i = 0; i< Value.SIZE; i++){
+			this.value.setValue(raw[i], i);
+		}
 	}
 	public Boolean compareMessageValues(Value value_in){
 		for(int i = 0; i < Value.SIZE; i++){
