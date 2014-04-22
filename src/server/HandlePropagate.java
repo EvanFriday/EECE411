@@ -5,38 +5,25 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.concurrent.Callable;
 
 import tools.Message;
 import tools.Tools;
 
-public class Propagate implements Runnable {
+public class HandlePropagate implements Callable<Message>{
 	private String address;
-	private Server server;
 	private Message message;
 	private Message reply;
-	public Message getReply() {
-		return reply;
-	}
-
 	private InputStream is;
 	private OutputStream os;
-	private Thread t;
 	private Socket propagation_socket;
-
-	public Propagate(Thread thread,String address ,Message message, Message reply) {
-		this.address = address;
+	public HandlePropagate(Message message,String address) {
 		this.message = message;
-		this.reply = new Message();
-		this.t = thread;
-		this.reply = reply;
-		
+		this.address = address;
 	}
 
-	public void run() {
-		this.reply = propagate();
-	}
-
-	public Message propagate(){
+	@Override
+	public Message call() throws Exception {
 		try {
 			propagation_socket = new Socket(this.address,9999);
 			is = propagation_socket.getInputStream();

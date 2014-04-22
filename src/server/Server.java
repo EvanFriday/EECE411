@@ -9,6 +9,8 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import tools.IpTools;
 import tools.Key;
@@ -23,22 +25,20 @@ public class Server {
 	private String file_location = "Test.txt";
 	private Node node;
 	private ArrayList<Thread> threadpool;
+	private ExecutorService executor;
+	private int NumThreads = 5;
 	private int port = 9999;
 	public Map<Key, Value> testMap;
 	//CONSTRUCTOR
 	public Server() throws IOException {
-			this.server = new ServerSocket();
-			server.setReuseAddress(true);
-			server.bind(new InetSocketAddress(this.port));
-			this.nodeList = new ArrayList<Node>(1);
-			this.threadpool = new ArrayList<Thread>();
-			this.node = new Node();
-			this.client = new Socket();
-			addThread();
-			addThread();
-			addThread();
-			addThread();
-			PopulateNodeList();
+		this.server = new ServerSocket();
+		server.setReuseAddress(true);
+		server.bind(new InetSocketAddress(this.port));
+		this.nodeList = new ArrayList<Node>(1);
+		this.executor = Executors.newFixedThreadPool(NumThreads);
+		this.node = new Node();
+		this.client = new Socket();
+		PopulateNodeList();
 	}
 	public Server(Server server){
 		this.server = server.getServer();
@@ -58,9 +58,6 @@ public class Server {
 		this.client = new Socket();
 		if(!inTestMode) {
 			addThread();
-			addThread();
-			addThread();
-			addThread();
 			PopulateNodeList();
 		}
 }
@@ -70,7 +67,7 @@ public class Server {
 		try {
 			this.client = server.accept();
 			System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
-			HandleConnection h = new HandleConnection(this,threadpool.get(1), this.client);
+			HandleConnection h = new HandleConnection(this,this.executor, this.client);
 			h.run();
 		} catch (IOException e) {
 			Tools.print("SERVER: Failed to accept connection from: "+client.getInetAddress().getHostName().toString());
