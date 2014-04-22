@@ -96,6 +96,20 @@ public class Message {
 			this.setFullMessageValue(new Value(value));
 		}
 	}
+	public void getReplyFrom(InputStream is,Command  c) throws IOException {
+		byte[] error = new byte[1];
+		byte[] value = new byte[1024];
+		if(c == Command.PUT || c == Command.PROP_PUT || c == Command.REMOVE || c == Command.PROP_REMOVE){
+			is.read(error,0,1);
+			this.setLeadByte(ErrorCode.getErrorCode(error[0]));
+		}
+		else if(c == Command.GET || c == Command.PROP_GET){
+			is.read(error,0,1);
+			this.setLeadByte(ErrorCode.getErrorCode(error[0]));
+			if(is.read(value,0,1024)!=0)		
+				this.setMessageValue(value);
+		}	
+	}
 
 	public Message sendTo(String address, int port) throws IOException {
 		Socket con = new Socket(address, port);
@@ -113,8 +127,7 @@ public class Message {
 		Message reply = new Message();
 		ErrorCode error = null;
 		os.write(this.getRaw());
-		//os.flush();
-		reply.getFrom(replyStream);
+		reply.getReplyFrom(replyStream,(Command) this.getLeadByte());
 		try{
 		error = reply.getErrorByte();
 		}
