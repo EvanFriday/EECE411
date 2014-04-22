@@ -90,16 +90,15 @@ public class HandleConnection implements Runnable {
 				propagate_to_list.addAll(correct_node_for_key.getChildren());
 			}
 
-			Tools.print("SERVER: Receiving = ");
 			if(is_local) {
 				switch(c) {
 				case PUT:
-					Tools.print("PUT");
+					Tools.print("SERVER: Receiving = PUT");
 //					replyerr = this.server.getNode().addToKvpairs(k, v);
 					local_reply = new Message(this.server.getNode().addToKvpairs(k, v));
 					break;
 				case GET:
-					Tools.print("GET");
+					Tools.print("SERVER: Receiving = GET");
 					pair = server.getNode().getValueFromKvpairs(k);
 //					replyerr = pair.getError();
 					local_reply = new Message(pair.getError(), pair.getValue());
@@ -110,7 +109,10 @@ public class HandleConnection implements Runnable {
 //					}
 					break;
 				case REMOVE:
-					Tools.print("RM");
+					Tools.print("SERVER: Receiving = RM");
+					ErrorCode ec = this.server.getNode().removeKeyFromKvpairs(k);
+					byte[] tempBA = new byte[1];
+					tempBA[0] = ec.getByte();
 					local_reply = new Message(this.server.getNode().removeKeyFromKvpairs(k));
 					//replyerr = this.server.getNode().removeKeyFromKvpairs(k);
 					break;

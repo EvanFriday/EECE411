@@ -37,7 +37,7 @@ public class Tests {
 	 * @throws InterruptedException 
 	 */
 	public static void main(String[] args) throws IOException, InterruptedException {
-		boolean debug = true;
+		boolean debug = false;
 		Tests test = new Tests();
 		Thread t = new Thread(new Runnable() {
 	        @Override
@@ -65,56 +65,58 @@ public class Tests {
 
 	    /*
 	     * CLIENT 1 : Put
-	     */	
-
-		/*
-		for(int i = 0; i < 1+32+1024; i++){
-			if(i == 0)
-				message[i]= c[0];
-			else if(i<32+1 && i>0)
-				message[i] = k.getValue(i-1);
-			else
-				message[i] = v.getValue(i-32-1);
-		}
-		*/
-				
+	     */					
 	    
-	    Tools.print("CLIENT: Sending = ");
-	    Tools.print(m1.getLeadByte().toString());
+	    Tools.print("CLIENT: Sending = "+m1.getLeadByte().toString());
 	    Tools.printByte(m1.getFullMessageKey().key);
 	    Tools.printByte(m1.getFullMessageValue().value);
 	    
 	    r1 = m1.sendTo(client1.os, client1.is);
-		Tools.print("CLIENT: Receiving Reply: ");
-	    Tools.print(r1.getLeadByte().toString());
+		Tools.print("CLIENT: Receiving Reply: "+r1.getLeadByte().toString());
 	    
 	    /*
 	     * CLIENT 2 : Get
 	     */
-	    /*
-	    for(int i = 0; i < 32; i++){
-			if(i == 0)
-				message2[i] = c[1];
-	    	if(i<32)
-	    		message2[1+i] = k.getValue(i);
-		}
-		*/
 	    
 	    Message m2 = new Message(Command.GET, k);
 	    Message r2 = new Message();
 	    
-	    Tools.print("CLIENT: Sending = ");
-	    Tools.print(m2.getLeadByte().toString());
+	    Tools.print("CLIENT: Sending = "+m2.getLeadByte().toString());
 	    Tools.printByte(m2.getFullMessageKey().key);
 	    
 	    r2 = m2.sendTo(client2.os, client2.is);
-	    
-	    client2.is.read(r2.getRaw());
-
-		Tools.print("CLIENT: Receiving Reply: ");
-		Tools.print("CLIENT: ErrorCode = "+r2.getLeadByte().toString());
+		Tools.print("CLIENT: Receiving Reply: "+r2.getLeadByte().toString());
 	    Tools.printByte(r2.getFullMessageValue().value);
 
+	    
+	    /*
+	     * CLIENT 3 : Remove
+	     */
+	    
+	    Message m3 = new Message(Command.REMOVE, k);
+	    Message r3 = new Message();
+	    
+	    Tools.print("CLIENT: Sending = "+m3.getLeadByte().toString());
+	    Tools.printByte(m3.getFullMessageKey().key);
+	    
+	    r3 = m3.sendTo(client3.os, client3.is);
+		Tools.print("CLIENT: Receiving Reply: "+r3.getLeadByte().toString());
+		
+		
+		/*
+	     * CLIENT 4 : Get
+	     */
+	    
+	    Message m4 = new Message(Command.GET, k);
+	    Message r4 = new Message();
+	    
+	    Tools.print("CLIENT: Sending = "+m4.getLeadByte().toString());
+	    Tools.printByte(m4.getFullMessageKey().key);
+	    
+	    r4 = m4.sendTo(client4.os, client4.is);
+		Tools.print("CLIENT: Receiving Reply: "+r4.getLeadByte().toString());
+	    if(r4.getFullMessageValue() != null)
+	    	Tools.printByte(r4.getFullMessageValue().value);
 //	    Thread.sleep(500);
 //	    client2.editMessage();
 //	    client2.sendMessage();

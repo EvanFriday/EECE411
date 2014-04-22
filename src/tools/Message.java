@@ -41,7 +41,7 @@ public class Message {
 	}
 	
 	public Message(byte[] message) {
-		boolean debug = true;
+		boolean debug = false;
 		switch (message.length) {
 		case Command.SIZE:
 			if(Command.getCommand(message[0]) != null)
@@ -118,7 +118,7 @@ public class Message {
 		//Message reply = new Message();
 		ErrorCode error = null;
 		byte[] b = new byte[1+32+1024];
-		boolean debug = true;
+		boolean debug = false;
 		if(debug) Tools.print("[debug] sendTo: About to write to OS");
 		os.write(this.getRaw());
 		//os.flush();
@@ -136,8 +136,10 @@ public class Message {
 		for(int i=0; i<IS_read_length; i++) {
 			bb[i] = b[i];
 		}
-		if(debug) Tools.print("[debug] sendTo: Bytestream read from IS:");
-		Tools.printByte(bb);
+		if(debug) { 
+			Tools.print("[debug] sendTo: Bytestream read from IS:");
+			Tools.printByte(bb); 
+		}
 		Message reply = new Message(bb);
 		//reply.getFrom(replyStream);
 		try{
@@ -242,6 +244,14 @@ public class Message {
 	}
 
 	public ErrorCode getErrorByte(){
+		if(this.lead == Command.PUT)
+			return ErrorCode.KEY_DNE;
+		if(this.lead == Command.GET)
+			return ErrorCode.OUT_OF_SPACE;
+		if(this.lead == Command.REMOVE)
+			return ErrorCode.OVERLOAD;
+		if(this.lead == Command.SHUTDOWN)
+			return ErrorCode.KVSTORE_FAIL;
 		return (ErrorCode) this.lead;
 	}
 	

@@ -66,15 +66,15 @@ public class Server {
 }
 	
 	public void AcceptConnections(){
-		System.out.println("SERVER: Now Accepting connections on port: "+this.port);
+		//System.out.println("SERVER: Now Accepting connections on port: "+this.port);
 		try {
 			this.client = server.accept();
-			System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
+			//System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
 			HandleConnection h = new HandleConnection(this,threadpool.get(1), this.client);
 			//h.accept();
 			h.run();
 		} catch (IOException e) {
-			Tools.print("SERVER: Failed to accept connection from: "+client.getInetAddress().getHostName().toString());
+			//Tools.print("SERVER: Failed to accept connection from: "+client.getInetAddress().getHostName().toString());
 		}
 		
 	}
