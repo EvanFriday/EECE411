@@ -33,28 +33,41 @@ public class Message {
 	public Message(LeadByte l, Key k, Value v) {
 		this();
 		this.setLeadByte(l);
-		this.setMessageKey(k);
-		this.setMessageValue(v);
+		this.key = k;
+		this.value = v;
 	}
 	public Message(EVpair evpair){
 		this(evpair.getError(),evpair.getValue());	
 	}
 	
 	public Message(byte[] message) {
+		boolean debug = true;
 		switch (message.length) {
 		case Command.SIZE:
-			this.setLeadByte(Command.getCommand(message[0]));
+			if(Command.getCommand(message[0]) != null)
+				this.setLeadByte(Command.getCommand(message[0]));
+			else if(ErrorCode.getErrorCode(message[0]) != null)
+				this.setLeadByte(ErrorCode.getErrorCode(message[0]));
 			break;
 		case Command.SIZE + Key.SIZE:
-			this.setLeadByte(Command.getCommand(message[0]));
+			if(Command.getCommand(message[0]) != null)
+				this.setLeadByte(Command.getCommand(message[0]));
+			else if(ErrorCode.getErrorCode(message[0]) != null)
+				this.setLeadByte(ErrorCode.getErrorCode(message[0]));
 			this.setMessageKey(new Key(message, Command.SIZE));
 			break;
 		case Command.SIZE + Value.SIZE:
-			this.setLeadByte(Command.getCommand(message[0]));
+			if(Command.getCommand(message[0]) != null)
+				this.setLeadByte(Command.getCommand(message[0]));
+			else if(ErrorCode.getErrorCode(message[0]) != null)
+				this.setLeadByte(ErrorCode.getErrorCode(message[0]));
 			this.setMessageValue(new Value(message, Command.SIZE));
 			break;		
 		case Command.SIZE + Key.SIZE + Value.SIZE:
-			this.setLeadByte(Command.getCommand(message[0]));
+			if(Command.getCommand(message[0]) != null)
+				this.setLeadByte(Command.getCommand(message[0]));
+			else if(ErrorCode.getErrorCode(message[0]) != null)
+				this.setLeadByte(ErrorCode.getErrorCode(message[0]));
 			this.setMessageKey(new Key(message,Command.SIZE));
 			this.setMessageValue(new Value(message,Command.SIZE+Key.SIZE));
 				break;
@@ -104,7 +117,7 @@ public class Message {
 	public Message sendTo(OutputStream os, InputStream replyStream) throws IOException {
 		//Message reply = new Message();
 		ErrorCode error = null;
-		byte[] b = new byte[1];
+		byte[] b = new byte[1+32+1024];
 		boolean debug = true;
 		if(debug) Tools.print("[debug] sendTo: About to write to OS");
 		os.write(this.getRaw());
@@ -117,9 +130,15 @@ public class Message {
 			Tools.print("failed to send message");
 		}
 
-		replyStream.read(b);
-		Tools.printByte(b);
-		Message reply = new Message(b);
+		int IS_read_length = replyStream.read(b);
+		byte[] bb = new byte[IS_read_length];
+		// Copy b into new byte array of proper length
+		for(int i=0; i<IS_read_length; i++) {
+			bb[i] = b[i];
+		}
+		if(debug) Tools.print("[debug] sendTo: Bytestream read from IS:");
+		Tools.printByte(bb);
+		Message reply = new Message(bb);
 		//reply.getFrom(replyStream);
 		try{
 		error = reply.getErrorByte();
@@ -131,26 +150,25 @@ public class Message {
 				if(debug) Tools.print("[debug] sendTo: ErrorCode != Null");
 			switch(error) {
 			case OK:
-				System.out.println("SERVER: "+"Operation successful.");
+				System.out.println("SERVER: "+"Operation successful."); break;
 			case KEY_DNE:
-				System.out.println("SERVER: "+"Error: Inexistent key.");
+				System.out.println("SERVER: "+"Error: Inexistent key."); break;
 			case OUT_OF_SPACE:
-				System.out.println("SERVER: "+"Error: Out of space.");
+				System.out.println("SERVER: "+"Error: Out of space."); break;
 			case OVERLOAD:
-				System.out.println("SERVER: "+"Error: System overload.");
+				System.out.println("SERVER: "+"Error: System overload."); break;
 			case KVSTORE_FAIL:
-				System.out.println("SERVER: "+"Error: Internal KVStore failure.");
+				System.out.println("SERVER: "+"Error: Internal KVStore failure."); break;
 			case BAD_COMMAND:
-				System.out.println("SERVER: "+"Error: Unrecognized command.");
+				System.out.println("SERVER: "+"Error: Unrecognized command."); break;
 			default:
-				System.out.println("SERVER: "+"Error: Unknown error.");
+				System.out.println("SERVER: "+"Error: Unknown error."); break;
 			}
 		}
 			if(debug) {
 			Tools.print("[debug] sendTo: Returning Reply:");
 			Tools.print(reply.lead);
-			Tools.printByte(reply.getFullMessageKey().key);
-			Tools.printByte(reply.getFullMessageValue().value);
+			if(this.lead == Command.GET) Tools.printByte(reply.getFullMessageValue().value);
 			}
 
 		return reply;

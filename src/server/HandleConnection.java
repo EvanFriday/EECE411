@@ -42,7 +42,7 @@ public class HandleConnection implements Runnable {
 //			byte[] message = new byte[1+32+1024];
 //			byte[] reply = new byte[1+1024];
 			ErrorCode replyerr = null;
-			Message local_reply = new Message();
+			Message local_reply = null;
 			InputStream in = null;
 			OutputStream out = null;
 			Boolean is_local = true; //TODO:once getNodeIndex() returns an actual value set this to false
@@ -96,24 +96,27 @@ public class HandleConnection implements Runnable {
 				case PUT:
 					Tools.print("PUT");
 //					replyerr = this.server.getNode().addToKvpairs(k, v);
-					local_reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
+					local_reply = new Message(this.server.getNode().addToKvpairs(k, v));
 					break;
 				case GET:
 					Tools.print("GET");
 					pair = server.getNode().getValueFromKvpairs(k);
 //					replyerr = pair.getError();
-					local_reply.setLeadByte(pair.getError());
+					local_reply = new Message(pair.getError(), pair.getValue());
+					//local_reply.setLeadByte(pair.getError());
 //					if(pair.getValue()!= null){
 //						replyv = pair.getValue().value;
-						local_reply.setMessageValue(pair.getValue());
+						//local_reply.setMessageValue(pair.getValue());
 //					}
 					break;
 				case REMOVE:
 					Tools.print("RM");
-					replyerr = this.server.getNode().removeKeyFromKvpairs(k);
+					local_reply = new Message(this.server.getNode().removeKeyFromKvpairs(k));
+					//replyerr = this.server.getNode().removeKeyFromKvpairs(k);
 					break;
 				default:
-					local_reply.setLeadByte(ErrorCode.BAD_COMMAND);
+					//local_reply.setLeadByte(ErrorCode.BAD_COMMAND);
+					local_reply = new Message(ErrorCode.BAD_COMMAND);
 					break;
 				}
 			}

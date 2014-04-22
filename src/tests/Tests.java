@@ -87,10 +87,6 @@ public class Tests {
 	    r1 = m1.sendTo(client1.os, client1.is);
 		Tools.print("CLIENT: Receiving Reply: ");
 	    Tools.print(r1.getLeadByte().toString());
-	    client1.is.read(r1.getRaw());
-
-	    Tools.print("CLIENT Reply ErrorCode = "+ErrorCode.getErrorCode(replyerr).toString());
-	    
 	    
 	    /*
 	     * CLIENT 2 : Get
@@ -109,9 +105,9 @@ public class Tests {
 	    
 	    Tools.print("CLIENT: Sending = ");
 	    Tools.print(m2.getLeadByte().toString());
-	    Tools.print(m2.getFullMessageKey());
+	    Tools.printByte(m2.getFullMessageKey().key);
 	    
-	    m2.sendTo(client2.os, client2.is);
+	    r2 = m2.sendTo(client2.os, client2.is);
 	    
 	    client2.is.read(r2.getRaw());
 
