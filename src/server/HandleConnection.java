@@ -23,7 +23,6 @@ public class HandleConnection implements Runnable {
 		private ExecutorService executor;
 		public Server server;
 		public Socket client;
-		public boolean debug = true;
 		
 		public HandleConnection(Server server, ExecutorService executor, Socket client){
 			this.server = new Server(server);
@@ -105,7 +104,9 @@ public class HandleConnection implements Runnable {
 					if(is_local){
 						pair = server.getNode().getValueFromKvpairs(k);
 						reply.setLeadByte(pair.getError());
-						reply.setMessageValue(pair.getValue());
+						if(pair.getError() == ErrorCode.OK){
+							reply.setMessageValue(pair.getValue().value);
+						}
 						propagate = false;
 					}
 					else{
@@ -142,7 +143,8 @@ public class HandleConnection implements Runnable {
 					Tools.print("PROP_GET");
 					pair = server.getNode().getValueFromKvpairs(k);
 					reply.setLeadByte(pair.getError());
-					reply.setMessageValue(pair.getValue());
+					if(pair.getError() == ErrorCode.OK)
+						reply.setMessageValue(pair.getValue());
 					propagate = false;
 					break;
 				case PROP_REMOVE:
@@ -190,15 +192,20 @@ public class HandleConnection implements Runnable {
 				
 			}
 
-			try {
-				Tools.print("Writing Reply");
+			
+				Tools.print("SERVER: Writing Reply");
+				Tools.print(reply.getLeadByte().toString());
+				if((c == Command.GET || c == Command.PROP_GET) && (reply.getLeadByte() == ErrorCode.OK))
+					Tools.printByte(reply.getMessageValue().value);
 				reply.sendReplyTo(out);
-				Tools.print("Closing Socket");
-				this.client.close();
+				Tools.print("SERVER: Closing Socket");
+				try {
+					this.client.close();
+				} catch (IOException e) {
+					Tools.print("SERVER: Failed to close Socket");
+				}
 
-			} catch (Exception e) {
-				Tools.print("failed to write reply");
-			}
+			
 		}
 
 		private Node getCorrectNode(Key k) {

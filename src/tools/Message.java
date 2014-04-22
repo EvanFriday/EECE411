@@ -159,8 +159,13 @@ public class Message {
 		sendReplyTo(con.getOutputStream());
 	}
 
-	public void sendReplyTo(OutputStream os) throws Exception {
-		os.write(this.getRaw());
+	public void sendReplyTo(OutputStream os) {
+			try {
+				byte[] reply = this.getRaw();
+				os.write(reply);
+			} catch (IOException e) {
+				Tools.print("IO Exception");
+			}
 	}
 
 	public byte[] getRaw() {
@@ -171,6 +176,7 @@ public class Message {
 		byte[] raw = new byte[size];
 		switch (size) {
 		case Command.SIZE:
+				
 				raw[0] = this.lead.getByte();
 				break;
 
