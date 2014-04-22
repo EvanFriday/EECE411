@@ -36,13 +36,14 @@ public class HandlePropagate implements Callable<Message>{
 		System.out.println("SERVER: Propagating Changes to: " + address.toString());
 		try {
 			this.reply = this.message.sendTo(this.os, this.is);
+			Tools.print("Reply from Propagation");
+			Tools.printByte(this.reply.getMessageKey().key);
+			Tools.printByte(this.reply.getMessageValue().value);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Tools.print("Failed to receive reply from Propagation");
 		}
 		propagation_socket.close();
-		Tools.print("Reply from Propagation");
-		Tools.printByte(this.reply.getMessageKey().key);
-		Tools.printByte(this.reply.getMessageValue().value);
+		
 		return this.reply;
 	}
 
