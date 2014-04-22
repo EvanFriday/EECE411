@@ -64,7 +64,7 @@ public class Server {
 	}
 	
 	public void AcceptConnections(){
-		//System.out.println("SERVER: Now Accepting connections on port: "+this.port);
+		System.out.println("SERVER: Now Accepting connections on port: "+this.port);
 		try {
 			this.client = server.accept();
 

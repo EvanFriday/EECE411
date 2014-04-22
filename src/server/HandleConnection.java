@@ -62,9 +62,6 @@ public class HandleConnection implements Runnable {
 				Tools.print("Failed to open input or output stream");
 			}
 			try {
-//				in.read(message);
-				if(debug) System.out.println("[debug] SERVER: onAccept - Calling getFrom");
-
 				message.getFrom(in);
 			} catch (IOException e) {
 				Tools.print("failed to read message");
