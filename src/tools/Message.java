@@ -33,28 +33,41 @@ public class Message {
 	public Message(LeadByte l, Key k, Value v) {
 		this();
 		this.setLeadByte(l);
-		this.setMessageKey(k);
-		this.setMessageValue(v);
+		this.key = k;
+		this.value = v;
 	}
 	public Message(EVpair evpair){
 		this(evpair.getError(),evpair.getValue());	
 	}
 	
 	public Message(byte[] message) {
+		boolean debug = false;
 		switch (message.length) {
 		case Command.SIZE:
-			this.setLeadByte(Command.getCommand(message[0]));
+			if(Command.getCommand(message[0]) != null)
+				this.setLeadByte(Command.getCommand(message[0]));
+			else if(ErrorCode.getErrorCode(message[0]) != null)
+				this.setLeadByte(ErrorCode.getErrorCode(message[0]));
 			break;
 		case Command.SIZE + Key.SIZE:
-			this.setLeadByte(Command.getCommand(message[0]));
+			if(Command.getCommand(message[0]) != null)
+				this.setLeadByte(Command.getCommand(message[0]));
+			else if(ErrorCode.getErrorCode(message[0]) != null)
+				this.setLeadByte(ErrorCode.getErrorCode(message[0]));
 			this.setMessageKey(new Key(message, Command.SIZE));
 			break;
 		case Command.SIZE + Value.SIZE:
-			this.setLeadByte(Command.getCommand(message[0]));
+			if(Command.getCommand(message[0]) != null)
+				this.setLeadByte(Command.getCommand(message[0]));
+			else if(ErrorCode.getErrorCode(message[0]) != null)
+				this.setLeadByte(ErrorCode.getErrorCode(message[0]));
 			this.setMessageValue(new Value(message, Command.SIZE));
 			break;		
 		case Command.SIZE + Key.SIZE + Value.SIZE:
-			this.setLeadByte(Command.getCommand(message[0]));
+			if(Command.getCommand(message[0]) != null)
+				this.setLeadByte(Command.getCommand(message[0]));
+			else if(ErrorCode.getErrorCode(message[0]) != null)
+				this.setLeadByte(ErrorCode.getErrorCode(message[0]));
 			this.setMessageKey(new Key(message,Command.SIZE));
 			this.setMessageValue(new Value(message,Command.SIZE+Key.SIZE));
 				break;
@@ -68,21 +81,25 @@ public class Message {
 	}
 
 	public void getFrom(InputStream is) throws IOException {
-		
+		boolean debug = true;
+		if(debug) System.out.println("[debug] Entering getFrom");
 		byte[] command = new byte[1];
 		byte[] key = new byte[32];
 		byte[] value = new byte[1024];
 		is.read(command, 0, 1);
 		this.setLeadByte(Command.getCommand(command[0]));
-		is.read(key,0,32);
-		this.setMessageKey(key);
-		if(Command.getCommand(command[0])==Command.PUT){
-			is.read(value,0,1024);
-			this.setMessageValue(value);
+		if(debug) System.out.println("[debug] getFrom: Done reading Command");
+		if(this.lead==Command.PUT || this.lead==Command.GET || this.lead==Command.REMOVE) {
+			is.read(key,0,32);
+			this.setFullMessageKey(new Key(key));
+			if(debug) System.out.println("[debug] getFrom: Done reading Key");
 		}
-	
-			
-		
+		if(this.lead==Command.PUT){
+			is.read(value,0,1024);
+			this.setFullMessageValue(new Value(value));
+			if(debug) System.out.println("[debug] getFrom: Done reading Value");
+		}
+		if(debug) System.out.println("[debug] Leaving getFrom");
 	}
 
 	public Message sendTo(String address, int port) throws IOException {
@@ -98,16 +115,33 @@ public class Message {
 	}
 
 	public Message sendTo(OutputStream os, InputStream replyStream) throws IOException {
-		Message reply = new Message();
+
 		ErrorCode error = null;
+		byte[] b = new byte[1+32+1024];
+		boolean debug = false;
+		if(debug) Tools.print("[debug] sendTo: About to write to OS");
+		os.write(this.getRaw());
+		//os.flush();
+		if(debug) Tools.print("[debug] sendTo: Done writing to OS, about to getFrom IS");
+		
 		try {
-			this.sendReplyTo(os);
+			//this.sendReplyTo(os);
 		} catch (Exception e1) {
 			Tools.print("failed to send message");
 		}
 
-
-		reply.getFrom(replyStream);
+		int IS_read_length = replyStream.read(b);
+		byte[] bb = new byte[IS_read_length];
+		// Copy b into new byte array of proper length
+		for(int i=0; i<IS_read_length; i++) {
+			bb[i] = b[i];
+		}
+		if(debug) { 
+			Tools.print("[debug] sendTo: Bytestream read from IS:");
+			Tools.printByte(bb); 
+		}
+		Message reply = new Message(bb);
+		//reply.getFrom(replyStream);
 		try{
 		error = reply.getErrorByte();
 		}
@@ -115,23 +149,29 @@ public class Message {
 			System.err.println("SERVER: "+"Error: replystream has no lead byte. NPE");
 		}
 			if (error != null) {
+				if(debug) Tools.print("[debug] sendTo: ErrorCode != Null");
 			switch(error) {
 			case OK:
-				System.out.println("SERVER: "+"Operation successful.");
+				System.out.println("SERVER: "+"Operation successful."); break;
 			case KEY_DNE:
-				System.out.println("SERVER: "+"Error: Inexistent key.");
+				System.out.println("SERVER: "+"Error: Inexistent key."); break;
 			case OUT_OF_SPACE:
-				System.out.println("SERVER: "+"Error: Out of space.");
+				System.out.println("SERVER: "+"Error: Out of space."); break;
 			case OVERLOAD:
-				System.out.println("SERVER: "+"Error: System overload.");
+				System.out.println("SERVER: "+"Error: System overload."); break;
 			case KVSTORE_FAIL:
-				System.out.println("SERVER: "+"Error: Internal KVStore failure.");
+				System.out.println("SERVER: "+"Error: Internal KVStore failure."); break;
 			case BAD_COMMAND:
-				System.out.println("SERVER: "+"Error: Unrecognized command.");
+				System.out.println("SERVER: "+"Error: Unrecognized command."); break;
 			default:
-				System.out.println("SERVER: "+"Error: Unknown error.");
+				System.out.println("SERVER: "+"Error: Unknown error."); break;
 			}
 		}
+			if(debug) {
+			Tools.print("[debug] sendTo: Returning Reply:");
+			Tools.print(reply.lead);
+			if(this.lead == Command.GET) Tools.printByte(reply.getFullMessageValue().value);
+			}
 
 		return reply;
 	}
@@ -204,6 +244,14 @@ public class Message {
 	}
 
 	public ErrorCode getErrorByte(){
+		if(this.lead == Command.PUT)
+			return ErrorCode.KEY_DNE;
+		if(this.lead == Command.GET)
+			return ErrorCode.OUT_OF_SPACE;
+		if(this.lead == Command.REMOVE)
+			return ErrorCode.OVERLOAD;
+		if(this.lead == Command.SHUTDOWN)
+			return ErrorCode.KVSTORE_FAIL;
 		return (ErrorCode) this.lead;
 	}
 	
