@@ -115,7 +115,7 @@ public class Message {
 	}
 
 	public Message sendTo(OutputStream os, InputStream replyStream) throws IOException {
-		//Message reply = new Message();
+
 		ErrorCode error = null;
 		byte[] b = new byte[1+32+1024];
 		boolean debug = false;
@@ -330,10 +330,10 @@ public class Message {
 	}
 
 	public void setMessageValue(byte[] raw) {
-		this.value = new Value(raw);
-//		for(int i = 0; i< Value.SIZE; i++){
-//			this.value.setValue(raw[i], i);
-//		}
+		this.value = new Value();
+		for(int i = 0; i< Value.SIZE; i++){
+			this.value.setValue(raw[i], i);
+		}
 	}
 	public Boolean compareMessageValues(Value value_in){
 		for(int i = 0; i < Value.SIZE; i++){

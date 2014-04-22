@@ -10,44 +10,51 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.FutureTask;
 
 import tools.*;
 
 public class HandleConnection implements Runnable {
-		public Thread thread;
+		private ExecutorService executor;
 		public Server server;
 		public Socket client;
 		public boolean debug = true;
-		public HandleConnection(Server server, Thread t, Socket client){
+		
+		public HandleConnection(Server server, ExecutorService executor, Socket client){
 			this.server = new Server(server);
 			this.client = client;
-			this.thread = t;
+			this.executor = executor;
 		}
 
 		public void run() {
 			try {
-				onAccept();
-				
+				onAccept();	
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		public void accept(){
-			this.thread.start();
-		}
 		public void onAccept(){
 			Message message = new Message();
-//			byte[] message = new byte[1+32+1024];
-//			byte[] reply = new byte[1+1024];
+			Message prop_message = new Message();
+			Message reply = new Message();
+			Message local_reply = new Message();
 			ErrorCode replyerr = null;
-			Message local_reply = null;
 			InputStream in = null;
 			OutputStream out = null;
-			Boolean is_local = true; //TODO:once getNodeIndex() returns an actual value set this to false
 			Node correct_node_for_key;
-			
+			Boolean propagate = false;
+			Key k;
+			Value v;
+			Command c;
+			EVpair pair = new EVpair(null,null);
+			List<Node> propagate_to_list = new ArrayList<Node>();
+			Map<String,Message> replies = new ConcurrentHashMap<String,Message>();
+			Boolean is_local = false; //USE THIS FOR NORMAL USE
 			try {
 				in = client.getInputStream();
 				out = client.getOutputStream();
@@ -57,39 +64,29 @@ public class HandleConnection implements Runnable {
 			try {
 //				in.read(message);
 				if(debug) System.out.println("[debug] SERVER: onAccept - Calling getFrom");
+
 				message.getFrom(in);
 			} catch (IOException e) {
 				Tools.print("failed to read message");
 			}
-//			message = new Message(message);
-			Command c = null; 
-			Key k = new Key(message.getMessageKey());
-			Value v = new Value(message.getMessageValue());
-//			byte[] replyv = new byte[1024];
-			EVpair pair = new EVpair(null,null);
-//			for(int i=0;i<message.length;i++){
-//				if(i==0)
-//					c = Command.getCommand(message[i]);
-//				else if(1<=i && i<33)
-//					k.setValue(message[i], i-1);
-//				else
-//					v.setValue(message[i], i-1-32);
-//			}
 			
-			c = (Command) message.getLeadByte();
-			List<Node> propagate_to_list = new ArrayList<Node>();
-			Map<String,Message> replies = new ConcurrentHashMap<String,Message>();
-			//correct_node_for_key = getCorrectNode(k); //USE THIS FOR NOMAL USE
+			c = (Command) message.getLeadByte(); 
+			k = new Key(message.getMessageKey());
+			v = new Value(message.getMessageValue());
+			
+			//correct_node_for_key = getCorrectNode(k); //USE THIS FOR NORMAL USE
 			correct_node_for_key = this.server.getNode(); //USE THIS FOR SINGLE NODE DEBUG
 			if(correct_node_for_key.getAddress() == this.server.getNode().getAddress()){
 				is_local = true;
-				propagate_to_list.addAll(this.server.getNode().getChildren());
+				//propagate_to_list.addAll(this.server.getNode().getChildren());
 			}
 			else{
 				propagate_to_list.add(correct_node_for_key);
-				propagate_to_list.addAll(correct_node_for_key.getChildren());
+				//propagate_to_list.addAll(correct_node_for_key.getChildren());
 			}
 
+			/*
+<<<<<<< HEAD
 			if(is_local) {
 				switch(c) {
 				case PUT:
@@ -119,77 +116,126 @@ public class HandleConnection implements Runnable {
 				default:
 					//local_reply.setLeadByte(ErrorCode.BAD_COMMAND);
 					local_reply = new Message(ErrorCode.BAD_COMMAND);
+=======
+*/
+				Tools.print("SERVER: Receiving = ");
+				switch(c) {
+				case PUT:
+					Tools.print("PUT");
+					if(is_local){
+						if(this.server.getNode().getKvpairs().size()< 40000)
+						reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
+						propagate = false;
+					}else{
+						prop_message.setLeadByte(Command.PROP_PUT);	
+						prop_message.setMessageKey(k);
+						prop_message.setMessageValue(v);
+						propagate = true;
+//						replies.put(this.server.getNode().getAddress().getHostName(),local_reply);
+					}
+					break;
+				case GET:
+					Tools.print("GET");
+					if(is_local){
+						pair = server.getNode().getValueFromKvpairs(k);
+						reply.setLeadByte(pair.getError());
+						reply.setMessageValue(pair.getValue());
+						propagate = false;
+					}
+					else{
+						prop_message.setLeadByte(Command.PROP_GET);
+						prop_message.setMessageKey(k);
+						propagate = true;
+					}
+					break;
+				case REMOVE:
+					Tools.print("REMOVE");
+					if(is_local){
+						reply.setLeadByte(this.server.getNode().removeKeyFromKvpairs(k));
+						propagate = false;
+					}
+					else{
+						prop_message.setLeadByte(Command.PROP_REMOVE);
+						prop_message.setMessageKey(k);
+						propagate = true;
+//						replies.put(this.server.getNode().getAddress().getHostName(),local_reply);
+					}
+					break;
+				case SHUTDOWN:
+					Tools.print("SHUTDOWN");
+					//TODO: Handle node shutdown
+					propagate = false;
+					break;
+				case PROP_PUT:
+					Tools.print("PROP_PUT");
+					if(this.server.getNode().getKvpairs().size()< 40000)
+						reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
+					propagate = false;
+					break;
+				case PROP_GET:
+					Tools.print("PROP_GET");
+					pair = server.getNode().getValueFromKvpairs(k);
+					reply.setLeadByte(pair.getError());
+					reply.setMessageValue(pair.getValue());
+					propagate = false;
+					break;
+				case PROP_REMOVE:
+					Tools.print("PROP_REMOVE");
+					reply.setLeadByte(this.server.getNode().removeKeyFromKvpairs(k));
+					propagate = false;
+					break;
+				default:
+					Tools.print("ERROR");
+					reply.setLeadByte(ErrorCode.BAD_COMMAND);
 					break;
 				}
+				Tools.printByte(message.getMessageKey().key);
+				if(message.getMessageValue().value != null)
+				Tools.printByte(message.getMessageValue().value);
+//				Tools.printByte(k.key);
+//				if(v != null)
+//					Tools.printByte(v.value);					
+			
+			if(propagate){
+				//Propagate message
+				HandlePropagate hp = new HandlePropagate(prop_message,correct_node_for_key.getAddress().getHostName());
+				FutureTask<Message> ft = new FutureTask<Message>(hp);
+				executor.execute(ft);
+				while(true){
+					try{
+						if(ft.isDone()){
+							reply = ft.get();
+							break;
+						}
+					}catch(InterruptedException | ExecutionException e){
+						e.printStackTrace();
+					}
+				}
+				//Retry Attempt Code
+//				for(Entry<String, Message> replymsg : replies.entrySet() ){
+//					int retrycount = 0;
+//					while(retrycount < 3){
+//						//Re-propagate command until OK, or 3 attempts
+//						if (replymsg.getValue().getErrorByte() == ErrorCode.OK)
+//							break;
+//						retrycount++;
+//					}
+//				}
 			}
-			Tools.printByte(k.key);
-			if(v != null)
-				Tools.printByte(v.value);
-//			for(int i=0;i<reply.length;i++){
-//				if(i==0)
-//					reply[i] = replyerr.getByte();
-//				else if(replyv!=null)
-//					reply[i] = replyv[i-1];
-//			}
-//			Tools.print("message value = ");
-			//Tools.printByte(local_reply.getMessageValue().value);
 			try {
 				//out.write(reply);
 				if(debug) Tools.print("[debug] SERVER: onAccept - Sending reply: "+local_reply.getLeadByte());
 				//if(debug) Tools.print("[debug] SERVER: onAccept - Sending reply: "+local_reply.getFullMessageKey().key);
 				//if(debug) Tools.print("[debug] SERVER: onAccept - Sending reply: "+local_reply.getFullMessageValue().value);
-				local_reply.sendReplyTo(out);
+				reply.sendReplyTo(out);
 			} catch (Exception e) {
 				Tools.print("failed to write reply");
 			}
-			
-			
-			//replies.add(local_reply);			
-			/*
-			 * TODO: propagate to the nodes contained in propagate_to_list
-			 * new Propagate();
-			 */
-//			if(is_local){
-//				/*
-//				Propagate p1 = new Propagate(this.server,this.server.getThreadpool().get(1),propagate_to_list.get(0).getAddress().toString(),message);
-//				Propagate p2 = new Propagate(this.server,this.server.getThreadpool().get(2),propagate_to_list.get(1).getAddress().toString(),message);
-//				replies.put(propagate_to_list.get(0).getAddress().getHostName().toString(), p1.propagate());
-//				replies.put(propagate_to_list.get(1).getAddress().getHostName().toString(), p2.propagate());
-//				*/
-//			}
-//			else{
-//				Propagate p0 = new Propagate(this.server,this.server.getThreadpool().get(1),propagate_to_list.get(0).getAddress().toString(),message);
-//				Propagate p1 = new Propagate(this.server,this.server.getThreadpool().get(2),propagate_to_list.get(1).getAddress().toString(),message);
-//				Propagate p2 = new Propagate(this.server,this.server.getThreadpool().get(3),propagate_to_list.get(2).getAddress().toString(),message);
-//				replies.put(propagate_to_list.get(0).getAddress().getHostName().toString(), p0.propagate());
-//				replies.put(propagate_to_list.get(1).getAddress().getHostName().toString(), p1.propagate());
-//				replies.put(propagate_to_list.get(2).getAddress().getHostName().toString(), p2.propagate());
-//			}
-//			for(Entry<String, Message> replymsg : replies.entrySet() ){
-//				int retrycount = 0;
-//				while(replymsg.getValue().getErrorByte() != ErrorCode.OK || retrycount > 3){
-//					Propagate predo = new Propagate(this.server,this.server.getThreadpool().get(0),propagate_to_list.get(0).getAddress().toString(),message);
-//					replymsg.setValue(predo.propagate());
-//					retrycount++;
-//				}
-				
-//			}
-			
-			
-//			reply = local_reply;
-//			reply.sendReplyTo(out);
-			// Send reply to output stream
-			//o_out.writeObject(local_reply.getRaw());
-			//out.flush();
 		}
 
 		private Node getCorrectNode(Key k) {
 			// DONE: make getNode Index return node which should hold key
-			byte[] b = new byte[Key.SIZE];
-			for(int i=0; i<Key.SIZE; i++) {
-				b[i] = k.getValue(i);
-			}
-			int a = b.hashCode();
+			int a = k.key.hashCode();
 			int position = a % this.server.getNodeList().size();
 			return this.server.getNodeList().get(position);
 		}

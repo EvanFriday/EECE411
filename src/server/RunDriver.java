@@ -34,6 +34,7 @@ public class RunDriver {
 		}
 		finally{
 			try {
+				server.getExecutor().shutdown();
 				server.getServer().close();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block

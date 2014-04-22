@@ -9,6 +9,11 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 import tools.IpTools;
 import tools.Key;
@@ -22,28 +27,25 @@ public class Server {
 	public Socket client;
 	private String file_location = "Test.txt";
 	private Node node;
-	private ArrayList<Thread> threadpool;
+	private ExecutorService executor;
+	private int NumThreads = 5;
 	private int port = 9999;
 	public Map<Key, Value> testMap;
 	//CONSTRUCTOR
 	public Server() throws IOException {
-			this.server = new ServerSocket();
-			server.setReuseAddress(true);
-			server.bind(new InetSocketAddress(this.port));
-			this.nodeList = new ArrayList<Node>(1);
-			this.threadpool = new ArrayList<Thread>();
-			this.node = new Node();
-			this.client = new Socket();
-			addThread();
-			addThread();
-			addThread();
-			addThread();
-			PopulateNodeList();
+		this.server = new ServerSocket();
+		server.setReuseAddress(true);
+		server.bind(new InetSocketAddress(this.port));
+		this.nodeList = new ArrayList<Node>(1);
+		this.executor = Executors.newFixedThreadPool(NumThreads);
+		this.node = new Node();
+		this.client = new Socket();
+		PopulateNodeList();
 	}
 	public Server(Server server){
 		this.server = server.getServer();
 		this.nodeList=server.getNodeList();
-		this.threadpool = server.getThreadpool();
+		
 		this.node = server.getNode();
 		this.client=server.getClient();
 	}
@@ -53,35 +55,33 @@ public class Server {
 		server.setReuseAddress(true);
 		server.bind(new InetSocketAddress(this.port));
 		this.nodeList = new ArrayList<Node>(1);
-		this.threadpool = new ArrayList<Thread>();
+		
 		this.node = new Node();
 		this.client = new Socket();
 		if(!inTestMode) {
-			addThread();
-			addThread();
-			addThread();
-			addThread();
 			PopulateNodeList();
 		}
-}
+	}
 	
 	public void AcceptConnections(){
 		//System.out.println("SERVER: Now Accepting connections on port: "+this.port);
 		try {
 			this.client = server.accept();
-			//System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
-			HandleConnection h = new HandleConnection(this,threadpool.get(1), this.client);
-			//h.accept();
-			h.run();
+
+			HandleConnection hc = new HandleConnection(this,this.executor,this.client);
+			FutureTask<Integer> ft = new FutureTask<Integer>(hc,null);
+			executor.submit(hc);
+			if(ft.get()== null){
+				System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
+			}
 		} catch (IOException e) {
-			//Tools.print("SERVER: Failed to accept connection from: "+client.getInetAddress().getHostName().toString());
+			Tools.print("SERVER: Failed to accept connection from: "+client.getInetAddress().getHostName().toString());
+		}catch(InterruptedException | ExecutionException e){
+			e.printStackTrace();
 		}
-		
+
 	}
-	public void addThread(){
-		this.threadpool.add(new Thread());
-		System.out.println("SERVER: Thread "+this.threadpool.size()+" created.");
-	}
+
 	public void PopulateNodeList() throws UnknownHostException, IOException{
 		FileReader file = new FileReader(file_location);
 		BufferedReader in = new BufferedReader(file);
@@ -130,6 +130,12 @@ public class Server {
 		System.out.println("SERVER: Node List Populated");
 	}
 
+	public ExecutorService getExecutor() {
+		return executor;
+	}
+	public void setExecutor(ExecutorService executor) {
+		this.executor = executor;
+	}
 	public List<Node> getNodeList() {
 		return nodeList;
 	}
@@ -159,12 +165,6 @@ public class Server {
 
 	public void setNode(Node node) {
 		this.node = node;
-	}
-	public ArrayList<Thread> getThreadpool() {
-		return threadpool;
-	}
-	public void setThreadpool(ArrayList<Thread> threadpool) {
-		this.threadpool = threadpool;
 	}
 
 }
