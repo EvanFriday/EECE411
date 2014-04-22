@@ -137,7 +137,8 @@ public class Message {
 		boolean debug = true;
 
 		os.write(this.getRaw());
-		if(debug) Tools.print("[debug] sendTo: Done writing to OS.");
+		if(debug) Tools.print("[debug] sendTo: Done writing to OS:");
+		if(debug) Tools.printByte(this.getRaw());
 		reply.getReplyFrom(replyStream,(Command) this.getLeadByte());
 		if(debug) Tools.print("[debug] sendTo: Done getting reply from OS.");
 

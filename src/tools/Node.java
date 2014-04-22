@@ -98,7 +98,7 @@ public class Node{
 		EVpair pair;
 		Boolean matchfound;
 		Value retval = new Value();
-		ErrorCode err = null;
+		ErrorCode err = ErrorCode.KEY_DNE;
 		for(Key ks : this.kvpairs.keySet()){
 			matchfound = true;
 			
@@ -113,22 +113,49 @@ public class Node{
 					retval.value[index] = this.kvpairs.get(ks).value[index];
 				}
 				err = ErrorCode.OK;
+				break;
 			}
-			else
-				err = ErrorCode.KEY_DNE;
 		}
 		pair = new EVpair(err,retval);
 		return pair;
 	}
 	public ErrorCode removeKeyFromKvpairs(Key k) {
-		ErrorCode error;
-		Value returned_value = this.kvpairs.remove(k);
-		if(returned_value==null)
-			error = ErrorCode.KEY_DNE;
-		else if(!this.kvpairs.containsKey(k))
-			error = ErrorCode.OK;
+		boolean debug = true;
+		boolean matchfound;
+		boolean containsKey = this.kvpairs.containsKey(k);
+		if(debug) Tools.print("[debug] removeFromKvpairs: containsKey: "+containsKey);
+		if(debug) Tools.printByte(k.key);
+		
+		/*
+		if(containsKey) {
+			this.kvpairs.remove(k);
+			if(this.kvpairs.containsKey(k) == false)
+				return ErrorCode.OK;
+			else
+				return ErrorCode.KVSTORE_FAIL;
+		}
 		else
-			error = ErrorCode.KVSTORE_FAIL;
-		return error;
+			return ErrorCode.KEY_DNE;
+		*/
+		
+		for(Key ks : this.kvpairs.keySet()){
+			matchfound = true;
+			
+			if(debug) Tools.print("[debug] removeFromKvpairs: Key:");
+			if(debug) Tools.printByte(ks.key);
+			for(int index = 0; index < 32; index++){
+				if (ks.key[index] != k.key[index]){
+					matchfound = false;
+					break;
+				}		
+			}
+			if(matchfound){
+				if(debug) Tools.print("[debug] removeFromKvpairs: Match found");
+				if(this.kvpairs.remove(ks) != null) {
+					return ErrorCode.OK;
+				}
+			}
+		}
+		return ErrorCode.KEY_DNE;
 	}
 }
