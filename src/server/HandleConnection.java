@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -32,8 +33,7 @@ public class HandleConnection implements Runnable {
 
 		public void run() {
 			try {
-				onAccept();
-				
+				onAccept();	
 			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -89,7 +89,7 @@ public class HandleConnection implements Runnable {
 					Tools.print("PUT");
 					if(is_local){
 						if(this.server.getNode().getKvpairs().size()< 40000)
-						local_reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
+						reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
 					}else{
 						prop_message.setLeadByte(Command.PROP_PUT);	
 						prop_message.setMessageKey(k);
@@ -102,8 +102,8 @@ public class HandleConnection implements Runnable {
 					Tools.print("GET");
 					if(is_local){
 						pair = server.getNode().getValueFromKvpairs(k);
-						local_reply.setLeadByte(pair.getError());
-						local_reply.setMessageValue(pair.getValue());
+						reply.setLeadByte(pair.getError());
+						reply.setMessageValue(pair.getValue());
 					}
 					else{
 						prop_message.setLeadByte(Command.PROP_GET);
@@ -114,7 +114,7 @@ public class HandleConnection implements Runnable {
 				case REMOVE:
 					Tools.print("REMOVE");
 					if(is_local){
-						replyerr = this.server.getNode().removeKeyFromKvpairs(k);
+						reply.setLeadByte(this.server.getNode().removeKeyFromKvpairs(k));
 						propagate = false;
 					}
 					else{
@@ -144,12 +144,12 @@ public class HandleConnection implements Runnable {
 					break;
 				case PROP_REMOVE:
 					Tools.print("PROP_REMOVE");
-					replyerr = this.server.getNode().removeKeyFromKvpairs(k);
+					reply.setLeadByte(this.server.getNode().removeKeyFromKvpairs(k));
 					propagate = false;
 					break;
 				default:
 					Tools.print("ERROR");
-					local_reply.setLeadByte(ErrorCode.BAD_COMMAND);
+					reply.setLeadByte(ErrorCode.BAD_COMMAND);
 					break;
 				}
 				Tools.printByte(k.key);
@@ -171,15 +171,16 @@ public class HandleConnection implements Runnable {
 						e.printStackTrace();
 					}
 				}
-				for(Entry<String, Message> replymsg : replies.entrySet() ){
-					int retrycount = 0;
-					while(retrycount < 3){
-						//Re-propagate command until OK, or 3 attempts
-						if (replymsg.getValue().getErrorByte() == ErrorCode.OK)
-							break;
-						retrycount++;
-					}
-				}
+				//Retry Attempt Code
+//				for(Entry<String, Message> replymsg : replies.entrySet() ){
+//					int retrycount = 0;
+//					while(retrycount < 3){
+//						//Re-propagate command until OK, or 3 attempts
+//						if (replymsg.getValue().getErrorByte() == ErrorCode.OK)
+//							break;
+//						retrycount++;
+//					}
+//				}
 			}
 			try {
 				reply.sendReplyTo(out);
