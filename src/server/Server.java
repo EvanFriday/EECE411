@@ -63,16 +63,17 @@ public class Server {
 		}
 	}
 	
-	public void AcceptConnections(){
+	public void AcceptConnections() throws InterruptedException{
 		System.out.println("SERVER: Now Accepting connections on port: "+this.port);
 		try {
 			this.client = server.accept();
-			//System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
+			System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
 			HandleConnection hc = new HandleConnection(this,this.executor,this.client);
 			FutureTask<Integer> ft = new FutureTask<Integer>(hc,null);
 			executor.submit(ft);
 		} catch (IOException e) {
 			Tools.print("SERVER: Failed to accept connection from: "+client.getInetAddress().getHostName().toString());
+			Thread.sleep(100000);
 		}
 
 	}

@@ -49,6 +49,7 @@ public class HandleConnection implements Runnable {
 			OutputStream out = null;
 			Node correct_node_for_key;
 			Boolean propagate = false;
+			boolean debug = true;
 			Key k;
 			Value v;
 			Command c;
@@ -107,6 +108,9 @@ public class HandleConnection implements Runnable {
 						reply.setLeadByte(pair.getError());
 						reply.setMessageValue(pair.getValue());
 						propagate = false;
+						if(debug) Tools.print("[debug] SERVER: GET - returning:");
+						if(debug) Tools.print(reply.getLeadByte());
+						if(debug) Tools.printByte(reply.getMessageValue().value);
 					}
 					else{
 						prop_message.setLeadByte(Command.PROP_GET);
