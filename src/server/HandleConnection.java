@@ -169,6 +169,7 @@ public class HandleConnection implements Runnable {
 						}
 					}catch(InterruptedException | ExecutionException e){
 						e.printStackTrace();
+						Tools.print("Error in propagation");
 					}
 				}
 				//Retry Attempt Code
