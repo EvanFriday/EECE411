@@ -158,7 +158,7 @@ public class HandleConnection implements Runnable {
 			
 			if(propagate){
 				//Propagate message
-				HandlePropagate hp = new HandlePropagate(prop_message,correct_node_for_key.getAddress().getHostAddress());
+				HandlePropagate hp = new HandlePropagate(prop_message,correct_node_for_key.getAddress().getHostName());
 				FutureTask<Message> ft = new FutureTask<Message>(hp);
 				executor.execute(ft);
 				while(true){
