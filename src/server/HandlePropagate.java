@@ -39,6 +39,7 @@ public class HandlePropagate implements Callable<Message>{
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		propagation_socket.close();
 		return this.reply;
 	}
 

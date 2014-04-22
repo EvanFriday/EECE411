@@ -188,7 +188,10 @@ public class HandleConnection implements Runnable {
 //				}
 			}
 			try {
+				Tools.print("Writing Reply");
 				reply.sendReplyTo(out);
+				Tools.print("Closing Socket");
+				this.client.close();
 			} catch (Exception e) {
 				Tools.print("failed to write reply");
 			}
