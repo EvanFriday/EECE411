@@ -72,8 +72,8 @@ public class HandleConnection implements Runnable {
 			k = new Key(message.getMessageKey());
 			v = new Value(message.getMessageValue());
 			
-			correct_node_for_key = getCorrectNode(k); //USE THIS FOR NORMAL USE
-			//correct_node_for_key = this.server.getNode(); //USE THIS FOR SINGLE NODE DEBUG
+			//correct_node_for_key = getCorrectNode(k); //USE THIS FOR NORMAL USE
+			correct_node_for_key = this.server.getNode(); //USE THIS FOR SINGLE NODE DEBUG
 			if(correct_node_for_key.getAddress() == this.server.getNode().getAddress()){
 				is_local = true;
 				//propagate_to_list.addAll(this.server.getNode().getChildren());
@@ -90,6 +90,7 @@ public class HandleConnection implements Runnable {
 					if(is_local){
 						if(this.server.getNode().getKvpairs().size()< 40000)
 						reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
+						propagate = false;
 					}else{
 						prop_message.setLeadByte(Command.PROP_PUT);	
 						prop_message.setMessageKey(k);
@@ -104,6 +105,7 @@ public class HandleConnection implements Runnable {
 						pair = server.getNode().getValueFromKvpairs(k);
 						reply.setLeadByte(pair.getError());
 						reply.setMessageValue(pair.getValue());
+						propagate = false;
 					}
 					else{
 						prop_message.setLeadByte(Command.PROP_GET);
@@ -152,9 +154,12 @@ public class HandleConnection implements Runnable {
 					reply.setLeadByte(ErrorCode.BAD_COMMAND);
 					break;
 				}
-				Tools.printByte(k.key);
-				if(v != null)
-					Tools.printByte(v.value);					
+				Tools.printByte(message.getMessageKey().key);
+				if(message.getMessageValue().value != null)
+				Tools.printByte(message.getMessageValue().value);
+//				Tools.printByte(k.key);
+//				if(v != null)
+//					Tools.printByte(v.value);					
 			
 			if(propagate){
 				//Propagate message
