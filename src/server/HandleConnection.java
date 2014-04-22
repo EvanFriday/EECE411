@@ -204,6 +204,8 @@ public class HandleConnection implements Runnable {
 		private Node getCorrectNode(Key k) {
 			// DONE: make getNode Index return node which should hold key
 			int a = Arrays.hashCode(k.key);
+			a = (a & 0x7FFFFFFF);
+			//a = Math.abs(a);
 			Tools.print(a);
 			Tools.print(this.server.getNodeList().size());
 			int position = a % this.server.getNodeList().size();
