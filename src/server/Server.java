@@ -69,14 +69,10 @@ public class Server {
 			this.client = server.accept();
 			HandleConnection hc = new HandleConnection(this,this.executor,this.client);
 			FutureTask<Integer> ft = new FutureTask<Integer>(hc,null);
-			executor.submit(hc);
-			if(ft.get()== null){
-				System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
-			}
+			System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
+			executor.submit(ft);
 		} catch (IOException e) {
 			Tools.print("SERVER: Failed to accept connection from: "+client.getInetAddress().getHostName().toString());
-		}catch(InterruptedException | ExecutionException e){
-			e.printStackTrace();
 		}
 	}
 
