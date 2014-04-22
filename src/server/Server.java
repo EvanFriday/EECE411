@@ -66,11 +66,16 @@ public class Server {
 	public void AcceptConnections(){
 		System.out.println("SERVER: Now Accepting connections on port: "+this.port);
 		try {
+			Tools.print("-1");
 			this.client = server.accept();
 			//System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
+			Tools.print("0");
 			HandleConnection hc = new HandleConnection(this,this.executor,this.client);
+			Tools.print("1");
 			FutureTask<Integer> ft = new FutureTask<Integer>(hc,null);
+			Tools.print("2");
 			executor.submit(ft);
+			Tools.print("3");
 		} catch (IOException e) {
 			Tools.print("SERVER: Failed to accept connection from: "+client.getInetAddress().getHostName().toString());
 		}
