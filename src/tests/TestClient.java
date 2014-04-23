@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 
 import server.Propagate;
@@ -22,6 +23,8 @@ public class TestClient {
 			this.socket = new Socket("127.0.0.1",9999);
 			this.is = this.socket.getInputStream();
 			this.os = this.socket.getOutputStream();
+		}  catch (SocketException e){
+			Tools.print("Socket Timed out");
 		} catch (IOException e) {
 			Tools.print("Failed to Open test Socket");
 		}

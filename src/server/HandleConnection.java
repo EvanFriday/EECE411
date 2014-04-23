@@ -29,15 +29,6 @@ public class HandleConnection implements Runnable {
 			this.client = client;
 			this.executor = executor;
 		}
-
-		public void run() {
-			try {
-				onAccept();	
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
 		public void onAccept(){
 			Message message = new Message();
 			Message prop_message = new Message();
@@ -52,7 +43,7 @@ public class HandleConnection implements Runnable {
 			Value v;
 			Command c;
 			EVpair pair = new EVpair(null,null);
-			List<Node> propagate_to_list = new ArrayList<Node>();
+			List<Node> propagate_list = new ArrayList<Node>();
 			Map<String,Message> replies = new ConcurrentHashMap<String,Message>();
 			Boolean is_local = false; //USE THIS FOR NORMAL USE
 			try {
@@ -73,14 +64,18 @@ public class HandleConnection implements Runnable {
 			
 			//correct_node_for_key = getCorrectNode(k);//USE THIS FOR NORMAL USE
 			correct_node_for_key = this.server.getNode(); //USE THIS FOR SINGLE NODE DEBUG
-			Tools.print("Correct Node for this key is:"+correct_node_for_key.getAddress().getHostName());
 			if(correct_node_for_key.getAddress() == this.server.getNode().getAddress()){
-				is_local = true;
-				//propagate_to_list.addAll(this.server.getNode().getChildren());
+					is_local = true;	
+				//propagate_list.addAll(this.server.getNode().getChildren());
 			}
 			else{
-				propagate_to_list.add(correct_node_for_key);
-				//propagate_to_list.addAll(correct_node_for_key.getChildren());
+				if(correct_node_for_key.getAlive()){
+					propagate_list.add(correct_node_for_key);
+				}
+				else{
+					reply.setLeadByte(ErrorCode.KVSTORE_FAIL);
+				}
+				//propagate_list.addAll(correct_node_for_key.getChildren());
 			}
 
 				Tools.print("SERVER: Receiving = ");
@@ -130,7 +125,8 @@ public class HandleConnection implements Runnable {
 					break;
 				case SHUTDOWN:
 					Tools.print("SHUTDOWN");
-					//TODO: Handle node shutdown
+					reply.setLeadByte(ErrorCode.OK);
+					this.server.getNode().setAlive(false);
 					propagate = false;
 					break;
 				case PROP_PUT:
@@ -152,33 +148,53 @@ public class HandleConnection implements Runnable {
 					reply.setLeadByte(this.server.getNode().removeKeyFromKvpairs(k));
 					propagate = false;
 					break;
+				case DEATH:
+					reply.setLeadByte(ErrorCode.BAD_COMMAND);
+					for(Node n : this.server.getNodeList()){
+						if(n.getAddress() == client.getInetAddress()){
+							Tools.print(n.getAddress().getHostName()+" is now dead");
+							n.setAlive(false);
+							reply.setLeadByte(ErrorCode.OK);
+							break;
+						}
+						if(n.getAddress() == this.server.getNode().getAddress()){
+							this.server.getNode().setAlive(false);
+							reply.setLeadByte(ErrorCode.OK);
+						}
+					}
 				default:
 					Tools.print("ERROR");
 					reply.setLeadByte(ErrorCode.BAD_COMMAND);
 					break;
 				}
-				Tools.printByte(message.getMessageKey().key);
+				if(message.getMessageKey() != null)
+					Tools.printByte(message.getMessageKey().key);
 				if(c == Command.PUT || c == Command.PROP_PUT)
-				Tools.printByte(message.getMessageValue().value);
+					Tools.printByte(message.getMessageValue().value);
 //				Tools.printByte(k.key);
 //				if(v != null)
 //					Tools.printByte(v.value);					
 			
 			if(propagate){
 				//Propagate message
-				HandlePropagate hp = new HandlePropagate(prop_message,correct_node_for_key.getAddress().getHostName());
-				FutureTask<Message> ft = new FutureTask<Message>(hp);
-				executor.execute(ft);
-				while(true){
-					try{
-						if(ft.isDone()){
-							reply = ft.get();
-							break;
+				for(Node n : propagate_list){
+					
+						HandlePropagate hp = new HandlePropagate(prop_message,n.getAddress().getHostName());
+						FutureTask<Message> ft = new FutureTask<Message>(hp);
+						executor.execute(ft);
+						while(true){
+							try{
+								if(ft.isDone()){
+									reply = ft.get();
+									break;
+								}
+							}catch(InterruptedException | ExecutionException e){
+								e.printStackTrace();
+							}
 						}
-					}catch(InterruptedException | ExecutionException e){
-						e.printStackTrace();
-					}
+					
 				}
+				
 				//Retry Attempt Code
 //				for(Entry<String, Message> replymsg : replies.entrySet() ){
 //					int retrycount = 0;
@@ -208,7 +224,7 @@ public class HandleConnection implements Runnable {
 			
 		}
 
-		private Node getCorrectNode(Key k) {
+		private Node getCorrectNode(Key k){
 			// DONE: make getNode Index return node which should hold key
 			int a = Arrays.hashCode(k.key);
 			a = (a & 0x7FFFFFFF);
@@ -218,4 +234,15 @@ public class HandleConnection implements Runnable {
 			int position = a % this.server.getNodeList().size();
 			return this.server.getNodeList().get(position);
 		}
+		@Override
+		public void run() {
+			try {
+				onAccept();	
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		
 	}

@@ -17,6 +17,8 @@ public class Tests {
 	static TestClient client2;
 	static TestClient client3;
 	static TestClient client4;
+	static TestClient client5;
+	static TestClient client6;
 	
 	public Tests() {
 		try {
@@ -35,13 +37,23 @@ public class Tests {
 	public static void main(String[] args) throws IOException, InterruptedException {
 		boolean debug = false;
 		Tests test = new Tests();
+		final Server s = test.server;
 		Thread t = new Thread(new Runnable() {
 	        @Override
 	        public void run() {
 	            try {
 	            	while(true){
-	            		server.AcceptConnections();
+	            		if(s.getNode().getAlive()){
+	            			s.AcceptConnections();
+	            		}	
+	            		else{
+	            			Tools.print("Server has Died");
+	            			s.getServer().close();
+	            			break;
+	            		}
+
 	            	}
+	            	
 	            } catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -52,7 +64,9 @@ public class Tests {
 	    client1 = new TestClient("Client 1");
 		client2 = new TestClient("Client 2");
 		client3 = new TestClient("Client 3");
-		client4 = new TestClient("Client 4");
+
+
+		
 	    
 	    Key k = new Key();
 		Value v = new Value();
@@ -107,7 +121,7 @@ public class Tests {
 		/*
 	     * CLIENT 4 : Get
 	     */
-	    
+		client4 = new TestClient("Client 4");
 	    Message m4 = new Message(Command.GET, k);
 	    Message r4 = new Message();
 	    
@@ -118,6 +132,32 @@ public class Tests {
 		Tools.print("CLIENT: Receiving Reply: "+r4.getLeadByte().toString());
 	    if(r4.getFullMessageValue() != null)
 	    	Tools.printByte(r4.getFullMessageValue().value);
+	    
+	    /*
+	     * CLIENT 5: Shutdown
+	     */
+		client5 = new TestClient("Client 5");
+	    Message m5 = new Message();
+	    m5.setLeadByte(Command.SHUTDOWN);
+	    Message r5 = new Message();
+	    Tools.print("CLIENT: 5 Sending = "+m5.getLeadByte().toString());
+	    r5 = m5.sendTo(client5.os, client5.is);
+	    Tools.print("CLIENT: Receiving Reply: "+r5.getLeadByte().toString());
+	    
+	    /*
+	     * CLIENT 6: Checking Shutdown
+	     */
+	    Thread.sleep(3000);
+	    client6 = new TestClient("Client 6");
+	    Message m6 = new Message(Command.GET,k);
+	    Message r6 = new Message();
+	    Tools.print("CLIENT: Sending = "+m6.getLeadByte().toString());
+	    Tools.printByte(m6.getFullMessageKey().key);
+	    r6 = m6.sendTo(client6.os, client6.is);
+	    Tools.print("CLIENT: Receiving Reply: "+r6.getLeadByte().toString());
+	    
+	    
+	    
 //	    Thread.sleep(500);
 //	    client2.editMessage();
 //	    client2.sendMessage();

@@ -19,7 +19,8 @@ public class Message {
 	}
 
 	public Message(LeadByte l) {
-		this(l, null, null);
+		this();
+		this.setLeadByte(l);
 	}
 
 	public Message(LeadByte l, Key k) {
@@ -84,13 +85,12 @@ public class Message {
 		byte[] command = new byte[1];
 		byte[] key = new byte[32];
 		byte[] value = new byte[1024];
-		
 		is.read(command, 0, 1);
 		this.setLeadByte(Command.getCommand(command[0]));
-		
-		is.read(key,0,32);
-		this.setFullMessageKey(new Key(key));
-		
+		if((this.lead != Command.DEATH) && (this.lead != Command.SHUTDOWN)){
+			is.read(key,0,32);
+			this.setFullMessageKey(new Key(key));
+		}
 		if(this.lead==Command.PUT || this.lead == Command.PROP_PUT){
 			is.read(value,0,1024);
 			this.setFullMessageValue(new Value(value));
@@ -99,7 +99,7 @@ public class Message {
 	public void getReplyFrom(InputStream is,Command  c) throws IOException {
 		byte[] error = new byte[1];
 		byte[] value = new byte[1024];
-		if(c == Command.PUT || c == Command.PROP_PUT || c == Command.REMOVE || c == Command.PROP_REMOVE){
+		if(c == Command.PUT || c == Command.PROP_PUT || c == Command.REMOVE || c == Command.PROP_REMOVE || c == Command.SHUTDOWN || c == Command.DEATH){
 			is.read(error,0,1);
 			this.setLeadByte(ErrorCode.getErrorCode(error[0]));
 		}
@@ -108,7 +108,10 @@ public class Message {
 			this.setLeadByte(ErrorCode.getErrorCode(error[0]));
 			if(is.read(value,0,1024)!=0)		
 				this.setMessageValue(value);
-		}	
+		}
+		else{
+			Tools.print("Failed to recognize Command");
+		}
 	}
 
 	public Message sendTo(String address, int port) throws IOException {
@@ -123,11 +126,20 @@ public class Message {
 		return this.sendTo(con.getOutputStream(), con.getInputStream());
 	}
 
-	public Message sendTo(OutputStream os, InputStream replyStream) throws IOException {
+	public Message sendTo(OutputStream os, InputStream replyStream){
 		Message reply = new Message();
 		ErrorCode error = null;
-		os.write(this.getRaw());
-		reply.getReplyFrom(replyStream,(Command) this.getLeadByte());
+		try {
+			Tools.print("Sending");
+			os.write(this.getRaw());
+		} catch (IOException e1) {
+			Tools.print("Failed to Send");
+		}
+		try {
+			reply.getReplyFrom(replyStream,(Command) this.getLeadByte());
+		} catch (IOException e1) {
+			Tools.print("Failed to get Reply");
+		}
 		try{
 		error = reply.getErrorByte();
 		}
@@ -176,10 +188,8 @@ public class Message {
 		byte[] raw = new byte[size];
 		switch (size) {
 		case Command.SIZE:
-				
 				raw[0] = this.lead.getByte();
 				break;
-
 		case Command.SIZE + Key.SIZE:
 				raw[0] = this.lead.getByte();
 				for (int i = 0; i < Key.SIZE; i++) {
@@ -247,11 +257,15 @@ public class Message {
 	}
 
 	public Key getMessageKey() {
-		Key temp = new Key();
-		for(int i = 0; i < Key.SIZE; i++){
-			temp.setValue(this.key.key[i], i);
+		if(this.key != null){
+			Key temp = new Key();
+			for(int i = 0; i < Key.SIZE; i++){
+				temp.setValue(this.key.key[i], i);
+			}
+			return temp;
 		}
-		return temp;
+		else
+			return null;
 	}
 	
 	public Key getFullMessageKey() {

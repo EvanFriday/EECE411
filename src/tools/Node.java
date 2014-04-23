@@ -108,7 +108,6 @@ public class Node{
 			}
 		}
 		if(!matchfound){
-			Tools.print("match not found");
 			err = ErrorCode.KEY_DNE;
 			pair = new EVpair(err,null);
 		}
