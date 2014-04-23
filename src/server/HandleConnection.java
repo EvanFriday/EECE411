@@ -80,9 +80,9 @@ public class HandleConnection implements Runnable {
 				//propagate_list.addAll(this.server.getNode().getChildren());
 			}
 			else{
-				if(correct_node_for_key.getAlive()){
+				
 					propagate_list.add(correct_node_for_key);
-				}
+				
 				
 				//propagate_list.addAll(correct_node_for_key.getChildren());
 			}
