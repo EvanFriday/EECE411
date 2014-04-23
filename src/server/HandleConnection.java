@@ -75,7 +75,8 @@ public class HandleConnection implements Runnable {
 			correct_node_for_key = getCorrectNode(k);//USE THIS FOR NORMAL USE
 			//correct_node_for_key = this.server.getNode(); //USE THIS FOR SINGLE NODE DEBUG
 			if(correct_node_for_key.getAddress() == this.server.getNode().getAddress()){
-					is_local = true;	
+					is_local = true;
+					Tools.print("SERVER: Handling Locally");
 				//propagate_list.addAll(this.server.getNode().getChildren());
 			}
 			else{
