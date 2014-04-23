@@ -21,7 +21,7 @@ public class RunDriver {
 			e2.printStackTrace();
 		}
 		try{
-			while(true){
+			while(server.getNode().getAlive()){
 			server.AcceptConnections();
 			}
 		}catch (Exception e){
