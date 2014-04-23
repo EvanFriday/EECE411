@@ -92,12 +92,8 @@ public class Server {
 			
 			InetAddress address = InetAddress.getByName(line);
 			Node n;
-			if(address.isReachable(1000)){ // Ping with a one second timeout
-				n = new Node(index,address,true);
-			}
-			else{
-				n = new Node(index,address,false); // Dead node
-			}
+			n = new Node(index,address,true);
+			n = new Node(index,address,false); // Dead node
 			this.nodeList.add(n);
 			index++;
 		}
