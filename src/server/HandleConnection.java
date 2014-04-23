@@ -6,6 +6,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -151,6 +152,7 @@ public class HandleConnection implements Runnable {
 					prop_message.setLeadByte(Command.DEATH);
 					propagate_list.addAll(this.server.getNodeList());
 					//Don't propagate to Self
+					this.transferParentData();
 					propagate_list.remove(this.server.getNode().getPosition());
 					this.executor.shutdown();
 
@@ -300,6 +302,18 @@ public class HandleConnection implements Runnable {
 
 		}
 
+		private void transferParentData() throws UnknownHostException, IOException {
+			boolean debug = true;
+			
+			Node n = this.server.getNode();
+			List<Node> parents = n.getParents();
+			List<Node> children = n.getChildren();
+			
+			for(int index=0; index<3; index++) {
+				Socket s = new Socket(n.getAddress().getHostName(), 9999);
+			}
+			
+		}
 		private Node getCorrectNode(Key k){
 			// DONE: make getNode Index return node which should hold key
 			int a = Arrays.hashCode(k.key);
