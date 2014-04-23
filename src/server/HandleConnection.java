@@ -179,8 +179,18 @@ public class HandleConnection implements Runnable {
 					propagate_ch = true;
 					break;
 				case REPLICA_PUT:
+					for(Node nd : this.server.getNode().getParents()){
+						if(this.client.getInetAddress() == nd.getAddress()){
+							reply.setLeadByte(nd.addToKvpairs(k, v));
+						}
+					}
 					break;
 				case REPLICA_REMOVE:
+					for(Node nd : this.server.getNode().getParents()){
+						if(this.client.getInetAddress() == nd.getAddress()){
+							reply.setLeadByte(nd.removeKeyFromKvpairs(k));
+						}
+					}
 					break;
 				case DEATH:
 					Tools.print("DEATH");
@@ -322,7 +332,11 @@ public class HandleConnection implements Runnable {
 			Tools.print(a);
 			Tools.print(this.server.getNodeList().size());
 			int position = a % this.server.getNodeList().size();
-			return this.server.getNodeList().get(position);
+			Node n = this.server.getNodeList().get(position);
+				while(!n.getAlive()){
+					n = n.getChild(0);
+				}
+			return n;
 		}
 
 		
