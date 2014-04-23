@@ -74,18 +74,22 @@ public class HandleConnection implements Runnable {
 			
 			correct_node_for_key = getCorrectNode(k);//USE THIS FOR NORMAL USE
 			//correct_node_for_key = this.server.getNode(); //USE THIS FOR SINGLE NODE DEBUG
-			if(correct_node_for_key.getAddress() == this.server.getNode().getAddress()){
+			if(this.server.getNode().getAlive()){
+				if(correct_node_for_key.getAddress() == this.server.getNode().getAddress()){
 					is_local = true;
 					Tools.print("SERVER: Handling Locally");
 				//propagate_list.addAll(this.server.getNode().getChildren());
+				}
+				else{
+					
+						propagate_list.add(correct_node_for_key);
+					
+					
+					//propagate_list.addAll(correct_node_for_key.getChildren());
+				}
 			}
-			else{
-				
-					propagate_list.add(correct_node_for_key);
-				
-				
-				//propagate_list.addAll(correct_node_for_key.getChildren());
-			}
+
+			
 
 				Tools.print("SERVER: Receiving = ");
 				switch(c) {
@@ -136,6 +140,7 @@ public class HandleConnection implements Runnable {
 					Tools.print("SHUTDOWN");
 					reply.setLeadByte(ErrorCode.OK);
 					this.server.getNode().setAlive(false);
+					this.executor.shutdown();
 					propagate = false;
 					break;
 				case PROP_PUT:
