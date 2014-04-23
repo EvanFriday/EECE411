@@ -302,7 +302,11 @@ public class HandleConnection implements Runnable {
 			Tools.print(a);
 			Tools.print(this.server.getNodeList().size());
 			int position = a % this.server.getNodeList().size();
-			return this.server.getNodeList().get(position);
+			Node n = this.server.getNodeList().get(position);
+				while(!n.getAlive()){
+					n = n.getChild(0);
+				}
+			return n;
 		}
 
 		
