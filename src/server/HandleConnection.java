@@ -100,8 +100,10 @@ public class HandleConnection implements Runnable {
 				case PUT:
 					Tools.print("PUT");
 					if(is_local){
-						if(this.server.getNode().getKvpairs().size()< 40000)
-						reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
+						if(this.server.getNode().getKvpairs().size()< 40000){
+							this.server.getNode().removeKeyFromKvpairs(k);
+							reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
+						}	
 						propagate = false;
 						propagate_ch = true;
 					}else{
@@ -162,8 +164,11 @@ public class HandleConnection implements Runnable {
 					break;
 				case PROP_PUT:
 					Tools.print("PROP_PUT");
-					if(this.server.getNode().getKvpairs().size()< 40000)
+					if(this.server.getNode().getKvpairs().size()< 40000){
+						this.server.getNode().removeKeyFromKvpairs(k);
 						reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
+					}
+						
 					propagate = false;
 					propagate_ch = true;
 					break;
