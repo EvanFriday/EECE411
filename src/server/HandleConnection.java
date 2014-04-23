@@ -72,9 +72,7 @@ public class HandleConnection implements Runnable {
 				if(correct_node_for_key.getAlive()){
 					propagate_list.add(correct_node_for_key);
 				}
-				else{
-					reply.setLeadByte(ErrorCode.KVSTORE_FAIL);
-				}
+				
 				//propagate_list.addAll(correct_node_for_key.getChildren());
 			}
 
