@@ -102,19 +102,27 @@ public class Server {
 		//Get the last two nodes in the list (for circular roll around)
 		int last = this.nodeList.size()-1;
 		int second_last = this.nodeList.size()-2;
-		
+		int third_last = this.nodeList.size()-3;
 		//Give each node two children, who will hold hold replicas
 		for(Node n : nodeList){
 			if(nodeList.indexOf(n) == last){
 				n.addChild(this.nodeList.get(0));
-				n.addChild(this.nodeList.get(1));				
+				n.addChild(this.nodeList.get(1));
+				n.addChild(this.nodeList.get(2));
 			}
 			else if(nodeList.indexOf(n) == second_last){
 				n.addChild(this.nodeList.get(nodeList.indexOf(n)+1));
 				n.addChild(this.nodeList.get(0));
+				n.addChild(this.nodeList.get(1));
+			}
+			else if(nodeList.indexOf(n) == third_last){
+				n.addChild(this.nodeList.get(nodeList.indexOf(n)+1));
+				n.addChild(this.nodeList.get(nodeList.indexOf(n)+2));
+				n.addChild(this.nodeList.get(0));
 			}
 			else{
 				n.addChild(this.nodeList.get(nodeList.indexOf(n)+1));
+				n.addChild(this.nodeList.get(nodeList.indexOf(n)+2));
 				n.addChild(this.nodeList.get(nodeList.indexOf(n)+2));
 			}
 			

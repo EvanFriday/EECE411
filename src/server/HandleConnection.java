@@ -136,7 +136,12 @@ public class HandleConnection implements Runnable {
 					Tools.print("SHUTDOWN");
 					reply.setLeadByte(ErrorCode.OK);
 					this.server.getNode().setAlive(false);
-					propagate = false;
+					//Broadcast Death
+					propagate = true;
+					prop_message.setLeadByte(Command.DEATH);
+					propagate_list.addAll(this.server.getNodeList());
+					//Don't propagate to Self
+					propagate_list.remove(this.server.getNode().getPosition());
 					break;
 				case PROP_PUT:
 					Tools.print("PROP_PUT");
@@ -158,6 +163,7 @@ public class HandleConnection implements Runnable {
 					propagate = false;
 					break;
 				case DEATH:
+					Tools.print("DEATH");
 					reply.setLeadByte(ErrorCode.BAD_COMMAND);
 					for(Node n : this.server.getNodeList()){
 						if(n.getAddress() == client.getInetAddress()){
@@ -187,11 +193,13 @@ public class HandleConnection implements Runnable {
 			if(propagate){
 				//Propagate message
 				for(Node n : propagate_list){
-					
+					if(n.getAlive()){ //Only propagate to a node if it is alive.
 						HandlePropagate hp = new HandlePropagate(prop_message,n.getAddress().getHostName());
 						FutureTask<Message> ft = new FutureTask<Message>(hp);
 						executor.execute(ft);
-						while(true){
+						int attempt = 0;
+						while(attempt<15){
+
 							try{
 								if(ft.isDone()){
 									reply = ft.get();
@@ -200,7 +208,21 @@ public class HandleConnection implements Runnable {
 							}catch(InterruptedException | ExecutionException e){
 								Tools.print("Exception in Propagation");
 							}
+							
+							try {
+								Thread.sleep(100);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							attempt++;
+							if(attempt == 15)
+								reply.setLeadByte(ErrorCode.KVSTORE_FAIL); //Timeout
 						}
+					}
+					else{
+						//Broadcast to correct Node. Probably should be a recursive function
+					}
 				}
 				
 				//Retry Attempt Code
@@ -228,7 +250,9 @@ public class HandleConnection implements Runnable {
 				} catch (IOException e) {
 					Tools.print("SERVER: Failed to close Socket");
 				}
-
+				
+				if(c == Command.SHUTDOWN)
+					this.executor.shutdown();
 			
 		}
 
