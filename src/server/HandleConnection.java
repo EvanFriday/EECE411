@@ -3,15 +3,18 @@ package server;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -318,9 +321,24 @@ public class HandleConnection implements Runnable {
 			Node n = this.server.getNode();
 			List<Node> parents = n.getParents();
 			List<Node> children = n.getChildren();
+			Message toSend = null;
+			Message reply = null;
 			
+			/* Send keys from parents to children as follows:
+			 * Parent 2 keys --> Child 0
+			 * Parent 1 keys --> Child 1
+			 * Parent 0 keys --> Child 2
+			 */
 			for(int index=0; index<3; index++) {
-				Socket s = new Socket(n.getAddress().getHostName(), 9999);
+				Socket s = new Socket(children.get(index).getAddress().getHostName(), 9999); // Connect to child node
+				Set<Map.Entry<Key, Value>> set = null;
+				set = parents.get(2-index).getKvpairs().entrySet(); // Read keys from corresponding parent
+				Iterator<Entry<Key, Value>> iter = set.iterator();
+				while(iter.hasNext()) {
+					Entry<Key, Value> entry = iter.next();
+					toSend = new Message(Command.REPLICA_PUT, entry.getKey(), entry.getValue());
+					reply = toSend.sendTo(s);
+				}
 			}
 			
 		}
