@@ -12,17 +12,18 @@ public class Node{
 	private int position;
 	private Boolean alive;
 	private List<Node> children;
+	private List<Node> parents;
 	private Map<Key,Value> kvpairs;
-	
 	/*
 	 * Constructors:
 	 */
-	public Node(int position,InetAddress address,Boolean alive, List<Node> children, Map<Key,Value> kvpairs){
+	public Node(int position,InetAddress address,Boolean alive, List<Node> children, List<Node> parents, Map<Key,Value> kvpairs){
 		this();
 		this.position = position;
 		this.address = address;
 		this.alive = alive;
 		this.children = children;
+		this.parents = parents;
 		this.kvpairs = kvpairs;
 	}
 	public Node(int position,InetAddress address,Boolean alive){
@@ -32,10 +33,11 @@ public class Node{
 		this.alive = alive;
 	}	
 	public Node(Node node){
-		this(node.getPosition(),node.getAddress(),node.getAlive(),node.getChildren(),node.getKvpairs());
+		this(node.getPosition(),node.getAddress(),node.getAlive(),node.getChildren(),node.getParents(),node.getKvpairs());
 	}
 	public Node(){
 		this.children = new ArrayList<Node>();
+		this.parents = new ArrayList<Node>();
 		this.kvpairs = new ConcurrentHashMap<Key,Value>();
 		this.address = IpTools.getInet();
 		this.alive = true;
@@ -64,6 +66,18 @@ public class Node{
 	}
 	public List<Node> getChildren(){
 		return this.children;
+	}
+	public void addParent(Node node){
+		this.parents.add(node);
+	}
+	public void removeParent(Node node){
+		this.parents.remove(node);
+	}
+	public List<Node> getParents() {
+		return parents;
+	}
+	public void setParents(List<Node> parents) {
+		this.parents = parents;
 	}
 	public int getPosition() {
 		return position;

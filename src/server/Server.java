@@ -103,7 +103,7 @@ public class Server {
 		int last = this.nodeList.size()-1;
 		int second_last = this.nodeList.size()-2;
 		int third_last = this.nodeList.size()-3;
-		//Give each node two children, who will hold hold replicas
+		//Give each node Three children, who will hold hold replicas
 		for(Node n : nodeList){
 			if(nodeList.indexOf(n) == last){
 				n.addChild(this.nodeList.get(0));
@@ -123,13 +123,39 @@ public class Server {
 			else{
 				n.addChild(this.nodeList.get(nodeList.indexOf(n)+1));
 				n.addChild(this.nodeList.get(nodeList.indexOf(n)+2));
-				n.addChild(this.nodeList.get(nodeList.indexOf(n)+2));
+				n.addChild(this.nodeList.get(nodeList.indexOf(n)+3));
 			}
 			
 			if(n.getAddress() == IpTools.getInet()){
 				this.node = new Node(n);
 			}
-			//System.out.println("Node number: "+n.getPosition()+" Address: "+n.getAddress().toString()+" Has children: "+n.getChild(0).getAddress().toString()+", "+n.getChild(1).getAddress().toString());
+		}
+		//Adding Parents
+		//Parent 0 is immediate parent (when it fails, it's kvstore becomes local)
+		//Parent 3 is furthest parent
+		for(Node n : nodeList){
+			if(nodeList.indexOf(n) == 0){
+				n.addParent(this.nodeList.get(nodeList.size()));
+				n.addParent(this.nodeList.get(nodeList.size()-1));
+				n.addParent(this.nodeList.get(nodeList.size()-2));				
+			}
+			else if(nodeList.indexOf(n) == 1){
+				n.addParent(this.nodeList.get(nodeList.indexOf(n)-1));			
+				n.addParent(this.nodeList.get(nodeList.size()));
+				n.addParent(this.nodeList.get(nodeList.size()-1));
+			}
+			else if(nodeList.indexOf(n) == 2){
+				n.addParent(this.nodeList.get(nodeList.indexOf(n)-1));
+				n.addParent(this.nodeList.get(nodeList.indexOf(n)-2));
+				n.addParent(this.nodeList.get(nodeList.size()));
+			}
+			else{
+				n.addParent(this.nodeList.get(nodeList.indexOf(n)-1));
+				n.addParent(this.nodeList.get(nodeList.indexOf(n)-2));
+				n.addParent(this.nodeList.get(nodeList.indexOf(n)-3));
+			}
+			
+		
 		}
 		System.out.println("SERVER: Node List Populated");
 	}
