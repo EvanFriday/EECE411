@@ -2,16 +2,12 @@ package server;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -96,8 +92,10 @@ public class HandleConnection implements Runnable {
 				case PUT:
 					Tools.print("PUT");
 					if(is_local){
-						if(this.server.getNode().getKvpairs().size()< 40000)
-						reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
+						if(this.server.getNode().getKvpairs().size()< 40000){
+							this.server.getNode().removeKeyFromKvpairs(k);
+							reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
+						}	
 						propagate = false;
 						propagate_ch = true;
 					}else{
@@ -152,8 +150,11 @@ public class HandleConnection implements Runnable {
 					break;
 				case PROP_PUT:
 					Tools.print("PROP_PUT");
-					if(this.server.getNode().getKvpairs().size()< 40000)
+					if(this.server.getNode().getKvpairs().size()< 40000){
+						this.server.getNode().removeKeyFromKvpairs(k);
 						reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
+					}
+						
 					propagate = false;
 					propagate_ch = true;
 					break;
