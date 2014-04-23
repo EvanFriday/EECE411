@@ -14,16 +14,20 @@ public class Key {
 
 	public Key(byte[] key) {
 		this();
-		for(int i = 0; i< Key.SIZE; i++){
-			this.setValue(key[i],i);
+		if(key != null){
+			for(int i = 0; i< Key.SIZE; i++){
+				this.setValue(key[i],i);
+			}
 		}
 		//this.hashCode = this.getHash();
 	}
 
-	public Key(Key k){
+	public Key(Key key){
 		this();
-		for(int i = 0; i< Key.SIZE; i++){
-			this.setValue(k.getValue(i),i);
+		if(key != null){
+			for(int i = 0; i< Key.SIZE; i++){
+				this.setValue(key.getValue(i),i);
+			}
 		}
 		//this.hashCode = this.getHash();
 	}

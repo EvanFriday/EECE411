@@ -2,6 +2,7 @@ package tools;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -96,34 +97,38 @@ public class Node{
 	}
 	public EVpair getValueFromKvpairs(Key k) {
 		EVpair pair;
-		Boolean matchfound;
+		Boolean matchfound = false;
 		Value retval = new Value();
-		ErrorCode err = null;
+		ErrorCode err = ErrorCode.KEY_DNE;
 		for(Key ks : this.kvpairs.keySet()){
-			matchfound = true;
-			
-			for(int index = 0; index < 32; index++){
-				if (ks.key[index] != k.key[index]){
-					matchfound = false;
-					break;
-				}		
+			if(Arrays.equals(k.key, ks.key)){
+				retval = this.kvpairs.get(ks);
+				matchfound = true;
+				break;
 			}
-			if(matchfound){
-				for(int index = 0; index < Value.SIZE; index++){
-					retval.value[index] = this.kvpairs.get(ks).value[index];
-				}
-				err = ErrorCode.OK;
-			}
-			else
-				err = ErrorCode.KEY_DNE;
 		}
-		pair = new EVpair(err,retval);
+		if(!matchfound){
+			err = ErrorCode.KEY_DNE;
+			pair = new EVpair(err,null);
+		}
+		else{
+			err = ErrorCode.OK;
+			pair = new EVpair(err,retval);
+		}
 		return pair;
 	}
 	public ErrorCode removeKeyFromKvpairs(Key k) {
 		ErrorCode error;
-		Value returned_value = this.kvpairs.remove(k);
-		if(returned_value==null)
+		Boolean matchfound = false;
+		for(Key ks : this.kvpairs.keySet()){
+			if(Arrays.equals(k.key, ks.key)){
+				this.kvpairs.remove(ks);
+				matchfound = true;
+				break;
+			}
+		}
+		
+		if(!matchfound)
 			error = ErrorCode.KEY_DNE;
 		else if(!this.kvpairs.containsKey(k))
 			error = ErrorCode.OK;
