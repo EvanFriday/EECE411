@@ -42,6 +42,7 @@ public class HandleConnection implements Runnable {
 		public void onAccept(){
 			Message message = new Message();
 			Message prop_message = new Message();
+			Message prop_child_message = new Message();
 			Message reply = new Message();
 			Message local_reply = new Message();
 			ErrorCode replyerr = null;
@@ -49,11 +50,13 @@ public class HandleConnection implements Runnable {
 			OutputStream out = null;
 			Node correct_node_for_key;
 			Boolean propagate = false;
+			Boolean propagate_ch = false;
 			Key k;
 			Value v;
 			Command c;
 			EVpair pair = new EVpair(null,null);
 			List<Node> propagate_list = new ArrayList<Node>();
+			List<Node> propagate_children = new ArrayList<Node>();
 			Map<String,Message> replies = new ConcurrentHashMap<String,Message>();
 			Boolean is_local = false; //USE THIS FOR NORMAL USE
 			try {
@@ -78,14 +81,11 @@ public class HandleConnection implements Runnable {
 				if(correct_node_for_key.getAddress() == this.server.getNode().getAddress()){
 					is_local = true;
 					Tools.print("SERVER: Handling Locally");
-				//propagate_list.addAll(this.server.getNode().getChildren());
+					propagate_children.addAll(this.server.getNode().getChildren());
 				}
 				else{
-					
-						propagate_list.add(correct_node_for_key);
-					
-					
-					//propagate_list.addAll(correct_node_for_key.getChildren());
+					propagate_list.add(correct_node_for_key);
+					propagate_children.addAll(correct_node_for_key.getChildren());
 				}
 			}
 
@@ -99,6 +99,7 @@ public class HandleConnection implements Runnable {
 						if(this.server.getNode().getKvpairs().size()< 40000)
 						reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
 						propagate = false;
+						propagate_ch = true;
 					}else{
 						prop_message.setLeadByte(Command.PROP_PUT);	
 						prop_message.setMessageKey(k);
@@ -128,6 +129,7 @@ public class HandleConnection implements Runnable {
 					if(is_local){
 						reply.setLeadByte(this.server.getNode().removeKeyFromKvpairs(k));
 						propagate = false;
+						propagate_ch = true;
 					}
 					else{
 						prop_message.setLeadByte(Command.PROP_REMOVE);
@@ -153,6 +155,7 @@ public class HandleConnection implements Runnable {
 					if(this.server.getNode().getKvpairs().size()< 40000)
 						reply.setLeadByte(this.server.getNode().addToKvpairs(k, v));
 					propagate = false;
+					propagate_ch = true;
 					break;
 				case PROP_GET:
 					Tools.print("PROP_GET");
@@ -166,6 +169,11 @@ public class HandleConnection implements Runnable {
 					Tools.print("PROP_REMOVE");
 					reply.setLeadByte(this.server.getNode().removeKeyFromKvpairs(k));
 					propagate = false;
+					propagate_ch = true;
+					break;
+				case REPLICA_PUT:
+					break;
+				case REPLICA_REMOVE:
 					break;
 				case DEATH:
 					Tools.print("DEATH");
@@ -204,7 +212,6 @@ public class HandleConnection implements Runnable {
 						executor.execute(ft);
 						int attempt = 0;
 						while(attempt<15){
-
 							try{
 								if(ft.isDone()){
 									reply = ft.get();
@@ -213,7 +220,6 @@ public class HandleConnection implements Runnable {
 							}catch(InterruptedException | ExecutionException e){
 								Tools.print("Exception in Propagation");
 							}
-							
 							try {
 								Thread.sleep(100);
 							} catch (InterruptedException e) {
@@ -225,22 +231,49 @@ public class HandleConnection implements Runnable {
 								reply.setLeadByte(ErrorCode.KVSTORE_FAIL); //Timeout
 						}
 					}
-					else{
-						//Broadcast to correct Node. Probably should be a recursive function
+				}
+			}
+			if(propagate_ch){
+					if(c == Command.PUT || c == Command.PROP_PUT){
+						prop_child_message.setLeadByte(Command.REPLICA_PUT);
+						prop_child_message.setFullMessageKey(k);
+						prop_child_message.setFullMessageValue(v);
+					}
+					else if(c == Command.REMOVE || c == Command.PROP_REMOVE){
+						prop_child_message.setLeadByte(Command.REPLICA_REMOVE);
+						prop_child_message.setFullMessageKey(k);
+					}
+				//Propagate message
+				for(Node n : propagate_children){
+					if(n.getAlive()){ //Only propagate to a node if it is alive.
+						Message child_reply = new Message();
+						HandlePropagate hp = new HandlePropagate(prop_child_message,n.getAddress().getHostName());
+						FutureTask<Message> ft = new FutureTask<Message>(hp);
+						executor.execute(ft);
+						int attempt = 0;
+						while(attempt<15){
+							try{
+								if(ft.isDone()){
+									child_reply = ft.get();
+									break;
+								}
+							}catch(InterruptedException | ExecutionException e){
+								Tools.print("Exception in Propagation");
+							}
+							try {
+								Thread.sleep(100);
+							} catch (InterruptedException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+							attempt++;
+							if(attempt == 15)
+								child_reply.setLeadByte(ErrorCode.KVSTORE_FAIL); //Timeout
+							
+							replies.put(n.getAddress().getHostName(), child_reply);
+						}
 					}
 				}
-				
-				//Retry Attempt Code
-//				for(Entry<String, Message> replymsg : replies.entrySet() ){
-//					int retrycount = 0;
-//					while(retrycount < 3){
-//						//Re-propagate command until OK, or 3 attempts
-//						if (replymsg.getValue().getErrorByte() == ErrorCode.OK)
-//							break;
-//						retrycount++;
-//					}
-//				}
-				
 			}
 
 			
