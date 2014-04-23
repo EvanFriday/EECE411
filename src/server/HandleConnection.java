@@ -23,11 +23,21 @@ public class HandleConnection implements Runnable {
 		private ExecutorService executor;
 		public Server server;
 		public Socket client;
-		
+
 		public HandleConnection(Server server, ExecutorService executor, Socket client){
 			this.server = new Server(server);
 			this.client = client;
 			this.executor = executor;
+		}
+		@Override
+		public void run() {
+			try {
+				onAccept();	
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
 		}
 		public void onAccept(){
 			Message message = new Message();
@@ -187,7 +197,7 @@ public class HandleConnection implements Runnable {
 									break;
 								}
 							}catch(InterruptedException | ExecutionException e){
-								e.printStackTrace();
+								Tools.print("Exception in Propagation");
 							}
 						}
 				}
@@ -231,15 +241,6 @@ public class HandleConnection implements Runnable {
 			int position = a % this.server.getNodeList().size();
 			return this.server.getNodeList().get(position);
 		}
-		@Override
-		public void run() {
-			try {
-				onAccept();	
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-		}
+
 		
 	}
