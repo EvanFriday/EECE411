@@ -44,6 +44,7 @@ public class HandleConnection implements Runnable {
 			
 		}
 		public void onAccept() throws IOException{
+			Tools.print("Handling Accept");
 			Message message = new Message();
 			Message prop_message = new Message();
 			Message prop_child_message = new Message();
@@ -314,8 +315,6 @@ public class HandleConnection implements Runnable {
 			int a = Arrays.hashCode(k.key);
 			a = (a & 0x7FFFFFFF);
 			//a = Math.abs(a);
-			Tools.print(a);
-			Tools.print(this.server.getNodeList().size());
 			int position = a % this.server.getNodeList().size();
 			Node n = this.server.getNodeList().get(position);
 				while(!n.getAlive()){
