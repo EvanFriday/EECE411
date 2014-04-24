@@ -97,14 +97,26 @@ public class Node{
 	public void setKvpairs(Map<Key,Value> kvpairs) {
 		this.kvpairs = kvpairs;
 	}
-	public ErrorCode addToKvpairs(Key k, Value v) {
+	public ErrorCode addToKvpairs(Key k, Value v) {		
 		if(this.kvpairs.size()<40000){
-			this.kvpairs.put(k, v);
-			
-			if(this.kvpairs.get(k)==v)
+			for(Key ks : this.kvpairs.keySet()){
+				if(Arrays.equals(k.key, ks.key)){ // Match found. Delete that entry
+					this.kvpairs.remove(ks);
+					this.kvpairs.put(k,  v);
+					if(this.kvpairs.get(k) == v)
+						return ErrorCode.OK;
+					else 
+						return ErrorCode.KVSTORE_FAIL;
+				}
+			}
+			// If code reaches here, no match found. Add the new pair.
+			this.kvpairs.put(k,  v);
+			if(this.kvpairs.get(k) == v) {
 				return ErrorCode.OK;
-			else
+			}
+			else {
 				return ErrorCode.KVSTORE_FAIL;
+			}
 		}
 		else
 			return ErrorCode.OUT_OF_SPACE;
