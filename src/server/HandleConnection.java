@@ -48,7 +48,9 @@ public class HandleConnection implements Runnable {
 			Message prop_message = new Message();
 			Message prop_child_message = new Message();
 			Message reply = new Message();
+			Message reply2 = new Message();
 			Message local_reply = new Message();
+			Message death_detected_message = new Message();
 			ErrorCode replyerr = null;
 			InputStream in = null;
 			OutputStream out = null;
@@ -57,11 +59,13 @@ public class HandleConnection implements Runnable {
 			boolean debug = true;
 
 			Boolean propagate_ch = false;
+			boolean death_detected = false;
 			Key k;
 			Value v;
 			Command c;
 			EVpair pair = new EVpair(null,null);
 			List<Node> propagate_list = new ArrayList<Node>();
+			List<Node> propagate_death_list = new ArrayList<Node>();
 			List<Node> propagate_children = new ArrayList<Node>();
 			Map<String,Message> replies = new ConcurrentHashMap<String,Message>();
 			Boolean is_local = true; //USE THIS FOR NORMAL USE
@@ -204,6 +208,10 @@ public class HandleConnection implements Runnable {
 							break;
 						}
 					}
+				case DEATH_DETECTED:
+					Tools.print("OTHER DEATH");
+					int position_dead = (int) message.getMessageKey().key[0];
+					
 				default:
 					Tools.print("ERROR");
 					reply.setLeadByte(ErrorCode.BAD_COMMAND);
@@ -241,8 +249,23 @@ public class HandleConnection implements Runnable {
 								e.printStackTrace();
 							}
 							attempt++;
-							if(attempt == 15)
-								reply.setLeadByte(ErrorCode.KVSTORE_FAIL); //Timeout
+						}
+						if(attempt == 15) {
+							death_detected = true;
+							reply.setLeadByte(ErrorCode.KVSTORE_FAIL); //Timeout
+							byte[] dead_node_position = new byte[32];
+							dead_node_position[0] = (byte) n.getPosition();
+							death_detected_message = new Message(Command.DEATH_DETECTED, new Key(dead_node_position));
+							propagate_death_list.addAll(this.server.getNodeList());
+							//Don't propagate to Self
+							propagate_death_list.remove(this.server.getNode().getPosition());
+							for(Node nn : propagate_death_list){
+								if(nn.getAlive()) {
+									HandlePropagate hp2 = new HandlePropagate(death_detected_message,nn.getAddress().getHostName());
+									FutureTask<Message> ft2 = new FutureTask<Message>(hp2);
+									executor.execute(ft2);
+								}
+							}
 						}
 					}
 				}
@@ -384,9 +407,6 @@ public class HandleConnection implements Runnable {
 					this.server.getNode().addChild(nd.getChild(2-count));
 					this.server.getNode().removeChild(nd);
 					child_dead =true;
-					if(count == 2){
-						
-					}
 					break;
 				}
 				count++;

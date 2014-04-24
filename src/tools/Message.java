@@ -92,7 +92,13 @@ public class Message {
 		if(debug) Tools.print("[debug] getFrom: Finished reading Command");
 		this.setLeadByte(Command.getCommand(command[0]));
 		
-		if((this.lead != Command.DEATH) && (this.lead != Command.SHUTDOWN)){
+		if(this.lead == Command.DEATH_DETECTED) {
+			is.read(key,0,32);
+			int position_dead = (int) key[0];
+			// TODO: Something here maybe
+			this.setFullMessageKey(new Key(key));
+		}
+		if((this.lead != Command.DEATH) && (this.lead != Command.SHUTDOWN)&& (this.lead != Command.DEATH_DETECTED)){
 			is.read(key,0,32);
 			if(debug) Tools.print("[debug] getFrom: Finished reading Key");
 			this.setFullMessageKey(new Key(key));
