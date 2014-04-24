@@ -69,7 +69,7 @@ public class HandleConnection implements Runnable {
 			List<Node> propagate_death_list = new ArrayList<Node>();
 			List<Node> propagate_children = new ArrayList<Node>();
 			Map<String,Message> replies = new ConcurrentHashMap<String,Message>();
-			Boolean is_local = true; //USE THIS FOR NORMAL USE
+			Boolean is_local = false;
 			try {
 				in = client.getInputStream();
 				out = client.getOutputStream();
