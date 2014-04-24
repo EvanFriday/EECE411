@@ -140,19 +140,19 @@ public class Server {
 		//Parent 3 is furthest parent
 		for(Node n : nodeList){
 			if(nodeList.indexOf(n) == 0){
-				n.addParent(this.nodeList.get(nodeList.size()));
 				n.addParent(this.nodeList.get(nodeList.size()-1));
-				n.addParent(this.nodeList.get(nodeList.size()-2));				
+				n.addParent(this.nodeList.get(nodeList.size()-2));
+				n.addParent(this.nodeList.get(nodeList.size()-3));				
 			}
 			else if(nodeList.indexOf(n) == 1){
 				n.addParent(this.nodeList.get(nodeList.indexOf(n)-1));			
-				n.addParent(this.nodeList.get(nodeList.size()));
 				n.addParent(this.nodeList.get(nodeList.size()-1));
+				n.addParent(this.nodeList.get(nodeList.size()-2));
 			}
 			else if(nodeList.indexOf(n) == 2){
 				n.addParent(this.nodeList.get(nodeList.indexOf(n)-1));
 				n.addParent(this.nodeList.get(nodeList.indexOf(n)-2));
-				n.addParent(this.nodeList.get(nodeList.size()));
+				n.addParent(this.nodeList.get(nodeList.size()-1));
 			}
 			else{
 				n.addParent(this.nodeList.get(nodeList.indexOf(n)-1));

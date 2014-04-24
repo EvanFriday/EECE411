@@ -395,11 +395,5 @@ public class HandleConnection implements Runnable {
 				}
 				sendParentData();
 			}
-			
-			
-			
 		}
-	
-
-		
 	}
