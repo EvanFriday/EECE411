@@ -42,7 +42,6 @@ public class Message {
 	}
 	
 	public Message(byte[] message) {
-		boolean debug = true;
 		switch (message.length) {
 		case Command.SIZE:
 			if(Command.getCommand(message[0]) != null)
@@ -94,7 +93,6 @@ public class Message {
 		
 		if(this.lead == Command.DEATH_DETECTED) {
 			is.read(key,0,32);
-			int position_dead = (int) key[0];
 			// TODO: Something here maybe
 			this.setFullMessageKey(new Key(key));
 		}

@@ -11,7 +11,6 @@ import tools.Tools;
 
 public class Propagate implements Runnable {
 	private String address;
-	private Server server;
 	private Message message;
 	private Message reply;
 	public Message getReply() {
@@ -20,14 +19,12 @@ public class Propagate implements Runnable {
 
 	private InputStream is;
 	private OutputStream os;
-	private Thread t;
 	private Socket propagation_socket;
 
 	public Propagate(Thread thread,String address ,Message message, Message reply) {
 		this.address = address;
 		this.message = message;
 		this.reply = new Message();
-		this.t = thread;
 		this.reply = reply;
 		
 	}

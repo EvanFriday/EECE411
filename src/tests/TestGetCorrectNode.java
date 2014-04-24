@@ -3,7 +3,6 @@ package tests;
 import java.util.Random;
 
 import tools.*;
-import server.*;
 
 public class TestGetCorrectNode {
 	

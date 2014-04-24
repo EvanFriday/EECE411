@@ -6,8 +6,6 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.concurrent.Callable;
-
-import tools.Command;
 import tools.Message;
 import tools.Tools;
 

@@ -1,7 +1,6 @@
 package tests;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.util.concurrent.ConcurrentHashMap;
 
 import server.Server;
@@ -11,8 +10,6 @@ public class TestPutGet {
 	static Key k;
 	static Value v;
 	static Server s;
-	private static ConcurrentHashMap<Key, Value> map;
-	
 	public TestPutGet() throws IOException {
 		int i;
 		byte val1 = 0x01;
@@ -20,8 +17,8 @@ public class TestPutGet {
 		k = new Key();
 		v = new Value();
 		s = new Server(true);
-		Message m = new Message();
-		Message reply = new Message();
+		new Message();
+		new Message();
 		s.testMap = new ConcurrentHashMap<Key, Value>();
 		
 		// Set k to all ones
@@ -34,12 +31,9 @@ public class TestPutGet {
 		}
 	}
 	public static void main(String[] args) throws IOException {
-		byte[] b = new byte[1024];
-		int i;
-		TestPutGet test = new TestPutGet();
 		System.out.println("Putting Key: " + k.toString() + ", Value: " + v.toString());
-		test.s.testMap.put(k, v);
-		Value returned_value = test.s.testMap.get(k);
+		TestPutGet.s.testMap.put(k, v);
+		Value returned_value = TestPutGet.s.testMap.get(k);
 		System.out.println("Returned Value: " + returned_value.toString());
 	}
 

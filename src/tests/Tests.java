@@ -1,24 +1,19 @@
 package tests;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.Random;
-
 import server.Server;
 import tools.*;
 
 
 public class Tests {
-	static Server server;
-	static TestClient client1;
-	static TestClient client2;
-	static TestClient client3;
-	static TestClient client4;
-	static TestClient client5;
-	static TestClient client6;
+	Server server;
+	TestClient client1;
+	TestClient client2;
+	TestClient client3;
+	TestClient client4;
+	TestClient client5;
+	TestClient client6;
 	
 	public Tests() {
 		try {
@@ -35,7 +30,6 @@ public class Tests {
 	 * @throws InterruptedException 
 	 */
 	public static void main(String[] args) throws IOException, InterruptedException {
-		boolean debug = true;
 		Tests test = new Tests();
 		final Server s = test.server;
 		Thread t = new Thread(new Runnable() {
@@ -61,9 +55,9 @@ public class Tests {
 	        }
 	    });
 	    t.start();
-	    client1 = new TestClient("Client 1");
-		client2 = new TestClient("Client 2");
-		client3 = new TestClient("Client 3");
+	    test.client1 = new TestClient("Client 1");
+	    test.client2 = new TestClient("Client 2");
+	    test.client3 = new TestClient("Client 3");
 
 
 		
@@ -73,8 +67,6 @@ public class Tests {
 		Random rn = new Random();
 		rn.nextBytes(k.key);
 		rn.nextBytes(v.value);
-		byte replyerr = 0;
-		
 		Message m1 = new Message(Command.PUT,k,v);
 		Message r1 = new Message();
 
@@ -86,7 +78,7 @@ public class Tests {
 	    Tools.printByte(m1.getFullMessageKey().key);
 	    Tools.printByte(m1.getFullMessageValue().value);
 	    
-	    r1 = m1.sendTo(client1.os, client1.is);
+	    r1 = m1.sendTo(test.client1.os, test.client1.is);
 		Tools.print("CLIENT: Receiving Reply: "+r1.getLeadByte().toString());
 	    
 	    /*
@@ -99,7 +91,7 @@ public class Tests {
 	    Tools.print("CLIENT: Sending = "+m2.getLeadByte().toString());
 	    Tools.printByte(m2.getFullMessageKey().key);
 	    
-	    r2 = m2.sendTo(client2.os, client2.is);
+	    r2 = m2.sendTo(test.client2.os, test.client2.is);
 		Tools.print("CLIENT: Receiving Reply: "+r2.getLeadByte().toString());
 	    Tools.printByte(r2.getFullMessageValue().value);
 
@@ -114,21 +106,21 @@ public class Tests {
 	    Tools.print("CLIENT: Sending = "+m3.getLeadByte().toString());
 	    Tools.printByte(m3.getFullMessageKey().key);
 	    
-	    r3 = m3.sendTo(client3.os, client3.is);
+	    r3 = m3.sendTo(test.client3.os, test.client3.is);
 		Tools.print("CLIENT: Receiving Reply: "+r3.getLeadByte().toString());
 		
 		
 		/*
 	     * CLIENT 4 : Get
 	     */
-		client4 = new TestClient("Client 4");
+		test.client4 = new TestClient("Client 4");
 	    Message m4 = new Message(Command.GET, k);
 	    Message r4 = new Message();
 	    
 	    Tools.print("CLIENT: Sending = "+m4.getLeadByte().toString());
 	    Tools.printByte(m4.getFullMessageKey().key);
 	    
-	    r4 = m4.sendTo(client4.os, client4.is);
+	    r4 = m4.sendTo(test.client4.os, test.client4.is);
 		Tools.print("CLIENT: Receiving Reply: "+r4.getLeadByte().toString());
 	    if(r4.getFullMessageValue() != null)
 	    	Tools.printByte(r4.getFullMessageValue().value);
@@ -136,38 +128,25 @@ public class Tests {
 	    /*
 	     * CLIENT 5: Shutdown
 	     */
-		client5 = new TestClient("Client 5");
+	    test.client5 = new TestClient("Client 5");
 	    Message m5 = new Message();
 	    m5.setLeadByte(Command.SHUTDOWN);
 	    Message r5 = new Message();
 	    Tools.print("CLIENT: 5 Sending = "+m5.getLeadByte().toString());
-	    r5 = m5.sendTo(client5.os, client5.is);
+	    r5 = m5.sendTo(test.client5.os, test.client5.is);
 	    Tools.print("CLIENT: Receiving Reply: "+r5.getLeadByte().toString());
 	    
 	    /*
 	     * CLIENT 6: Checking Shutdown
 	     */
 	    Thread.sleep(3000);
-	    client6 = new TestClient("Client 6");
+	    test.client6 = new TestClient("Client 6");
 	    Message m6 = new Message(Command.GET,k);
 	    Message r6 = new Message();
 	    Tools.print("CLIENT: Sending = "+m6.getLeadByte().toString());
 	    Tools.printByte(m6.getFullMessageKey().key);
-	    r6 = m6.sendTo(client6.os, client6.is);
+	    r6 = m6.sendTo(test.client6.os, test.client6.is);
 	    Tools.print("CLIENT: Receiving Reply: "+r6.getLeadByte().toString());
-	    
-	    
-	    
-//	    Thread.sleep(500);
-//	    client2.editMessage();
-//	    client2.sendMessage();
-//	    Thread.sleep(500);
-//	    test.client3.editMessage(Command.GET,test.client2.getMessage().getMessageKey());
-//	    test.client3.sendMessage();
-//	    Thread.sleep(500);
-//	    test.client4.editMessage(Command.REMOVE,test.client2.getMessage().getMessageKey());
-//	    test.client4.sendMessage();
-		
 	}
 
 }

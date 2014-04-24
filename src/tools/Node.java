@@ -148,8 +148,6 @@ public class Node{
 		return pair;
 	}
 	public ErrorCode removeKeyFromKvpairs(Key k) {
-		boolean debug = true;
-		
 		Boolean matchfound = false;
 		for(Key ks : this.kvpairs.keySet()){
 			if(Arrays.equals(k.key, ks.key)){
