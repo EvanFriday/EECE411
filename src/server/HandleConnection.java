@@ -358,7 +358,6 @@ public class HandleConnection implements Runnable {
 					 * This is a parent that is dying, so make it's keys local if we are immediate successor, 
 					 * get new parent.
 					 * and remove it, 
-					 * 
 					 */
 					if(count == 0){ //if immediage parent,dies place its replicas keys into our local
 						for(Map.Entry<Key,Value> pair : this.server.getNode().getParent(0).getKvpairs().entrySet()){
@@ -384,9 +383,6 @@ public class HandleConnection implements Runnable {
 					this.server.getNode().addChild(nd.getChild(2-count));
 					this.server.getNode().removeChild(nd);
 					child_dead =true;
-					if(count == 2){
-						
-					}
 					break;
 				}
 				count++;
