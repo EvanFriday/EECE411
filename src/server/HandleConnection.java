@@ -116,6 +116,7 @@ public class HandleConnection implements Runnable {
 						prop_message.setMessageKey(k);
 						prop_message.setMessageValue(v);
 						propagate = true;
+						propagate_ch = true;
 //						replies.put(this.server.getNode().getAddress().getHostName(),local_reply);
 					}
 					break;
@@ -128,11 +129,13 @@ public class HandleConnection implements Runnable {
 							reply.setMessageValue(pair.getValue().value);
 						}
 						propagate = false;
+						propagate_ch = false;
 					}
 					else{
 						prop_message.setLeadByte(Command.PROP_GET);
 						prop_message.setMessageKey(k);
 						propagate = true;
+						propagate_ch = false;
 					}
 					break;
 				case REMOVE:
@@ -146,6 +149,7 @@ public class HandleConnection implements Runnable {
 						prop_message.setLeadByte(Command.PROP_REMOVE);
 						prop_message.setMessageKey(k);
 						propagate = true;
+						propagate_ch = true;
 //						replies.put(this.server.getNode().getAddress().getHostName(),local_reply);
 					}
 					break;
@@ -228,6 +232,7 @@ public class HandleConnection implements Runnable {
 			
 			if(propagate){
 				//Propagate message
+				Tools.print("Propagating");
 				for(Node n : propagate_list){
 					if(n.getAlive()){ //Only propagate to a node if it is alive.
 						HandlePropagate hp = new HandlePropagate(prop_message,n.getAddress().getHostName());
