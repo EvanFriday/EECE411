@@ -79,6 +79,9 @@ public class Node{
 	public void setParents(List<Node> parents) {
 		this.parents = parents;
 	}
+	public Node getParent(int index){
+		return this.parents.get(index);
+	}
 	public int getPosition() {
 		return position;
 	}

@@ -123,9 +123,6 @@ public class HandleConnection implements Runnable {
 							reply.setMessageValue(pair.getValue().value);
 						}
 						propagate = false;
-						if(debug) Tools.print("[debug] SERVER: GET - returning:");
-						if(debug) Tools.print(reply.getLeadByte());
-						if(debug) Tools.printByte(reply.getMessageValue().value);
 					}
 					else{
 						prop_message.setLeadByte(Command.PROP_GET);
@@ -151,16 +148,12 @@ public class HandleConnection implements Runnable {
 					Tools.print("SHUTDOWN");
 					reply.setLeadByte(ErrorCode.OK);
 					this.server.getNode().setAlive(false);
-					
 					//Broadcast Death
 					propagate = true;
 					prop_message.setLeadByte(Command.DEATH);
 					propagate_list.addAll(this.server.getNodeList());
 					//Don't propagate to Self
-					this.transferParentData();
 					propagate_list.remove(this.server.getNode().getPosition());
-					
-
 					break;
 				case PROP_PUT:
 					Tools.print("PROP_PUT");
@@ -206,16 +199,10 @@ public class HandleConnection implements Runnable {
 					for(Node n : this.server.getNodeList()){
 						if(n.getAddress() == client.getInetAddress()){
 							Tools.print(n.getAddress().getHostName()+" is now dead");
-							n.setAlive(false);
+							handleDeath(n);
 							reply.setLeadByte(ErrorCode.OK);
 							break;
 						}
-						if(n.getAddress() == this.server.getNode().getAddress()){
-							this.server.getNode().setAlive(false);
-							this.server.broadcastDeath();
-							reply.setLeadByte(ErrorCode.OK);
-						}
-						
 					}
 				default:
 					Tools.print("ERROR");
@@ -321,33 +308,7 @@ public class HandleConnection implements Runnable {
 
 		}
 
-		private void transferParentData() throws UnknownHostException, IOException {
-			boolean debug = true;
-			
-			Node n = this.server.getNode();
-			List<Node> parents = n.getParents();
-			List<Node> children = n.getChildren();
-			Message toSend = null;
-			Message reply = null;
-			
-			/* Send keys from parents to children as follows:
-			 * Parent 2 keys --> Child 0
-			 * Parent 1 keys --> Child 1
-			 * Parent 0 keys --> Child 2
-			 */
-			for(int index=0; index<3; index++) {
-				Socket s = new Socket(children.get(index).getAddress().getHostName(), 9999); // Connect to child node
-				Set<Map.Entry<Key, Value>> set = null;
-				set = parents.get(2-index).getKvpairs().entrySet(); // Read keys from corresponding parent
-				Iterator<Entry<Key, Value>> iter = set.iterator();
-				while(iter.hasNext()) {
-					Entry<Key, Value> entry = iter.next();
-					toSend = new Message(Command.REPLICA_PUT, entry.getKey(), entry.getValue());
-					reply = toSend.sendTo(s);
-				}
-			}
-			
-		}
+		
 		private Node getCorrectNode(Key k){
 			// DONE: make getNode Index return node which should hold key
 			int a = Arrays.hashCode(k.key);
@@ -362,6 +323,70 @@ public class HandleConnection implements Runnable {
 				}
 			return n;
 		}
+	
+		public void sendParentData(){
+			for(Map.Entry<Key,Value> pair : this.server.getNode().getKvpairs().entrySet()){
+					Message update_message = new Message(Command.REPLICA_PUT,pair.getKey(),pair.getValue());
+					Message child_reply = new Message();
+					HandlePropagate hp = new HandlePropagate(update_message,this.server.getNode().getChild(2).getAddress().getHostName());
+					FutureTask<Message> ft = new FutureTask<Message>(hp);
+					executor.execute(ft);
+					int attempt = 0;			
+					while(attempt <= 3){
+						do{
+							try{
+							if(ft.isDone()){
+								child_reply = ft.get();
+								attempt++;
+								break;
+							}
+							}catch(InterruptedException | ExecutionException e){
+								Tools.print("Propagation Node Completed");
+							}
+						}
+						while(child_reply.getLeadByte()!= ErrorCode.OK);
+					}
+				}
+			}
+		
+		public void handleDeath(Node n){
+			int count = 0;
+			this.server.getNodeList().get(n.getPosition()).setAlive(false);
+			for(Node nd: this.server.getNode().getParents()){
+				if(nd.getAddress() == n.getAddress()){
+					//This is a parent that is dying, so remove it, and get new parent.
+					this.server.getNode().addParent(nd.getParent(2-count));
+					this.server.getNode().removeParent(nd);
+					break;
+				}
+				count++;
+			}
+			count = 0;
+			Boolean child_dead = false;
+			for(Node nd : this.server.getNode().getChildren()){
+				if(nd.getAddress() == n.getAddress()){
+					//This is one of our children that is dying, so remove it, and get a new child
+					this.server.getNode().addChild(nd.getChild(2-count));
+					this.server.getNode().removeChild(nd);
+					child_dead =true;
+					break;
+				}
+				count++;
+			}
+			
+			if(child_dead){ //If a child has died, we have to send data to our new child(2)
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					Tools.print("Thread sleep failed in handleDeath()");
+				}
+				sendParentData();
+			}
+			
+			
+			
+		}
+	
 
 		
 	}
