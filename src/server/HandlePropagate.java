@@ -28,13 +28,19 @@ public class HandlePropagate implements Callable<Message>{
 	public Message call() throws Exception{
 		try {
 			propagation_socket = new Socket(this.address,9999);
-			is = propagation_socket.getInputStream();
-			os = propagation_socket.getOutputStream();
+			
 		} catch (UnknownHostException e) {
 			Tools.print("Unknown Host Ex");
 		} catch (IOException e) {
-			Tools.print("IO Ex");
+			Tools.print("Socket Creation Failed");
 		}
+		try {
+			is = propagation_socket.getInputStream();
+			os = propagation_socket.getOutputStream();
+		} catch (IOException e) {
+			Tools.print("Stream Creation Failed");
+		}
+
 		System.out.println("SERVER: Propagating "+this.message.getLeadByte().toString()+" to: " + address.toString());
 		try {
 				this.reply = this.message.sendTo(this.os, this.is);
