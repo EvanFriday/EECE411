@@ -146,11 +146,13 @@ public class HandleConnection implements Runnable {
 					reply.setLeadByte(ErrorCode.OK);
 					this.server.getNode().setAlive(false);
 					//Broadcast Death
-					propagate = true;
+					propagate_ch = true;
 					prop_message.setLeadByte(Command.DEATH);
-					propagate_list.addAll(this.server.getNodeList());
+					//Node: Using propagate_children list, as the propagation for children does not wait upon replies.
+					propagate_children.removeAll(correct_node_for_key.getChildren());
+					propagate_children.addAll(this.server.getNodeList());
 					//Don't propagate to Self
-					propagate_list.remove(this.server.getNode().getPosition());
+					propagate_children.remove(this.server.getNode());
 					break;
 				case PROP_PUT:
 					Tools.print("PROP_PUT");
