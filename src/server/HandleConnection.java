@@ -86,9 +86,9 @@ public class HandleConnection implements Runnable {
 			k = new Key(message.getMessageKey());
 			v = new Value(message.getMessageValue());
 			
-			correct_node_for_key = getCorrectNode(k);//USE THIS FOR NORMAL USE
-			//correct_node_for_key = this.server.getNode(); //USE THIS FOR SINGLE NODE DEBUG
-			if(this.server.getNode().getAlive()){
+			//correct_node_for_key = getCorrectNode(k);//USE THIS FOR NORMAL USE
+			correct_node_for_key = this.server.getNode(); //USE THIS FOR SINGLE NODE DEBUG
+			
 				if(correct_node_for_key.getAddress() == this.server.getNode().getAddress()){
 					is_local = true;
 					Tools.print("SERVER: Handling Locally");
@@ -98,7 +98,7 @@ public class HandleConnection implements Runnable {
 					propagate_list.add(correct_node_for_key);
 					propagate_children.addAll(correct_node_for_key.getChildren());
 				}
-			}
+			
 
 				Tools.print("SERVER: Receiving = ");
 				switch(c) {
@@ -229,7 +229,6 @@ public class HandleConnection implements Runnable {
 			if(propagate){
 				//Propagate message
 				for(Node n : propagate_list){
-					if(n.getAlive()){ //Only propagate to a node if it is alive.
 						HandlePropagate hp = new HandlePropagate(prop_message,n.getAddress().getHostName());
 						FutureTask<Message> ft = new FutureTask<Message>(hp);
 						executor.execute(ft);
@@ -255,7 +254,7 @@ public class HandleConnection implements Runnable {
 							death_detected = true;
 							reply.setLeadByte(ErrorCode.KVSTORE_FAIL); //Timeout
 						}
-					}
+				
 				}
 			}
 			if(propagate_ch){
