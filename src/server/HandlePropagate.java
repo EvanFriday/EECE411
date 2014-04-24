@@ -35,7 +35,7 @@ public class HandlePropagate implements Callable<Message>{
 		} catch (IOException e) {
 			Tools.print("IO Ex");
 		}
-		System.out.println("SERVER: Propagating Changes to: " + address.toString());
+		System.out.println("SERVER: Propagating "+this.message.getLeadByte().toString()+" to: " + address.toString());
 		try {
 				this.reply = this.message.sendTo(this.os, this.is);
 				Tools.print("Reply from Propagation");

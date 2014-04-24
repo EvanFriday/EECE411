@@ -234,7 +234,7 @@ public class HandleConnection implements Runnable {
 						FutureTask<Message> ft = new FutureTask<Message>(hp);
 						executor.execute(ft);
 						int attempt = 0;
-						while(attempt<5){
+						while(attempt<15){
 							try{
 								if(ft.isDone()){
 									reply = ft.get();
@@ -251,7 +251,7 @@ public class HandleConnection implements Runnable {
 							}
 							attempt++;
 						}
-						if(attempt == 5) {
+						if(attempt == 15) {
 							death_detected = true;
 							reply.setLeadByte(ErrorCode.KVSTORE_FAIL); //Timeout
 						}
@@ -275,28 +275,28 @@ public class HandleConnection implements Runnable {
 						HandlePropagate hp = new HandlePropagate(prop_child_message,n.getAddress().getHostName());
 						FutureTask<Message> ft = new FutureTask<Message>(hp);
 						executor.execute(ft);
-						int attempt = 0;
-						while(attempt<4){
-							try{
-								if(ft.isDone()){
-									child_reply = ft.get();
-									break;
-								}
-							}catch(InterruptedException | ExecutionException e){
-								Tools.print("Exception in Propagation");
-							}
-							try {
-								Thread.sleep(100);
-							} catch (InterruptedException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							attempt++;
-							if(attempt == 4)
-								child_reply.setLeadByte(ErrorCode.KVSTORE_FAIL); //Timeout
-							
-							replies.put(n.getAddress().getHostName(), child_reply);
-						}
+//						int attempt = 0;
+//						while(attempt<4){
+//							try{
+//								if(ft.isDone()){
+//									child_reply = ft.get();
+//									break;
+//								}
+//							}catch(InterruptedException | ExecutionException e){
+//								Tools.print("Exception in Propagation");
+//							}
+//							try {
+//								Thread.sleep(100);
+//							} catch (InterruptedException e) {
+//								// TODO Auto-generated catch block
+//								e.printStackTrace();
+//							}
+//							attempt++;
+//							if(attempt == 4)
+//								child_reply.setLeadByte(ErrorCode.KVSTORE_FAIL); //Timeout
+//							
+//							replies.put(n.getAddress().getHostName(), child_reply);
+//						}
 					}
 				}
 			}
@@ -326,10 +326,11 @@ public class HandleConnection implements Runnable {
 			a = (a & 0x7FFFFFFF);
 			//a = Math.abs(a);
 			int position = a % this.server.getNodeList().size();
-			Node n = new Node(this.server.getNodeList().get(position));
+			Node n = this.server.getNodeList().get(position);
 				while(!n.getAlive()){
-					n = new Node(n.getChild(0));
+					n = n.getChild(0);
 				}
+				Tools.print("Correct Node is: "+n.getAddress().getHostName());
 			return n;
 		}
 	
