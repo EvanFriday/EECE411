@@ -354,7 +354,17 @@ public class HandleConnection implements Runnable {
 			this.server.getNodeList().get(n.getPosition()).setAlive(false);
 			for(Node nd: this.server.getNode().getParents()){
 				if(nd.getAddress() == n.getAddress()){
-					//This is a parent that is dying, so remove it, and get new parent.
+					/*
+					 * This is a parent that is dying, so make it's keys local if we are immediate successor, 
+					 * get new parent.
+					 * and remove it, 
+					 * 
+					 */
+					if(count == 0){
+						for(Map.Entry<Key,Value> pair : this.server.getNode().getParent(0).getKvpairs().entrySet()){
+							this.server.getNode().addToKvpairs(pair.getKey(), pair.getValue());
+						}
+					}
 					this.server.getNode().addParent(nd.getParent(2-count));
 					this.server.getNode().removeParent(nd);
 					break;
@@ -376,7 +386,7 @@ public class HandleConnection implements Runnable {
 			
 			if(child_dead){ //If a child has died, we have to send data to our new child(2)
 				try {
-					Thread.sleep(100);
+					Thread.sleep(100); //Wait, just to make sure that the death command was received and handled by all other nodes.
 				} catch (InterruptedException e) {
 					Tools.print("Thread sleep failed in handleDeath()");
 				}

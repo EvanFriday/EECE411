@@ -31,7 +31,7 @@ public class Server {
 	private String file_location = "Test.txt";
 	private Node node;
 	private ExecutorService executor;
-	private int NumThreads = 5;
+	private int NumThreads = 15;
 	private int port = 9999;
 	public Map<Key, Value> testMap;
 	//CONSTRUCTOR
