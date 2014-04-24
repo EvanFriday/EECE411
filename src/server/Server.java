@@ -84,7 +84,6 @@ public class Server {
 			Tools.print("SERVER: Failed to accept connection from: "+client.getInetAddress().getHostName().toString());
 			Thread.sleep(100000);
 		}
-
 	}
 
 	public void PopulateNodeList() throws UnknownHostException, IOException{
@@ -98,7 +97,6 @@ public class Server {
 			InetAddress address = InetAddress.getByName(line);
 			Node n;
 			n = new Node(index,address,true);
-			n = new Node(index,address,false); // Dead node
 			this.nodeList.add(n);
 			index++;
 		}

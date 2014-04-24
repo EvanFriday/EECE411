@@ -339,9 +339,9 @@ public class HandleConnection implements Runnable {
 			a = (a & 0x7FFFFFFF);
 			//a = Math.abs(a);
 			int position = a % this.server.getNodeList().size();
-			Node n = this.server.getNodeList().get(position);
+			Node n = new Node(this.server.getNodeList().get(position));
 				while(!n.getAlive()){
-					n = n.getChild(0);
+					n = new Node(n.getChild(0));
 				}
 			return n;
 		}
