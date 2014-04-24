@@ -15,8 +15,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.FutureTask;
 
+import tools.Command;
+import tools.ErrorCode;
 import tools.IpTools;
 import tools.Key;
+import tools.Message;
 import tools.Node;
 import tools.Tools;
 import tools.Value;
@@ -65,13 +68,18 @@ public class Server {
 	
 	public void AcceptConnections() throws InterruptedException{
 		System.out.println("SERVER: Now Accepting connections on port: "+this.port);
-		try {
 
-			this.client = server.accept();
-			System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
-			HandleConnection hc = new HandleConnection(this,this.executor,this.client);
-			FutureTask<Integer> ft = new FutureTask<Integer>(hc,null);
-			executor.submit(ft);
+		try {
+			Tools.print("Server Status is alive = "+this.getNode().getAlive());
+			if(this.getNode().getAlive()){
+				this.client = server.accept();
+				HandleConnection hc = new HandleConnection(this,this.executor,this.client);
+				FutureTask<Integer> ft = new FutureTask<Integer>(hc,null);
+				System.out.println("SERVER: Handling connection from: "+ client.getInetAddress().getHostName().toString());
+				executor.submit(ft);
+			}
+			else
+				Tools.print("SERVER: Status = Dead");
 		} catch (IOException e) {
 			Tools.print("SERVER: Failed to accept connection from: "+client.getInetAddress().getHostName().toString());
 			Thread.sleep(100000);
@@ -89,12 +97,8 @@ public class Server {
 			
 			InetAddress address = InetAddress.getByName(line);
 			Node n;
-			if(address.isReachable(1000)){ // Ping with a one second timeout
-				n = new Node(index,address,true);
-			}
-			else{
-				n = new Node(index,address,false); // Dead node
-			}
+			n = new Node(index,address,true);
+			n = new Node(index,address,false); // Dead node
 			this.nodeList.add(n);
 			index++;
 		}
@@ -103,26 +107,60 @@ public class Server {
 		//Get the last two nodes in the list (for circular roll around)
 		int last = this.nodeList.size()-1;
 		int second_last = this.nodeList.size()-2;
-		
-		//Give each node two children, who will hold hold replicas
+		int third_last = this.nodeList.size()-3;
+		//Give each node Three children, who will hold hold replicas
 		for(Node n : nodeList){
 			if(nodeList.indexOf(n) == last){
 				n.addChild(this.nodeList.get(0));
-				n.addChild(this.nodeList.get(1));				
+				n.addChild(this.nodeList.get(1));
+				n.addChild(this.nodeList.get(2));
 			}
 			else if(nodeList.indexOf(n) == second_last){
 				n.addChild(this.nodeList.get(nodeList.indexOf(n)+1));
+				n.addChild(this.nodeList.get(0));
+				n.addChild(this.nodeList.get(1));
+			}
+			else if(nodeList.indexOf(n) == third_last){
+				n.addChild(this.nodeList.get(nodeList.indexOf(n)+1));
+				n.addChild(this.nodeList.get(nodeList.indexOf(n)+2));
 				n.addChild(this.nodeList.get(0));
 			}
 			else{
 				n.addChild(this.nodeList.get(nodeList.indexOf(n)+1));
 				n.addChild(this.nodeList.get(nodeList.indexOf(n)+2));
+				n.addChild(this.nodeList.get(nodeList.indexOf(n)+3));
 			}
 			
 			if(n.getAddress() == IpTools.getInet()){
 				this.node = new Node(n);
 			}
-			//System.out.println("Node number: "+n.getPosition()+" Address: "+n.getAddress().toString()+" Has children: "+n.getChild(0).getAddress().toString()+", "+n.getChild(1).getAddress().toString());
+		}
+		//Adding Parents
+		//Parent 0 is immediate parent (when it fails, it's kvstore becomes local)
+		//Parent 3 is furthest parent
+		for(Node n : nodeList){
+			if(nodeList.indexOf(n) == 0){
+				n.addParent(this.nodeList.get(nodeList.size()));
+				n.addParent(this.nodeList.get(nodeList.size()-1));
+				n.addParent(this.nodeList.get(nodeList.size()-2));				
+			}
+			else if(nodeList.indexOf(n) == 1){
+				n.addParent(this.nodeList.get(nodeList.indexOf(n)-1));			
+				n.addParent(this.nodeList.get(nodeList.size()));
+				n.addParent(this.nodeList.get(nodeList.size()-1));
+			}
+			else if(nodeList.indexOf(n) == 2){
+				n.addParent(this.nodeList.get(nodeList.indexOf(n)-1));
+				n.addParent(this.nodeList.get(nodeList.indexOf(n)-2));
+				n.addParent(this.nodeList.get(nodeList.size()));
+			}
+			else{
+				n.addParent(this.nodeList.get(nodeList.indexOf(n)-1));
+				n.addParent(this.nodeList.get(nodeList.indexOf(n)-2));
+				n.addParent(this.nodeList.get(nodeList.indexOf(n)-3));
+			}
+			
+		
 		}
 		System.out.println("SERVER: Node List Populated");
 	}
@@ -162,6 +200,21 @@ public class Server {
 
 	public void setNode(Node node) {
 		this.node = node;
+	}
+	
+	public void broadcastDeath() throws IOException {
+		Message death_message = new Message(Command.DEATH);
+		Message reply = null;
+		int number_of_attempts;
+		for(Node n : this.nodeList) {
+			number_of_attempts = 0;
+			reply = death_message.sendTo(n.getAddress().getHostName(), this.port);
+			while(reply.getLeadByte() != ErrorCode.OK) {
+				reply = death_message.sendTo(n.getAddress().getHostName(), this.port);
+				if(number_of_attempts++ > 2)
+					break; // If 3 attempts failed, give up
+			}
+		}
 	}
 
 }

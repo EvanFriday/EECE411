@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.concurrent.Callable;
 
+import tools.Command;
 import tools.Message;
 import tools.Tools;
 
@@ -36,10 +37,11 @@ public class HandlePropagate implements Callable<Message>{
 		}
 		System.out.println("SERVER: Propagating Changes to: " + address.toString());
 		try {
-			this.reply = this.message.sendTo(this.os, this.is);
-			Tools.print("Reply from Propagation");
-			Tools.printByte(this.reply.getMessageKey().key);
-			Tools.printByte(this.reply.getMessageValue().value);
+				this.reply = this.message.sendTo(this.os, this.is);
+				Tools.print("Reply from Propagation");
+				Tools.printByte(this.reply.getMessageKey().key);
+				Tools.printByte(this.reply.getMessageValue().value);
+			
 		} catch (Exception e) {
 			Tools.print("Failed to receive reply from Propagation");
 		}

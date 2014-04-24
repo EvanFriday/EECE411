@@ -2,6 +2,7 @@ package tools;
 
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,17 +12,18 @@ public class Node{
 	private int position;
 	private Boolean alive;
 	private List<Node> children;
+	private List<Node> parents;
 	private Map<Key,Value> kvpairs;
-	
 	/*
 	 * Constructors:
 	 */
-	public Node(int position,InetAddress address,Boolean alive, List<Node> children, Map<Key,Value> kvpairs){
+	public Node(int position,InetAddress address,Boolean alive, List<Node> children, List<Node> parents, Map<Key,Value> kvpairs){
 		this();
 		this.position = position;
 		this.address = address;
 		this.alive = alive;
 		this.children = children;
+		this.parents = parents;
 		this.kvpairs = kvpairs;
 	}
 	public Node(int position,InetAddress address,Boolean alive){
@@ -31,10 +33,11 @@ public class Node{
 		this.alive = alive;
 	}	
 	public Node(Node node){
-		this(node.getPosition(),node.getAddress(),node.getAlive(),node.getChildren(),node.getKvpairs());
+		this(node.getPosition(),node.getAddress(),node.getAlive(),node.getChildren(),node.getParents(),node.getKvpairs());
 	}
 	public Node(){
 		this.children = new ArrayList<Node>();
+		this.parents = new ArrayList<Node>();
 		this.kvpairs = new ConcurrentHashMap<Key,Value>();
 		this.address = IpTools.getInet();
 		this.alive = true;
@@ -64,6 +67,18 @@ public class Node{
 	public List<Node> getChildren(){
 		return this.children;
 	}
+	public void addParent(Node node){
+		this.parents.add(node);
+	}
+	public void removeParent(Node node){
+		this.parents.remove(node);
+	}
+	public List<Node> getParents() {
+		return parents;
+	}
+	public void setParents(List<Node> parents) {
+		this.parents = parents;
+	}
 	public int getPosition() {
 		return position;
 	}
@@ -82,80 +97,70 @@ public class Node{
 	public void setKvpairs(Map<Key,Value> kvpairs) {
 		this.kvpairs = kvpairs;
 	}
-	public ErrorCode addToKvpairs(Key k, Value v) {
+	public ErrorCode addToKvpairs(Key k, Value v) {		
 		if(this.kvpairs.size()<40000){
-			this.kvpairs.put(k, v);
-			
-			if(this.kvpairs.get(k)==v)
+			for(Key ks : this.kvpairs.keySet()){
+				if(Arrays.equals(k.key, ks.key)){ // Match found. Delete that entry
+					this.kvpairs.remove(ks);
+					this.kvpairs.put(k,  v);
+					if(this.kvpairs.get(k) == v)
+						return ErrorCode.OK;
+					else 
+						return ErrorCode.KVSTORE_FAIL;
+				}
+			}
+			// If code reaches here, no match found. Add the new pair.
+			this.kvpairs.put(k,  v);
+			if(this.kvpairs.get(k) == v) {
 				return ErrorCode.OK;
-			else
+			}
+			else {
 				return ErrorCode.KVSTORE_FAIL;
+			}
 		}
 		else
 			return ErrorCode.OUT_OF_SPACE;
 	}
 	public EVpair getValueFromKvpairs(Key k) {
 		EVpair pair;
-		Boolean matchfound;
+		Boolean matchfound = false;
 		Value retval = new Value();
 		ErrorCode err = ErrorCode.KEY_DNE;
 		for(Key ks : this.kvpairs.keySet()){
-			matchfound = true;
-			
-			for(int index = 0; index < 32; index++){
-				if (ks.key[index] != k.key[index]){
-					matchfound = false;
-					break;
-				}		
-			}
-			if(matchfound){
-				for(int index = 0; index < Value.SIZE; index++){
-					retval.value[index] = this.kvpairs.get(ks).value[index];
-				}
-				err = ErrorCode.OK;
+
+			if(Arrays.equals(k.key, ks.key)){
+				retval = this.kvpairs.get(ks);
+				matchfound = true;
 				break;
 			}
 		}
-		pair = new EVpair(err,retval);
+		if(!matchfound){
+			err = ErrorCode.KEY_DNE;
+			pair = new EVpair(err,null);
+		}
+		else{
+			err = ErrorCode.OK;
+			pair = new EVpair(err,retval);
+		}
 		return pair;
 	}
 	public ErrorCode removeKeyFromKvpairs(Key k) {
 		boolean debug = true;
-		boolean matchfound;
-		boolean containsKey = this.kvpairs.containsKey(k);
-		if(debug) Tools.print("[debug] removeFromKvpairs: containsKey: "+containsKey);
-		if(debug) Tools.printByte(k.key);
 		
-		/*
-		if(containsKey) {
-			this.kvpairs.remove(k);
-			if(this.kvpairs.containsKey(k) == false)
-				return ErrorCode.OK;
-			else
-				return ErrorCode.KVSTORE_FAIL;
-		}
-		else
-			return ErrorCode.KEY_DNE;
-		*/
-		
+		Boolean matchfound = false;
 		for(Key ks : this.kvpairs.keySet()){
-			matchfound = true;
-			
-			if(debug) Tools.print("[debug] removeFromKvpairs: Key:");
-			if(debug) Tools.printByte(ks.key);
-			for(int index = 0; index < 32; index++){
-				if (ks.key[index] != k.key[index]){
-					matchfound = false;
-					break;
-				}		
-			}
-			if(matchfound){
-				if(debug) Tools.print("[debug] removeFromKvpairs: Match found");
-				if(this.kvpairs.remove(ks) != null) {
-					return ErrorCode.OK;
-				}
+			if(Arrays.equals(k.key, ks.key)){
+				this.kvpairs.remove(ks);
+				matchfound = true;
+				break;
 			}
 		}
-		return ErrorCode.KEY_DNE;
+		
+		if(!matchfound)
+			return ErrorCode.KEY_DNE;
+		else if(!this.kvpairs.containsKey(k))
+			return ErrorCode.OK;
+		else
+			return ErrorCode.KVSTORE_FAIL;
 	}
 }
