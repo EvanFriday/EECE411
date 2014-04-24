@@ -234,14 +234,14 @@ public class HandleConnection implements Runnable {
 						FutureTask<Message> ft = new FutureTask<Message>(hp);
 						executor.execute(ft);
 						int attempt = 0;
-						while(attempt<15){
+						while(attempt<5){
 							try{
 								if(ft.isDone()){
 									reply = ft.get();
 									break;
 								}
 							}catch(InterruptedException | ExecutionException e){
-								Tools.print("Exception in Propagation");
+								Tools.print("Waiting on Propagation from: " + n.getAddress().getHostName());
 							}
 							try {
 								Thread.sleep(100);
@@ -251,22 +251,9 @@ public class HandleConnection implements Runnable {
 							}
 							attempt++;
 						}
-						if(attempt == 15) {
+						if(attempt == 5) {
 							death_detected = true;
 							reply.setLeadByte(ErrorCode.KVSTORE_FAIL); //Timeout
-							byte[] dead_node_position = new byte[32];
-							dead_node_position[0] = (byte) n.getPosition();
-							death_detected_message = new Message(Command.DEATH_DETECTED, new Key(dead_node_position));
-							propagate_death_list.addAll(this.server.getNodeList());
-							//Don't propagate to Self
-							propagate_death_list.remove(this.server.getNode().getPosition());
-							for(Node nn : propagate_death_list){
-								if(nn.getAlive()) {
-									HandlePropagate hp2 = new HandlePropagate(death_detected_message,nn.getAddress().getHostName());
-									FutureTask<Message> ft2 = new FutureTask<Message>(hp2);
-									executor.execute(ft2);
-								}
-							}
 						}
 					}
 				}
@@ -289,7 +276,7 @@ public class HandleConnection implements Runnable {
 						FutureTask<Message> ft = new FutureTask<Message>(hp);
 						executor.execute(ft);
 						int attempt = 0;
-						while(attempt<15){
+						while(attempt<4){
 							try{
 								if(ft.isDone()){
 									child_reply = ft.get();
@@ -305,7 +292,7 @@ public class HandleConnection implements Runnable {
 								e.printStackTrace();
 							}
 							attempt++;
-							if(attempt == 15)
+							if(attempt == 4)
 								child_reply.setLeadByte(ErrorCode.KVSTORE_FAIL); //Timeout
 							
 							replies.put(n.getAddress().getHostName(), child_reply);
