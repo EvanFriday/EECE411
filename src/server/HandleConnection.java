@@ -147,7 +147,7 @@ public class HandleConnection implements Runnable {
 					this.server.getNode().setAlive(false);
 					//Broadcast Death
 					propagate_ch = true;
-					prop_message.setLeadByte(Command.DEATH);
+					
 					//Node: Using propagate_children list, as the propagation for children does not wait upon replies.
 					propagate_children.removeAll(correct_node_for_key.getChildren());
 					propagate_children.addAll(this.server.getNodeList());
@@ -258,6 +258,9 @@ public class HandleConnection implements Runnable {
 					else if(c == Command.REMOVE || c == Command.PROP_REMOVE){
 						prop_child_message.setLeadByte(Command.REPLICA_REMOVE);
 						prop_child_message.setFullMessageKey(k);
+					}
+					else if(c == Command.SHUTDOWN){
+						prop_child_message.setLeadByte(Command.DEATH);
 					}
 				//Propagate message
 				for(Node n : propagate_children){
