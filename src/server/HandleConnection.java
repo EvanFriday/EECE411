@@ -159,7 +159,7 @@ public class HandleConnection implements Runnable {
 					//Don't propagate to Self
 					this.transferParentData();
 					propagate_list.remove(this.server.getNode().getPosition());
-					this.executor.shutdown();
+					
 
 					break;
 				case PROP_PUT:
@@ -215,6 +215,7 @@ public class HandleConnection implements Runnable {
 							this.server.broadcastDeath();
 							reply.setLeadByte(ErrorCode.OK);
 						}
+						
 					}
 				default:
 					Tools.print("ERROR");
