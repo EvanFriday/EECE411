@@ -360,9 +360,14 @@ public class HandleConnection implements Runnable {
 					 * and remove it, 
 					 * 
 					 */
-					if(count == 0){
+					if(count == 0){ //if immediage parent,dies place its replicas keys into our local
 						for(Map.Entry<Key,Value> pair : this.server.getNode().getParent(0).getKvpairs().entrySet()){
 							this.server.getNode().addToKvpairs(pair.getKey(), pair.getValue());
+						}
+					}
+					else{ //if a different parent dies, place it's replicas keys into the parents child
+						for(Map.Entry<Key,Value> pair : this.server.getNode().getParent(count).getKvpairs().entrySet()){
+							this.server.getNode().getParent(count-1).addToKvpairs(pair.getKey(), pair.getValue());
 						}
 					}
 					this.server.getNode().addParent(nd.getParent(2-count));
@@ -379,11 +384,13 @@ public class HandleConnection implements Runnable {
 					this.server.getNode().addChild(nd.getChild(2-count));
 					this.server.getNode().removeChild(nd);
 					child_dead =true;
+					if(count == 2){
+						
+					}
 					break;
 				}
 				count++;
 			}
-			
 			if(child_dead){ //If a child has died, we have to send data to our new child(2)
 				try {
 					Thread.sleep(100); //Wait, just to make sure that the death command was received and handled by all other nodes.
