@@ -159,8 +159,6 @@ public class Server {
 				n.addParent(this.nodeList.get(nodeList.indexOf(n)-2));
 				n.addParent(this.nodeList.get(nodeList.indexOf(n)-3));
 			}
-			
-		
 		}
 		System.out.println("SERVER: Node List Populated");
 	}

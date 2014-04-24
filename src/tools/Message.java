@@ -85,7 +85,7 @@ public class Message {
 		byte[] command = new byte[1];
 		byte[] key = new byte[32];
 		byte[] value = new byte[1024];
-		boolean debug = true;
+		boolean debug = false;
 		
 		if(debug) Tools.print("[debug] getFrom: Entering getFrom");
 		is.read(command, 0, 1);
@@ -141,7 +141,6 @@ public class Message {
 	public Message sendTo(OutputStream os, InputStream replyStream){
 		Message reply = new Message();
 		ErrorCode error = null;
-		boolean debug = true;
 
 		try {
 			Tools.print("Sending");
